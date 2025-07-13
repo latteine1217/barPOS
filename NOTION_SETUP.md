@@ -2,7 +2,7 @@
 
 ## 快速設定您的餐廳管理系統
 
-您的 Notion Database ID 已經預設為：`31054bbd0e004118b6540645d872fd8f`
+您的 Notion Database ID 已經預設為：`22f2c142afa9807b896ad1c1d3cf315b`
 
 ### 步驟 1：建立 Notion Integration
 
@@ -21,7 +21,7 @@
 
 ### 步驟 2：設定 Database 權限
 
-1. 前往您的 [Notion Database](https://www.notion.so/31054bbd0e004118b6540645d872fd8f?v=d274d743dfe54ff79996628aa9f3e9a9)
+1. 前往您的 [Notion Database](https://www.notion.so/22f2c142afa9807b896ad1c1d3cf315b?v=22f2c142afa9805e8c38000cb1e59d56)
 2. 點擊右上角的 **"..."** (More) 按鈕
 3. 選擇 **"+ Add connections"**
 4. 搜尋並選擇您剛才建立的 **"餐廳管理系統"** integration

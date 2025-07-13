@@ -2,7 +2,7 @@
 let currentUser = null;
 let notionConfig = {
     token: localStorage.getItem('notionToken') || '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',
-    databaseId: localStorage.getItem('databaseId') || '31054bbd0e004118b6540645d872fd8f'
+    databaseId: localStorage.getItem('databaseId') || '22f2c142afa9807b896ad1c1d3cf315b'
 };
 
 let currentData = {
