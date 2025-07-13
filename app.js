@@ -583,28 +583,147 @@ function extractDatabaseId(input) {
 // 測試 Notion 連接
 async function testNotionConnection() {
     try {
-        const response = await fetch(`${NOTION_BASE_URL}/databases/${notionConfig.databaseId}`, {
+        showNotification('正在測試 Notion 連接...', 'info');
+        
+        // 首先測試基本認證
+        const authResponse = await fetch(`${NOTION_BASE_URL}/users/me`, {
             headers: {
                 'Authorization': `Bearer ${notionConfig.token}`,
-                'Notion-Version': NOTION_API_VERSION,
-                'Content-Type': 'application/json'
+                'Notion-Version': NOTION_API_VERSION
             }
         });
         
-        if (response.ok) {
-            showNotification('Notion 連接成功', 'success');
-        } else {
-            throw new Error('連接失敗');
+        if (!authResponse.ok) {
+            const authError = await authResponse.json();
+            throw new Error(`認證失敗 (${authResponse.status}): ${authError.message || '請檢查 Token 是否正確'}`);
         }
+        
+        showNotification('基本認證成功', 'success');
+        
+        // 然後測試 Database 存取
+        const dbResponse = await fetch(`${NOTION_BASE_URL}/databases/${notionConfig.databaseId}`, {
+            headers: {
+                'Authorization': `Bearer ${notionConfig.token}`,
+                'Notion-Version': NOTION_API_VERSION
+            }
+        });
+        
+        if (dbResponse.ok) {
+            const dbData = await dbResponse.json();
+            const title = dbData.title[0]?.plain_text || '未命名 Database';
+            showNotification(`Database 連接成功: "${title}"`, 'success');
+            
+            // 顯示 Database 結構資訊
+            const properties = Object.keys(dbData.properties);
+            console.log('Database properties:', properties);
+            showNotification(`Database 欄位: ${properties.join(', ')}`, 'info');
+            
+        } else {
+            const dbError = await dbResponse.json();
+            if (dbResponse.status === 404) {
+                throw new Error('Database 不存在或 Integration 沒有權限存取。請確認: 1) Database ID 正確 2) 已將 Database 分享給 Integration');
+            } else {
+                throw new Error(`Database 存取失敗 (${dbResponse.status}): ${dbError.message || '未知錯誤'}`);
+            }
+        }
+        
     } catch (error) {
-        showNotification('Notion 連接失敗，請檢查設定', 'error');
+        showNotification(`Notion 連接失敗: ${error.message}`, 'error');
         console.error('Notion connection error:', error);
+        
+        // 提供診斷建議
+        if (error.message.includes('認證')) {
+            showNotification('💡 請檢查 Integration Token 是否正確，並確認以 "ntn_" 開頭', 'warning');
+        } else if (error.message.includes('Database')) {
+            showNotification('💡 請在 Notion 中將 Database 分享給您的 Integration', 'warning');
+        }
     }
 }
 
 // 同步資料到 Notion
 async function syncOrderToNotion(order) {
     try {
+        showNotification('正在同步訂單到 Notion...', 'info');
+        
+        // 首先檢查 Database 結構
+        const dbResponse = await fetch(`${NOTION_BASE_URL}/databases/${notionConfig.databaseId}`, {
+            headers: {
+                'Authorization': `Bearer ${notionConfig.token}`,
+                'Notion-Version': NOTION_API_VERSION
+            }
+        });
+        
+        if (!dbResponse.ok) {
+            throw new Error('無法存取 Database，請檢查權限設定');
+        }
+        
+        const dbData = await dbResponse.json();
+        const properties = dbData.properties;
+        
+        // 根據實際的 Database 結構建構 properties
+        const pageProperties = {};
+        
+        // 動態匹配欄位
+        for (const [key, prop] of Object.entries(properties)) {
+            switch (prop.type) {
+                case 'title':
+                    // 通常是第一個 title 欄位用於訂單編號
+                    pageProperties[key] = {
+                        title: [{ text: { content: `訂單 #${order.id}` } }]
+                    };
+                    break;
+                case 'number':
+                    // 根據欄位名稱判斷用途
+                    if (key.includes('桌') || key.toLowerCase().includes('table')) {
+                        pageProperties[key] = { number: order.tableNumber };
+                    } else if (key.includes('人') || key.toLowerCase().includes('customer')) {
+                        pageProperties[key] = { number: order.customerCount };
+                    } else if (key.includes('金額') || key.includes('總額') || key.toLowerCase().includes('total')) {
+                        pageProperties[key] = { number: order.total };
+                    }
+                    break;
+                case 'select':
+                    // 狀態欄位
+                    if (key.includes('狀態') || key.toLowerCase().includes('status')) {
+                        pageProperties[key] = { select: { name: order.status } };
+                    }
+                    break;
+                case 'date':
+                    // 日期欄位
+                    if (key.includes('時間') || key.includes('日期') || key.toLowerCase().includes('time') || key.toLowerCase().includes('date')) {
+                        pageProperties[key] = { date: { start: order.timestamp.toISOString() } };
+                    }
+                    break;
+                case 'rich_text':
+                    // 項目詳情
+                    if (key.includes('項目') || key.toLowerCase().includes('item')) {
+                        pageProperties[key] = {
+                            rich_text: [{
+                                text: {
+                                    content: order.items.map(item => 
+                                        `${item.name} x${item.quantity} ($${item.price})`
+                                    ).join(', ')
+                                }
+                            }]
+                        };
+                    }
+                    break;
+            }
+        }
+        
+        // 如果沒有匹配到任何欄位，使用預設結構
+        if (Object.keys(pageProperties).length === 0) {
+            // 假設第一個欄位是 title
+            const titleField = Object.keys(properties).find(key => properties[key].type === 'title');
+            if (titleField) {
+                pageProperties[titleField] = {
+                    title: [{ text: { content: `訂單 #${order.id}` } }]
+                };
+            }
+        }
+        
+        console.log('Sending to Notion:', { parent: { database_id: notionConfig.databaseId }, properties: pageProperties });
+        
         const response = await fetch(`${NOTION_BASE_URL}/pages`, {
             method: 'POST',
             headers: {
@@ -614,45 +733,30 @@ async function syncOrderToNotion(order) {
             },
             body: JSON.stringify({
                 parent: { database_id: notionConfig.databaseId },
-                properties: {
-                    '訂單編號': {
-                        title: [{ text: { content: order.id } }]
-                    },
-                    '桌號': {
-                        number: order.tableNumber
-                    },
-                    '人數': {
-                        number: order.customerCount
-                    },
-                    '總額': {
-                        number: order.total
-                    },
-                    '狀態': {
-                        select: { name: order.status }
-                    },
-                    '建立時間': {
-                        date: { start: order.timestamp.toISOString() }
-                    },
-                    '項目': {
-                        rich_text: [{
-                            text: {
-                                content: order.items.map(item => 
-                                    `${item.name} x${item.quantity} ($${item.price})`
-                                ).join(', ')
-                            }
-                        }]
-                    }
-                }
+                properties: pageProperties
             })
         });
         
-        if (!response.ok) {
-            throw new Error('同步失敗');
+        const responseData = await response.json();
+        
+        if (response.ok) {
+            showNotification('訂單已成功同步到 Notion', 'success');
+            console.log('Notion sync successful:', responseData);
+        } else {
+            console.error('Notion sync failed:', responseData);
+            throw new Error(`同步失敗 (${response.status}): ${responseData.message || '未知錯誤'}`);
         }
         
-        console.log('訂單已同步到 Notion');
     } catch (error) {
+        showNotification(`Notion 同步失敗: ${error.message}`, 'error');
         console.error('Notion sync error:', error);
+        
+        // 提供具體的錯誤建議
+        if (error.message.includes('validation')) {
+            showNotification('💡 請檢查 Database 欄位設定是否正確', 'warning');
+        } else if (error.message.includes('權限')) {
+            showNotification('💡 請確認 Integration 有寫入權限', 'warning');
+        }
     }
 }
 
