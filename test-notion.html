@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion 連接測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0056b3; }
+        .config {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 餐廳管理系統 - Notion 連接測試</h1>
+        
+        <div class="config">
+            <strong>設定資訊:</strong><br>
+            Token: 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<br>
+            Database ID: 31054bbd0e004118b6540645d872fd8f
+        </div>
+
+        <button onclick="testConnection()">🔗 測試 Notion 連接</button>
+        <button onclick="testDatabase()">📊 測試 Database 存取</button>
+        <button onclick="createTestOrder()">➕ 建立測試訂單</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const NOTION_TOKEN = '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';
+        const DATABASE_ID = '31054bbd0e004118b6540645d872fd8f';
+        const NOTION_API_VERSION = '2022-06-28';
+        const NOTION_BASE_URL = 'https://api.notion.com/v1';
+
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        async function testConnection() {
+            showResult('🔄 正在測試基本連接...', 'info');
+            
+            try {
+                const response = await fetch(`${NOTION_BASE_URL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${NOTION_TOKEN}`,
+                        'Notion-Version': NOTION_API_VERSION
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ 基本連接成功! 用戶: ${data.name || '匿名'}`, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult(`❌ 連接失敗: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 網路錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDatabase() {
+            showResult('🔄 正在測試 Database 存取...', 'info');
+            
+            try {
+                const response = await fetch(`${NOTION_BASE_URL}/databases/${DATABASE_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${NOTION_TOKEN}`,
+                        'Notion-Version': NOTION_API_VERSION
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ Database 存取成功! 標題: ${data.title[0]?.plain_text || 'N/A'}`, 'success');
+                    
+                    // 顯示 Database 結構
+                    const properties = Object.keys(data.properties);
+                    showResult(`📋 Database 欄位: ${properties.join(', ')}`, 'info');
+                } else {
+                    const error = await response.text();
+                    showResult(`❌ Database 存取失敗: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 網路錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestOrder() {
+            showResult('🔄 正在建立測試訂單...', 'info');
+            
+            const testOrder = {
+                id: 'TEST001',
+                tableNumber: 1,
+                customerCount: 2,
+                total: 250,
+                status: 'pending',
+                timestamp: new Date(),
+                items: [
+                    { name: '牛肉麵', quantity: 1, price: 180 },
+                    { name: '珍珠奶茶', quantity: 2, price: 35 }
+                ]
+            };
+
+            try {
+                const response = await fetch(`${NOTION_BASE_URL}/pages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${NOTION_TOKEN}`,
+                        'Notion-Version': NOTION_API_VERSION,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        parent: { database_id: DATABASE_ID },
+                        properties: {
+                            '訂單編號': {
+                                title: [{ text: { content: testOrder.id } }]
+                            },
+                            '桌號': {
+                                number: testOrder.tableNumber
+                            },
+                            '人數': {
+                                number: testOrder.customerCount
+                            },
+                            '總額': {
+                                number: testOrder.total
+                            },
+                            '狀態': {
+                                select: { name: testOrder.status }
+                            },
+                            '建立時間': {
+                                date: { start: testOrder.timestamp.toISOString() }
+                            },
+                            '項目': {
+                                rich_text: [{
+                                    text: {
+                                        content: testOrder.items.map(item => 
+                                            `${item.name} x${item.quantity} ($${item.price})`
+                                        ).join(', ')
+                                    }
+                                }]
+                            }
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ 測試訂單建立成功! 🎉`, 'success');
+                    showResult(`🔗 <a href="${data.url}" target="_blank">在 Notion 中查看</a>`, 'info');
+                } else {
+                    const error = await response.text();
+                    showResult(`❌ 建立測試訂單失敗: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 網路錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        // 頁面載入時自動測試基本連接
+        window.onload = function() {
+            showResult('🚀 歡迎使用餐廳管理系統 Notion 連接測試工具', 'info');
+            testConnection();
+        };
+    </script>
+</body>
+</html>

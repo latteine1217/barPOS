@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐廳管理系統 - Restaurant POS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <!-- 側邊欄 -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <h2>Restaurant POS</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-tab="dashboard">
+                    <i class="fas fa-chart-dashboard"></i>
+                    <span>儀表板</span>
+                </li>
+                <li class="nav-item" data-tab="orders">
+                    <i class="fas fa-receipt"></i>
+                    <span>訂單管理</span>
+                </li>
+                <li class="nav-item" data-tab="menu">
+                    <i class="fas fa-book-open"></i>
+                    <span>菜單管理</span>
+                </li>
+                <li class="nav-item" data-tab="tables">
+                    <i class="fas fa-chair"></i>
+                    <span>桌位管理</span>
+                </li>
+                <li class="nav-item" data-tab="reports">
+                    <i class="fas fa-chart-line"></i>
+                    <span>營收報表</span>
+                </li>
+                <li class="nav-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>設定</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            <!-- 頂部欄 -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="搜尋...">
+                </div>
+                <div class="user-info">
+                    <span class="date-time" id="datetime"></span>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 儀表板 -->
+            <section id="dashboard" class="tab-content active">
+                <div class="dashboard-header">
+                    <h1>儀表板</h1>
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="todayRevenue">$0</h3>
+                                <p>今日營收</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="todayOrders">0</h3>
+                                <p>今日訂單</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="activeCustomers">0</h3>
+                                <p>用餐中客人</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <h2>快速操作</h2>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="showNewOrderModal()">
+                            <i class="fas fa-plus"></i>
+                            新增訂單
+                        </button>
+                        <button class="action-btn" onclick="showAddMenuItemModal()">
+                            <i class="fas fa-utensils"></i>
+                            新增菜品
+                        </button>
+                        <button class="action-btn" onclick="refreshData()">
+                            <i class="fas fa-sync"></i>
+                            同步資料
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 訂單管理 -->
+            <section id="orders" class="tab-content">
+                <div class="section-header">
+                    <h1>訂單管理</h1>
+                    <button class="btn-primary" onclick="showNewOrderModal()">
+                        <i class="fas fa-plus"></i>
+                        新增訂單
+                    </button>
+                </div>
+                <div class="orders-container">
+                    <div class="orders-list" id="ordersList">
+                        <!-- 訂單將在這裡動態載入 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 菜單管理 -->
+            <section id="menu" class="tab-content">
+                <div class="section-header">
+                    <h1>菜單管理</h1>
+                    <button class="btn-primary" onclick="showAddMenuItemModal()">
+                        <i class="fas fa-plus"></i>
+                        新增菜品
+                    </button>
+                </div>
+                <div class="menu-grid" id="menuGrid">
+                    <!-- 菜品將在這裡動態載入 -->
+                </div>
+            </section>
+
+            <!-- 桌位管理 -->
+            <section id="tables" class="tab-content">
+                <div class="section-header">
+                    <h1>桌位管理</h1>
+                </div>
+                <div class="tables-grid" id="tablesGrid">
+                    <!-- 桌位將在這裡動態載入 -->
+                </div>
+            </section>
+
+            <!-- 營收報表 -->
+            <section id="reports" class="tab-content">
+                <div class="section-header">
+                    <h1>營收報表</h1>
+                </div>
+                <div class="reports-container">
+                    <div class="report-filters">
+                        <select id="reportPeriod">
+                            <option value="today">今日</option>
+                            <option value="week">本週</option>
+                            <option value="month">本月</option>
+                        </select>
+                    </div>
+                    <div class="report-charts">
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 設定 -->
+            <section id="settings" class="tab-content">
+                <div class="section-header">
+                    <h1>設定</h1>
+                </div>
+                <div class="settings-container">
+                    <div class="setting-group">
+                        <h3>Notion API 設定</h3>
+                        <div class="form-group">
+                            <label for="notionToken">Notion Integration Token:</label>
+                            <input type="password" id="notionToken" placeholder="輸入 Notion Integration Token" value="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">
+                        </div>
+                        <div class="form-group">
+                            <label for="databaseId">Database ID 或 URL:</label>
+                            <input type="text" id="databaseId" placeholder="輸入 Notion Database ID 或直接貼上 Database URL" value="31054bbd0e004118b6540645d872fd8f">
+                            <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
+                                可以直接貼上完整的 Notion 資料庫 URL，系統會自動提取 ID
+                            </small>
+                        </div>
+                        <button class="btn-primary" onclick="saveNotionSettings()">
+                            <i class="fas fa-save"></i>
+                            儲存設定
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 模態窗口 -->
+    <div id="modalOverlay" class="modal-overlay">
+        <!-- 桌位詳情模態窗口 -->
+        <div id="tableDetailModal" class="modal large-modal">
+            <div class="modal-header">
+                <h3 id="tableDetailTitle">桌位詳情</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-detail-content">
+                    <div class="table-info-section">
+                        <div class="table-status-card">
+                            <div class="status-header">
+                                <h4 id="tableDetailNumber">桌 1</h4>
+                                <span id="tableDetailStatus" class="table-status">用餐中</span>
+                            </div>
+                            <div class="table-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-users"></i>
+                                    <span id="tableDetailCapacity">4 人座</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="tableDetailTime">已用餐 1 小時 23 分</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="orders-section">
+                        <div class="section-header">
+                            <h4>訂單詳情</h4>
+                            <button class="btn-primary" onclick="showMenuSelectionForTable()">
+                                <i class="fas fa-plus"></i>
+                                加點
+                            </button>
+                        </div>
+                        <div id="tableOrdersList" class="table-orders-list">
+                            <!-- 該桌的訂單將在這裡顯示 -->
+                        </div>
+                        <div class="table-total">
+                            <div class="total-summary">
+                                <span class="total-label">總計:</span>
+                                <span id="tableDetailTotal" class="total-amount">$450</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">關閉</button>
+                <button class="btn-primary" onclick="checkoutTable()">
+                    <i class="fas fa-credit-card"></i>
+                    結帳
+                </button>
+            </div>
+        </div>
+
+        <!-- 視覺化菜單選擇模態窗口 -->
+        <div id="menuSelectionModal" class="modal fullscreen-modal">
+            <div class="modal-header pos-header">
+                <div class="pos-info">
+                    <h3 id="posTableInfo">桌 1 - 點餐</h3>
+                    <span id="posCustomerCount">2 人</span>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body pos-body">
+                <div class="pos-layout">
+                    <!-- 左側菜單區域 -->
+                    <div class="menu-area">
+                        <div class="category-tabs">
+                            <button class="category-tab active" data-category="all" onclick="filterMenuByCategory('all')">
+                                <i class="fas fa-th"></i>
+                                全部
+                            </button>
+                            <button class="category-tab" data-category="appetizer" onclick="filterMenuByCategory('appetizer')">
+                                <i class="fas fa-leaf"></i>
+                                前菜
+                            </button>
+                            <button class="category-tab" data-category="main" onclick="filterMenuByCategory('main')">
+                                <i class="fas fa-utensils"></i>
+                                主菜
+                            </button>
+                            <button class="category-tab" data-category="dessert" onclick="filterMenuByCategory('dessert')">
+                                <i class="fas fa-ice-cream"></i>
+                                甜點
+                            </button>
+                            <button class="category-tab" data-category="beverage" onclick="filterMenuByCategory('beverage')">
+                                <i class="fas fa-coffee"></i>
+                                飲品
+                            </button>
+                        </div>
+                        <div class="menu-grid-container">
+                            <div id="posMenuGrid" class="pos-menu-grid">
+                                <!-- 菜品格子將在這裡動態載入 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側訂單區域 -->
+                    <div class="order-area">
+                        <div class="order-header">
+                            <h4>當前訂單</h4>
+                            <button class="btn-secondary clear-btn" onclick="clearCurrentOrder()">
+                                <i class="fas fa-trash"></i>
+                                清空
+                            </button>
+                        </div>
+                        <div id="currentOrderItems" class="current-order-items">
+                            <!-- 當前點選的項目將在這裡顯示 -->
+                        </div>
+                        <div class="order-summary">
+                            <div class="summary-line">
+                                <span>小計:</span>
+                                <span id="currentSubtotal">$0</span>
+                            </div>
+                            <div class="summary-line total-line">
+                                <span>總計:</span>
+                                <span id="currentTotal">$0</span>
+                            </div>
+                        </div>
+                        <div class="order-actions">
+                            <button class="btn-secondary full-width" onclick="closeModal()">
+                                <i class="fas fa-arrow-left"></i>
+                                返回
+                            </button>
+                            <button class="btn-primary full-width" onclick="confirmPosOrder()">
+                                <i class="fas fa-check"></i>
+                                確認訂單
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 原有的新增訂單模態窗口 -->
+        <div id="newOrderModal" class="modal">
+            <div class="modal-header">
+                <h3>新增訂單</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newOrderForm">
+                    <div class="form-group">
+                        <label for="tableNumber">桌號:</label>
+                        <select id="tableNumber" required>
+                            <!-- 桌號選項將動態載入 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerCount">人數:</label>
+                        <input type="number" id="customerCount" min="1" required>
+                    </div>
+                    <div class="order-selection-type">
+                        <h4>點餐方式</h4>
+                        <div class="selection-buttons">
+                            <button type="button" class="btn-primary" onclick="openMenuSelection()">
+                                <i class="fas fa-th-large"></i>
+                                視覺化點餐
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="showTraditionalOrdering()">
+                                <i class="fas fa-list"></i>
+                                傳統點餐
+                            </button>
+                        </div>
+                    </div>
+                    <div id="traditionalOrderSection" class="order-items" style="display: none;">
+                        <h4>點餐項目</h4>
+                        <div id="orderItemsList">
+                            <!-- 點餐項目將在這裡動態載入 -->
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="addOrderItem()">
+                            <i class="fas fa-plus"></i>
+                            新增項目
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn-primary" onclick="saveOrder()" id="saveOrderBtn" style="display: none;">儲存訂單</button>
+            </div>
+        </div>
+
+        <!-- 新增菜品模態窗口 -->
+        <div id="addMenuItemModal" class="modal">
+            <div class="modal-header">
+                <h3>新增菜品</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addMenuItemForm">
+                    <div class="form-group">
+                        <label for="itemName">菜品名稱:</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemPrice">價格:</label>
+                        <input type="number" id="itemPrice" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemCategory">分類:</label>
+                        <select id="itemCategory" required>
+                            <option value="appetizer">前菜</option>
+                            <option value="main">主菜</option>
+                            <option value="dessert">甜點</option>
+                            <option value="beverage">飲品</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemDescription">描述:</label>
+                        <textarea id="itemDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn-primary" onclick="saveMenuItem()">儲存菜品</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
