@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 
-const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialCustomers, isAddOnMode, existingOrder }) => {
+const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialCustomers, isAddOnMode, existingOrder, selectedTable }) => {
   const { state, actions } = useApp();
   const [orderItems, setOrderItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -249,7 +249,10 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-2xl font-bold text-white">
-              {isAddOnMode ? `桌 ${initialTableNumber} - 加點` : '選擇餐點'}
+              {isAddOnMode ? 
+                `${selectedTable?.name || `桌 ${initialTableNumber}`} - 加點` : 
+                selectedTable?.name ? `${selectedTable.name} - 新訂單` : '選擇餐點'
+              }
             </h2>
             {/* 移動端關閉按鈕 */}
             <button
@@ -344,7 +347,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               </h4>
               <div className="text-sm text-blue-700 mb-3">
                 <p>訂單編號：#{existingOrder.id}</p>
-                <p>桌號：桌 {existingOrder.tableNumber}</p>
+                <p>桌號：{selectedTable?.name || `桌 ${existingOrder.tableNumber}`}</p>
                 <p>人數：{existingOrder.customers || initialCustomers} 人</p>
                 <p>狀態：
                   <span className={`px-2 py-1 rounded-full text-xs ml-1 ${
@@ -397,14 +400,13 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                       required
                     >
                       <option value="">選擇桌號</option>
-                      {state.tables
-                        .filter(table => table.status === 'available')
-                        .map(table => (
-                          <option key={table.id} value={table.number}>
-                            桌 {table.number}
-                          </option>
-                        ))}
-                    </select>
+                       {state.tables
+                         .filter(table => table.status === 'available')
+                         .map(table => (
+                           <option key={table.id} value={table.number}>
+                             {table.name || `桌 ${table.number}`}
+                           </option>
+                         ))}                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">人數</label>
@@ -442,7 +444,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm text-gray-700">
-                        <strong>桌號：</strong>桌 {initialTableNumber}
+                        <strong>桌號：</strong>{selectedTable?.name || `桌 ${initialTableNumber}`}
                       </div>
                     </div>
                     <div>

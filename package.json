@@ -39,6 +39,7 @@
     "@capacitor/haptics": "^7.0.1",
     "@capacitor/ios": "^7.4.2",
     "@capacitor/keyboard": "^7.0.1",
+    "@capacitor/preferences": "^7.0.1",
     "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
     "react": "^19.1.0",

@@ -166,21 +166,21 @@ const Settings = () => {
             </button>
           </div>
 
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+          <div className="flex justify-between items-center p-4 bg-red-50 border border-red-200 rounded-lg">
             <div>
-              <h3 className="font-medium">清除本地資料</h3>
-              <p className="text-sm text-gray-600">清除本地儲存的所有訂單資料</p>
+              <h3 className="font-medium text-red-800">重置系統資料</h3>
+              <p className="text-sm text-red-600">清除所有本地儲存資料（訂單、菜單、桌位佈局等），但保留 Notion 設定</p>
             </div>
             <button
               onClick={() => {
-                if (window.confirm('確定要清除所有本地資料嗎？這個操作無法復原。')) {
-                  actions.setOrders([]);
-                  alert('本地資料已清除');
+                if (window.confirm('⚠️ 確定要重置系統嗎？\n\n這將清除以下資料：\n• 所有訂單記錄\n• 自訂菜單項目\n• 桌位佈局設定\n• 統計數據\n\n此操作無法復原！')) {
+                  actions.clearAllData();
+                  alert('✅ 系統已重置到初始狀態');
                 }
               }}
-              className="btn btn-error"
+              className="btn bg-red-500 hover:bg-red-600 text-white"
             >
-              清除資料
+              重置系統
             </button>
           </div>
         </div>

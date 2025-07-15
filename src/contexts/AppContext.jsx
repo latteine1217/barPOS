@@ -1,6 +1,84 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import storageService, { STORAGE_KEYS } from '../services/storageService';
 
-// 初始狀態
+// 本地儲存 keys（移到 storageService）
+// const STORAGE_KEYS = ... (現在從 storageService 導入)
+
+// 從跨平台儲存載入資料的工具函數
+const loadFromStorage = async (key, defaultValue) => {
+  try {
+    return await storageService.getItem(key, defaultValue);
+  } catch (error) {
+    console.warn(`Failed to load ${key} from storage:`, error);
+    return defaultValue;
+  }
+};
+
+// 儲存資料到跨平台儲存的工具函數
+const saveToStorage = async (key, data) => {
+  try {
+    await storageService.setItem(key, data);
+  } catch (error) {
+    console.warn(`Failed to save ${key} to storage:`, error);
+  }
+};
+
+// 初始狀態 - 改為異步載入
+const getInitialState = async () => {
+  const orders = await loadFromStorage(STORAGE_KEYS.ORDERS, []);
+  const menuItems = await loadFromStorage(STORAGE_KEYS.MENU_ITEMS, [
+    { id: 1, name: '招牌牛肉麵', price: 180, category: '主食' },
+    { id: 2, name: '蔥爆牛肉', price: 220, category: '主食' },
+    { id: 3, name: '宮保雞丁', price: 160, category: '主食' },
+    { id: 4, name: '麻婆豆腐', price: 120, category: '主食' },
+    { id: 5, name: '可樂', price: 30, category: '飲料' },
+    { id: 6, name: '熱茶', price: 20, category: '飲料' },
+  ]);
+  const tables = await loadFromStorage(STORAGE_KEYS.TABLES, [
+    ...Array.from({ length: 12 }, (_, i) => ({
+      id: i + 1,
+      number: i + 1,
+      name: `桌 ${i + 1}`,
+      status: 'available',
+      customers: 0,
+      currentOrder: null,
+      position: {
+        x: ((i % 4) * 200) + 50,
+        y: (Math.floor(i / 4) * 150) + 50
+      },
+      size: 'medium',
+      shape: 'round',
+      capacity: 4,
+      type: 'regular'
+    }))
+  ]);
+  const layoutConfig = await loadFromStorage(STORAGE_KEYS.LAYOUT_CONFIG, {
+    canvasWidth: 1000,
+    canvasHeight: 600,
+    gridSize: 20,
+    showGrid: true,
+    backgroundImage: null
+  });
+  const stats = await loadFromStorage(STORAGE_KEYS.STATS, {
+    todayRevenue: 0,
+    todayOrders: 0,
+    activeCustomers: 0
+  });
+
+  return {
+    orders,
+    menuItems,
+    tables,
+    layoutConfig,
+    stats,
+    notionConfig: {
+      token: await storageService.getItem(STORAGE_KEYS.NOTION_TOKEN, ''),
+      databaseId: await storageService.getItem(STORAGE_KEYS.DATABASE_ID, '')
+    }
+  };
+};
+
+// 同步初始狀態（用於 reducer 初始化）
 const initialState = {
   orders: [],
   menuItems: [
@@ -12,23 +90,38 @@ const initialState = {
     { id: 6, name: '熱茶', price: 20, category: '飲料' },
   ],
   tables: [
-    // 所有桌位初始為空桌
     ...Array.from({ length: 12 }, (_, i) => ({
       id: i + 1,
       number: i + 1,
+      name: `桌 ${i + 1}`,
       status: 'available',
       customers: 0,
-      currentOrder: null
+      currentOrder: null,
+      position: {
+        x: ((i % 4) * 200) + 50,
+        y: (Math.floor(i / 4) * 150) + 50
+      },
+      size: 'medium',
+      shape: 'round',
+      capacity: 4,
+      type: 'regular'
     }))
   ],
+  layoutConfig: {
+    canvasWidth: 1000,
+    canvasHeight: 600,
+    gridSize: 20,
+    showGrid: true,
+    backgroundImage: null
+  },
   stats: {
     todayRevenue: 0,
     todayOrders: 0,
     activeCustomers: 0
   },
   notionConfig: {
-    token: localStorage.getItem('notionToken') || '',
-    databaseId: localStorage.getItem('databaseId') || ''
+    token: '',
+    databaseId: ''
   }
 };
 
@@ -44,7 +137,12 @@ const actionTypes = {
   DELETE_MENU_ITEM: 'DELETE_MENU_ITEM',
   UPDATE_STATS: 'UPDATE_STATS',
   UPDATE_NOTION_CONFIG: 'UPDATE_NOTION_CONFIG',
-  SET_ORDERS: 'SET_ORDERS'
+  SET_ORDERS: 'SET_ORDERS',
+  UPDATE_TABLE_LAYOUT: 'UPDATE_TABLE_LAYOUT',
+  SAVE_LAYOUT_CONFIG: 'SAVE_LAYOUT_CONFIG',
+  ADD_TABLE: 'ADD_TABLE',
+  DELETE_TABLE: 'DELETE_TABLE',
+  CLEAR_ALL_DATA: 'CLEAR_ALL_DATA'
 };
 
 // Reducer
@@ -69,8 +167,13 @@ function appReducer(state, action) {
           ...state,
           orders: [...state.orders, newOrder],
           tables: state.tables.map(table => 
-            table.id === newOrder.tableNumber 
-              ? { ...table, status: 'occupied', currentOrder: newOrder.id }
+            table.number === newOrder.tableNumber
+              ? { 
+                  ...table, 
+                  status: 'occupied', 
+                  currentOrder: newOrder.id,
+                  customers: newOrder.customers || 0
+                }
               : table
           )
         };
@@ -197,6 +300,80 @@ function appReducer(state, action) {
           orders: action.payload
         };
 
+      case actionTypes.UPDATE_TABLE_LAYOUT:
+        if (!action.payload?.id || !action.payload?.layoutData) {
+          console.error('Invalid update table layout payload:', action.payload);
+          return state;
+        }
+        
+        return {
+          ...state,
+          tables: state.tables.map(table =>
+            table.id === action.payload.id
+              ? { ...table, ...action.payload.layoutData }
+              : table
+          )
+        };
+
+      case actionTypes.SAVE_LAYOUT_CONFIG:
+        if (!action.payload) {
+          console.error('Invalid layout config payload:', action.payload);
+          return state;
+        }
+        
+        return {
+          ...state,
+          layoutConfig: { ...state.layoutConfig, ...action.payload }
+        };
+
+      case actionTypes.ADD_TABLE:
+        if (!action.payload) {
+          console.error('Invalid add table payload:', action.payload);
+          return state;
+        }
+        
+        const newTable = {
+          id: action.payload.id || Date.now(),
+          number: action.payload.number || state.tables.length + 1,
+          name: action.payload.name || `桌 ${state.tables.length + 1}`,
+          status: 'available',
+          customers: 0,
+          currentOrder: null,
+          position: action.payload.position || { x: 100, y: 100 },
+          size: action.payload.size || 'medium',
+          shape: action.payload.shape || 'round',
+          capacity: action.payload.capacity || 4,
+          type: action.payload.type || 'regular'
+        };
+        
+        return {
+          ...state,
+          tables: [...state.tables, newTable]
+        };
+
+      case actionTypes.DELETE_TABLE:
+        if (!action.payload) {
+          console.error('Invalid delete table payload:', action.payload);
+          return state;
+        }
+        
+        return {
+          ...state,
+          tables: state.tables.filter(table => table.id !== action.payload)
+        };
+
+      case actionTypes.CLEAR_ALL_DATA:
+        // 清除所有跨平台儲存資料
+        storageService.clear().catch(error => {
+          console.error('Failed to clear storage:', error);
+        });
+        
+        // 重置狀態到初始值（但保留 Notion 設定）
+        return {
+          ...initialState,
+          notionConfig: state.notionConfig // 保留 Notion 設定
+        };
+
       default:
         console.warn('Unknown action type:', action.type);
         return state;
@@ -213,6 +390,49 @@ const AppContext = createContext();
 // Provider component
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // 初始化儲存並載入資料
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await storageService.initializeStorage();
+        const loadedState = await getInitialState();
+        
+        // 批量設定載入的狀態
+        Object.entries(loadedState).forEach(([key, value]) => {
+          if (key === 'orders' && value.length > 0) {
+            dispatch({ type: actionTypes.SET_ORDERS, payload: value });
+          } else if (key === 'menuItems' && value.length > initialState.menuItems.length) {
+            // 只有當載入的菜單項目比預設的多時才更新
+            value.forEach(item => {
+              if (!initialState.menuItems.find(defaultItem => defaultItem.id === item.id)) {
+                dispatch({ type: actionTypes.ADD_MENU_ITEM, payload: item });
+              }
+            });
+          } else if (key === 'tables' && value.length > 0) {
+            // 更新所有桌位
+            value.forEach(table => {
+              dispatch({ type: actionTypes.UPDATE_TABLE, payload: { id: table.id, updates: table } });
+            });
+          } else if (key === 'layoutConfig') {
+            dispatch({ type: actionTypes.SAVE_LAYOUT_CONFIG, payload: value });
+          } else if (key === 'stats') {
+            dispatch({ type: actionTypes.UPDATE_STATS, payload: value });
+          } else if (key === 'notionConfig') {
+            dispatch({ type: actionTypes.UPDATE_NOTION_CONFIG, payload: value });
+          }
+        });
+        
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        setIsLoaded(true); // 即使失敗也要讓應用繼續運行
+      }
+    };
+
+    initializeApp();
+  }, []);
 
   // 計算統計數據
   useEffect(() => {
@@ -264,6 +484,44 @@ export function AppProvider({ children }) {
     }
   }, [state.orders, state.tables]);
 
+  // 自動儲存狀態到跨平台儲存
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(STORAGE_KEYS.ORDERS, state.orders);
+    }
+  }, [state.orders, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(STORAGE_KEYS.MENU_ITEMS, state.menuItems);
+    }
+  }, [state.menuItems, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(STORAGE_KEYS.TABLES, state.tables);
+    }
+  }, [state.tables, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(STORAGE_KEYS.LAYOUT_CONFIG, state.layoutConfig);
+    }
+  }, [state.layoutConfig, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage(STORAGE_KEYS.STATS, state.stats);
+    }
+  }, [state.stats, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded && state.notionConfig) {
+      saveToStorage(STORAGE_KEYS.NOTION_TOKEN, state.notionConfig.token);
+      saveToStorage(STORAGE_KEYS.DATABASE_ID, state.notionConfig.databaseId);
+    }
+  }, [state.notionConfig, isLoaded]);
+
   // Actions
   const actions = {
     addOrder: (order) => dispatch({ type: actionTypes.ADD_ORDER, payload: order }),
@@ -275,7 +533,14 @@ export function AppProvider({ children }) {
     updateMenuItem: (id, updates) => dispatch({ type: actionTypes.UPDATE_MENU_ITEM, payload: { id, updates } }),
     deleteMenuItem: (id) => dispatch({ type: actionTypes.DELETE_MENU_ITEM, payload: id }),
     updateNotionConfig: (config) => dispatch({ type: actionTypes.UPDATE_NOTION_CONFIG, payload: config }),
-    setOrders: (orders) => dispatch({ type: actionTypes.SET_ORDERS, payload: orders })
+    setOrders: (orders) => dispatch({ type: actionTypes.SET_ORDERS, payload: orders }),
+    // 桌位佈局相關 actions
+    updateTableLayout: (id, layoutData) => dispatch({ type: actionTypes.UPDATE_TABLE_LAYOUT, payload: { id, layoutData } }),
+    saveLayoutConfig: (config) => dispatch({ type: actionTypes.SAVE_LAYOUT_CONFIG, payload: config }),
+    addTable: (tableData) => dispatch({ type: actionTypes.ADD_TABLE, payload: tableData }),
+    deleteTable: (id) => dispatch({ type: actionTypes.DELETE_TABLE, payload: id }),
+    // 資料管理
+    clearAllData: () => dispatch({ type: actionTypes.CLEAR_ALL_DATA })
   };
 
   return (

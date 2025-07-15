@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useApp } from '../contexts/AppContext';
 import VisualOrderingInterface from './VisualOrderingInterface';
 
@@ -6,6 +6,7 @@ const Tables = () => {
   const { state, actions } = useApp();
   const [showVisualOrdering, setShowVisualOrdering] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [viewMode, setViewMode] = useState('layout'); // 'layout' 或 'grid'
 
   const handleTableClick = (table) => {
     try {
@@ -96,47 +97,38 @@ const Tables = () => {
         
         actions.updateOrder(existingOrder.id, {
           items: updatedItems,
-          total: updatedTotal
+          total: updatedTotal,
+          customers: orderData.customers || existingOrder.customers
         });
-      } else {
-        // 新訂單模式或已結帳後的新訂單
-        if (isAddOnMode && existingOrder && existingOrder.status === 'paid') {
-          // 已結帳的桌位創建新訂單，先釋放舊訂單關聯
+
+        // 如果人數有變化，同時更新桌位資訊
+        if (orderData.customers !== existingOrder.customers) {
           actions.updateTable(selectedTable.id, {
-            currentOrder: null
+            customers: orderData.customers
           });
         }
-        
-        // 創建新訂單
-        const newOrderId = Date.now().toString();
-        const newOrder = {
+
+        alert(`成功加點！新增 ${orderData.items.length} 項餐點，金額 $${orderData.total}`);
+      } else {
+        // 新訂單模式
+        const finalOrderData = {
           ...orderData,
-          id: newOrderId,
-          createdAt: new Date().toISOString()
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          status: 'pending'
         };
-        
-        actions.addOrder(newOrder);
-        
-        // 驗證桌號
-        const tableId = parseInt(orderData.tableNumber);
-        if (isNaN(tableId) || tableId <= 0) {
-          alert('無效的桌號');
-          return;
-        }
-        
-        actions.updateTable(tableId, {
-          status: 'occupied',
-          customers: Math.max(1, Number(orderData.customers) || 1),
-          currentOrder: newOrderId
-        });
+
+        // 新增訂單
+        actions.addOrder(finalOrderData);
+        alert(`訂單建立成功！桌位 ${finalOrderData.tableNumber}，金額 $${finalOrderData.total}`);
       }
 
-      // 關閉所有模態框
+      // 關閉界面
       setShowVisualOrdering(false);
       setSelectedTable(null);
     } catch (error) {
       console.error('Error completing order:', error);
-      alert('處理訂單時發生錯誤，請重試');
+      alert('建立訂單時發生錯誤，請重試');
     }
   };
 
@@ -145,7 +137,7 @@ const Tables = () => {
       case 'available': return '空桌';
       case 'occupied': return '用餐中';
       case 'cleaning': return '清潔中';
-      default: return status;
+      default: return '未知狀態';
     }
   };
 
@@ -158,44 +150,141 @@ const Tables = () => {
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">桌位管理</h1>
-        <button
-          onClick={() => {
-            setSelectedTable(null);
-            setShowVisualOrdering(true);
+  // 獲取自定義佈局桌位樣式
+  const getLayoutTableStyle = useCallback((table) => {
+    const tableSizes = {
+      small: { width: 60, height: 60 },
+      medium: { width: 80, height: 80 },
+      large: { width: 100, height: 100 },
+      xlarge: { width: 120, height: 80 }
+    };
+
+    const size = tableSizes[table.size] || tableSizes.medium;
+    const baseStyle = {
+      position: 'absolute',
+      left: `${table.position.x}px`,
+      top: `${table.position.y}px`,
+      width: `${size.width}px`,
+      height: `${size.height}px`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      border: '2px solid',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      userSelect: 'none',
+      transition: 'all 0.2s ease',
+      padding: '4px'
+    };
+
+    // 根據狀態設定顏色
+    if (table.status === 'occupied') {
+      baseStyle.backgroundColor = '#fef3c7';
+      baseStyle.borderColor = '#f59e0b';
+      baseStyle.color = '#92400e';
+    } else if (table.status === 'available') {
+      baseStyle.backgroundColor = '#f0f9ff';
+      baseStyle.borderColor = '#0ea5e9';
+      baseStyle.color = '#0c4a6e';
+    } else {
+      baseStyle.backgroundColor = '#fef3c7';
+      baseStyle.borderColor = '#eab308';
+      baseStyle.color = '#a16207';
+    }
+
+    // 桌位形狀
+    if (table.shape === 'round') {
+      baseStyle.borderRadius = '50%';
+    } else if (table.shape === 'rectangular') {
+      baseStyle.width = `${size.width * 1.5}px`;
+      baseStyle.borderRadius = '8px';
+    } else {
+      baseStyle.borderRadius = '8px';
+    }
+
+    // VIP 桌位特殊樣式
+    if (table.type === 'vip') {
+      baseStyle.background = 'linear-gradient(45deg, #fef3c7, #fde68a)';
+      baseStyle.borderColor = '#d97706';
+    }
+
+    return baseStyle;
+  }, []);
+
+  // 渲染自定義佈局模式
+  const renderLayoutMode = () => {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div
+          className="relative bg-gray-50 border-2 border-dashed border-gray-300 overflow-auto"
+          style={{
+            width: `${state.layoutConfig.canvasWidth}px`,
+            height: `${state.layoutConfig.canvasHeight}px`,
+            maxWidth: '100%',
+            minHeight: '400px'
           }}
-          className="btn btn-primary w-full sm:w-auto"
         >
-          ➕ 新增訂單
-        </button>
-      </div>
+          {/* 網格背景 */}
+          {state.layoutConfig.showGrid && (
+            <div
+              className="absolute inset-0 opacity-20"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #d1d5db 1px, transparent 1px),
+                  linear-gradient(to bottom, #d1d5db 1px, transparent 1px)
+                `,
+                backgroundSize: `${state.layoutConfig.gridSize}px ${state.layoutConfig.gridSize}px`
+              }}
+            />
+          )}
 
-      {/* 桌位狀態統計 */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <div className="card text-center p-3 sm:p-4">
-          <div className="text-xl sm:text-2xl font-bold text-green-600">
-            {state.tables.filter(t => t.status === 'available').length}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">空桌</div>
-        </div>
-        <div className="card text-center p-3 sm:p-4">
-          <div className="text-xl sm:text-2xl font-bold text-red-600">
-            {state.tables.filter(t => t.status === 'occupied').length}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">用餐中</div>
-        </div>
-        <div className="card text-center p-3 sm:p-4">
-          <div className="text-xl sm:text-2xl font-bold text-yellow-600">
-            {state.tables.filter(t => t.status === 'cleaning').length}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">清潔中</div>
+          {/* 桌位 */}
+          {state.tables.map(table => {
+            const currentOrder = table.currentOrder 
+              ? state.orders.find(order => order.id === table.currentOrder)
+              : null;
+
+            return (
+              <div
+                key={table.id}
+                style={getLayoutTableStyle(table)}
+                onClick={() => handleTableClick(table)}
+                className="text-center hover:shadow-lg"
+              >
+                <div className="font-bold text-xs truncate max-w-full mb-1">
+                  {table.name || `桌 ${table.number}`}
+                </div>
+                {table.status === 'occupied' && (
+                  <div className="text-xs opacity-75">
+                    {currentOrder?.customers || table.customers || 0}人
+                  </div>
+                )}
+                {table.status === 'occupied' && currentOrder && (
+                  <div className="text-xs mt-1">
+                    ${currentOrder.total}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
+    );
+  };
 
-      {/* 桌位網格 */}
+  // 渲染網格模式
+  const renderGridMode = () => {
+    // 桌位大小選項 (用於顯示)
+    const tableSizes = {
+      small: { label: '2人桌' },
+      medium: { label: '4人桌' },
+      large: { label: '6人桌' },
+      xlarge: { label: '8人桌' }
+    };
+
+    return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
         {state.tables.map((table) => {
           const currentOrder = table.currentOrder 
@@ -212,7 +301,9 @@ const Tables = () => {
             >
               <div className="text-center h-full flex flex-col justify-between">
                 <div>
-                  <div className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">桌 {table.number}</div>
+                  <div className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">
+                    {table.name || `桌 ${table.number}`}
+                  </div>
                   <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                     table.status === 'available' ? 'text-green-600' :
                     table.status === 'occupied' ? 'text-red-600' : 'text-yellow-600'
@@ -224,7 +315,7 @@ const Tables = () => {
                 {table.status === 'occupied' && (
                   <div className="space-y-1 sm:space-y-2 flex-1 flex flex-col justify-center">
                     <div className="text-xs text-gray-600">
-                      {table.customers} 人
+                      {currentOrder?.customers || table.customers || 0} 人 | {tableSizes[table.size]?.label || '4人桌'}
                     </div>
                     {currentOrder && (
                       <>
@@ -279,7 +370,7 @@ const Tables = () => {
                               }}
                               className="btn btn-warning text-xs py-1 w-full"
                             >
-                              客人離開
+                              釋放桌位
                             </button>
                           )}
                         </div>
@@ -287,35 +378,87 @@ const Tables = () => {
                     )}
                   </div>
                 )}
-                
-                {table.status === 'available' && (
-                  <div className="text-xs text-gray-500 mt-auto">
-                    點擊新增訂單
-                  </div>
-                )}
-                
-                {table.status === 'occupied' && currentOrder && currentOrder.status !== 'paid' && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    點擊可加點
-                  </div>
-                )}
               </div>
             </div>
           );
         })}
       </div>
+    );
+  };
 
-      {/* 視覺化點餐介面 */}
+  return (
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">桌位管理</h1>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setViewMode(viewMode === 'layout' ? 'grid' : 'layout')}
+            className="btn bg-gray-500 hover:bg-gray-600 text-white"
+          >
+            {viewMode === 'layout' ? '🔲 網格檢視' : '🎨 佈局檢視'}
+          </button>
+          <button
+            onClick={() => {
+              setSelectedTable(null);
+              setShowVisualOrdering(true);
+            }}
+            className="btn btn-primary"
+          >
+            ➕ 新增訂單
+          </button>
+        </div>
+      </div>
+
+      {/* 桌位狀態統計 */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="card text-center p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-green-600">
+            {state.tables.filter(t => t.status === 'available').length}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-600">空桌</div>
+        </div>
+        <div className="card text-center p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-red-600">
+            {state.tables.filter(t => t.status === 'occupied').length}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-600">用餐中</div>
+        </div>
+        <div className="card text-center p-3 sm:p-4">
+          <div className="text-xl sm:text-2xl font-bold text-yellow-600">
+            {state.tables.filter(t => t.status === 'cleaning').length}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-600">清潔中</div>
+        </div>
+      </div>
+
+      {/* 提示文字 */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p className="text-sm text-blue-800">
+          {viewMode === 'layout' 
+            ? '🎨 佈局檢視模式：顯示真實店內桌位排列。點擊「佈局編輯」可自定義桌位位置和屬性。'
+            : '🔲 網格檢視模式：以網格方式顯示所有桌位資訊，適合快速操作。'
+          }
+        </p>
+      </div>
+
+      {/* 桌位顯示區域 */}
+      {viewMode === 'layout' ? renderLayoutMode() : renderGridMode()}
+
+      {/* 視覺化點餐界面 */}
       {showVisualOrdering && (
         <VisualOrderingInterface
-          onOrderComplete={handleOrderComplete}
+          selectedTable={selectedTable}
           initialTableNumber={selectedTable?.number}
           initialCustomers={selectedTable?.customers || 1}
           isAddOnMode={selectedTable && selectedTable.status === 'occupied' && selectedTable.currentOrder}
           existingOrder={selectedTable && selectedTable.currentOrder 
-            ? state.orders.find(order => order.id === selectedTable.currentOrder)
-            : null
-          }
+            ? state.orders.find(order => order.id === selectedTable.currentOrder) 
+            : null}
+          onClose={() => {
+            setShowVisualOrdering(false);
+            setSelectedTable(null);
+          }}
+          onOrderComplete={handleOrderComplete}
         />
       )}
     </div>

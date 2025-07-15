@@ -8,6 +8,7 @@ import Tables from './components/Tables';
 import History from './components/History';
 import Analytics from './components/Analytics';
 import Settings from './components/Settings';
+import TableLayoutEditor from './components/TableLayoutEditor';
 import './index.css';
 
 function App() {
@@ -29,6 +30,8 @@ function App() {
           return <Analytics />;
         case 'settings':
           return <Settings />;
+        case 'layout':
+          return <TableLayoutEditor />;
         default:
           return <Tables />;
       }

@@ -5,6 +5,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
 
   const menuItems = [
     { id: 'tables', label: '桌位管理', icon: '🪑' },
+    { id: 'layout', label: '佈局編輯', icon: '🎨' },
     { id: 'dashboard', label: '儀表板', icon: '📊' },
     { id: 'menu', label: '菜單管理', icon: '🍽️' },
     { id: 'history', label: '歷史訂單', icon: '📋' },
