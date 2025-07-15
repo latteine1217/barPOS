@@ -2,9 +2,11 @@
 
 這份文件旨在為 AI 開發代理提供本專案的開發指南，使其能夠理解專案的架構、慣例和核心邏輯。
 
+> **開發工具**: 本專案使用 [opencode](https://opencode.ai) + GitHub Copilot 進行 AI 輔助開發
+
 ## 1. 專案總覽
 
-本專案是一個功能類似 iChef 的餐廳銷售時點情報系統 (POS)，使用 Notion 作為後端資料庫。系統完全在前端運行，透過 Vanilla JavaScript、HTML 和 CSS 實現，並透過 Notion API 與資料庫進行互動。
+本專案是一個功能類似 iChef 的餐廳銷售時點情報系統 (POS)，使用 Notion 作為後端資料庫。系統完全在前端運行，透過 React + Vite 實現，並透過 Notion API 與資料庫進行互動。
 
 **核心功能:**
 - **儀表板**: 即時顯示營收、訂單數等關鍵指標。
@@ -22,14 +24,15 @@
 ## 2. 技術架構
 
 - **前端**:
-    - **框架**: React 18 + Vite (取代 Vanilla JavaScript)
+    - **框架**: React 19 + Vite
     - **語言**: JavaScript (JSX), HTML5
     - **樣式**: Tailwind CSS (取代傳統 CSS)
     - **架構**: 單頁應用程式 (SPA)，使用 React 組件和 Context API 進行狀態管理
 - **後端 / 資料庫**:
     - **服務**: Notion API
     - **資料庫**: 一個 Notion Database
-- **相依性**: React, Tailwind CSS, @tailwindcss/forms, Font Awesome 圖示。
+- **相依性**: React, Tailwind CSS, @tailwindcss/forms, ESLint plugins。
+- **開發工具**: opencode + GitHub Copilot (AI 輔助開發)
 
 ## 3. 專案結構
 
@@ -38,12 +41,15 @@
 ├── src/
 │   ├── components/         # React 組件
 │   │   ├── Dashboard.jsx   # 儀表板組件
-│   │   ├── Orders.jsx      # 訂單管理組件
 │   │   ├── Tables.jsx      # 桌位管理組件
 │   │   ├── Menu.jsx        # 菜單管理組件
 │   │   ├── Settings.jsx    # 設定組件
 │   │   ├── Sidebar.jsx     # 側邊欄組件
-│   │   └── NewOrderModal.jsx # 新增訂單模態框
+│   │   ├── Analytics.jsx   # 分析統計組件
+│   │   ├── History.jsx     # 歷史記錄組件
+│   │   ├── ErrorBoundary.jsx # 錯誤邊界組件
+│   │   ├── VisualOrderingInterface.jsx # 視覺化點餐介面
+│   │   └── OrderDetailsModal.jsx # 訂單詳情模態框
 │   ├── contexts/
 │   │   └── AppContext.jsx  # 全域狀態管理
 │   ├── services/
@@ -99,7 +105,7 @@
 
 ## 5. 開發慣例與程式碼風格
 
-- **框架**: 使用 React 18 和 JSX 語法。所有組件都應該是函數式組件並使用 React Hooks。
+- **框架**: 使用 React 19 和 JSX 語法。所有組件都應該是函數式組件並使用 React Hooks。
 - **狀態管理**: 使用 React Context API 進行全域狀態管理，本地狀態使用 useState。
 - **樣式**: 使用 Tailwind CSS utility classes，避免自定義 CSS（除非在 @layer components 中定義）。
 - **命名**:
@@ -122,14 +128,14 @@
 ### 新增訂單流程
 
 1.  使用者點擊「新增訂單」或一個「空桌」。
-2.  `NewOrderModal` 組件被渲染，顯示新增訂單的模態視窗。
+2.  `VisualOrderingInterface` 或其他相關組件被渲染，顯示新增訂單的介面。
 3.  使用者選擇桌號、人數和餐點項目。
 4.  使用者點擊「建立訂單」，`handleSubmit` 函數被呼叫。
 5.  `handleSubmit` 函數會：
     - 呼叫 `actions.addOrder()` 建立新訂單。
     - 呼叫 `actions.updateTable()` 更新桌位狀態為 'occupied'。
     - Context 自動重新計算統計數據並更新所有相關組件。
-    - 關閉模態視窗。
+    - 關閉介面或模態視窗。
 
 ### Notion 同步邏輯
 
@@ -161,7 +167,7 @@
 
 ## 9. Code Style Guidelines
 
-- **Language**: React 18 + JSX, JavaScript ES6+
+- **Language**: React 19 + JSX, JavaScript ES6+
 - **Naming**: 組件用 `PascalCase`, 函數/變數用 `camelCase`, 檔案用 `PascalCase.jsx`
 - **Imports**: ES6 modules, React hooks, Tailwind utilities
 - **Formatting**: 使用 Prettier 格式化，2-space 縮排，分號可選

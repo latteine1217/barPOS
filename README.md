@@ -1,19 +1,20 @@
 # 餐廳管理系統 - Restaurant POS
 
-## 🚀 重大更新：已遷移至 React + Tailwind CSS
+一個功能類似 iChef 的現代化餐廳銷售時點情報系統 (POS)，使用 React 19 + Tailwind CSS 構建，整合 Notion API 作為後端資料庫。
 
-這是一個類似 iChef 功能的現代化餐廳管理系統，使用sst/opencode搭配github copilot進行開發。
-專案架構為 React + Tailwind CSS，提供更好的開發體驗和性能，並整合 Notion API 作為後端資料庫。
+> **開發工具**: 本專案使用 [opencode](https://opencode.ai) + GitHub Copilot 進行 AI 輔助開發
 
 ## 功能特色
 
 ### 🏪 核心功能
 - **儀表板** - 即時顯示營收、訂單數量、用餐人數統計
-- **訂單管理** - 新增、編輯、更新訂單狀態
+- **桌位管理** - 視覺化桌位狀態監控、點擊操作、用餐時間追蹤
+- **視覺化點餐** - iChef 風格的 POS 機界面，格狀菜單選擇
+- **訂單管理** - 新增、加點、更新訂單狀態、結帳功能
 - **菜單管理** - 管理菜品資訊、價格、分類
-- **桌位管理** - 監控桌位狀態、容納人數、視覺化操作
-- **營收報表** - 查看營業數據分析
-- **Notion 整合** - 資料同步至 Notion 資料庫
+- **歷史記錄** - 查看過往訂單和營業數據
+- **分析統計** - 營收分析和經營數據報表
+- **Notion 整合** - 資料自動同步至 Notion 資料庫
 
 ### 🎨 使用者介面
 - 響應式設計，支援手機、平板、電腦
@@ -22,12 +23,13 @@
 - 直觀的操作流程和即時狀態更新
 
 ### 🔧 技術架構
-- **前端**: React 18 + Vite
+- **前端**: React 19 + Vite
 - **樣式**: Tailwind CSS + @tailwindcss/forms
 - **狀態管理**: React Context API + useReducer
 - **後端**: Notion API
 - **資料庫**: Notion Database
-- **圖示**: Font Awesome 6
+- **開發工具**: ESLint + Vite HMR
+- **AI 開發**: opencode + GitHub Copilot
 
 ## 安裝與設定
 
@@ -98,12 +100,15 @@ npm run preview
 ├── src/
 │   ├── components/         # React 組件
 │   │   ├── Dashboard.jsx   # 儀表板
-│   │   ├── Orders.jsx      # 訂單管理
 │   │   ├── Tables.jsx      # 桌位管理
 │   │   ├── Menu.jsx        # 菜單管理
 │   │   ├── Settings.jsx    # 設定
 │   │   ├── Sidebar.jsx     # 側邊欄
-│   │   └── NewOrderModal.jsx # 新增訂單模態框
+│   │   ├── Analytics.jsx   # 分析統計
+│   │   ├── History.jsx     # 歷史記錄
+│   │   ├── ErrorBoundary.jsx # 錯誤邊界
+│   │   ├── VisualOrderingInterface.jsx # 視覺化點餐介面
+│   │   └── OrderDetailsModal.jsx # 訂單詳情模態框
 │   ├── contexts/
 │   │   └── AppContext.jsx  # 全域狀態管理
 │   ├── services/
@@ -115,7 +120,11 @@ npm run preview
 ├── package.json            # 依賴和腳本配置
 ├── vite.config.js          # Vite 配置
 ├── tailwind.config.js      # Tailwind 配置
-└── postcss.config.js       # PostCSS 配置
+├── postcss.config.js       # PostCSS 配置
+├── README.md               # 專案說明
+├── FEATURES_GUIDE.md       # 功能使用指南
+├── NOTION_SETUP.md         # Notion 設定指南
+└── AGENTS.md               # AI 開發代理指南
 ```
 
 ## 使用說明
@@ -126,9 +135,11 @@ npm run preview
 - 查看最近訂單歷史記錄
 
 ### 🧾 訂單管理
-- **新增訂單**: 選擇桌號、人數，從菜單選擇餐點
-- **更新狀態**: 待處理 → 製作中 → 已完成 → 已取消
-- **查看詳情**: 檢視訂單內容、總額和建立時間
+- **視覺化點餐**: 使用 POS 機風格的格狀菜單界面快速點餐
+- **傳統點餐**: 下拉選單式的傳統點餐模式
+- **加點功能**: 為現有桌位添加額外訂單
+- **狀態管理**: 待處理 → 製作中 → 已完成 → 已結帳
+- **訂單詳情**: 檢視完整訂單內容、金額和時間資訊
 
 ### 🍽️ 菜單管理
 - **新增菜品**: 設定名稱、價格、分類
@@ -137,21 +148,25 @@ npm run preview
 - **刪除菜品**: 移除不再供應的菜品
 
 ### 🪑 桌位管理
-- **視覺化桌位圖**: 一目了然的桌位狀態顯示
-- **快速點餐**: 點擊空桌直接開始新增訂單
-- **結帳功能**: 直接在桌位卡片上結帳
-- **狀態監控**: 空桌、用餐中、清潔中狀態管理
+- **視覺化桌位圖**: 12 桌的直觀狀態顯示（空桌/用餐中）
+- **智能操作**: 點擊空桌開始點餐，點擊用餐中桌位查看詳情
+- **用餐時間追蹤**: 自動計算並顯示每桌用餐時長
+- **桌位詳情**: 查看該桌所有訂單、總消費金額和操作選項
+- **快速結帳**: 直接在桌位詳情中完成整桌結帳
 
 ## 遷移日誌
 
-### v2.0.0 - React + Tailwind 重構 (2025)
-- ✅ 完全遷移至 React 18 + Vite
+### v2.0.0 - React 19 重構 (2025)
+- ✅ 完全遷移至 React 19 + Vite
 - ✅ 使用 Tailwind CSS 替代傳統 CSS
 - ✅ 實現 React Context API 狀態管理
 - ✅ 重構所有 UI 組件為現代化 React 組件
+- ✅ 新增視覺化點餐界面 (POS 風格)
+- ✅ 實現智能桌位管理系統
+- ✅ 新增加點和結帳功能
 - ✅ 優化 Notion API 集成服務
 - ✅ 改善響應式設計和用戶體驗
-- ✅ 新增模態框組件化設計
+- ✅ 新增錯誤邊界和異常處理
 - ✅ 優化開發者體驗和代碼維護性
 
 ### 技術改進
@@ -159,6 +174,7 @@ npm run preview
 - **組件化**: 將單體 HTML 拆分為可復用的 React 組件
 - **樣式系統**: 從自定義 CSS 遷移至 Tailwind utility classes
 - **開發工具**: 新增 Vite 快速構建和 HMR 熱重載
+- **用戶體驗**: 實現 iChef 風格的直觀操作界面
 - **代碼結構**: 更清晰的檔案組織和關注點分離
 
 ## API 整合
@@ -181,7 +197,7 @@ const notionService = new NotionService(token, databaseId);
 ## 開發指南
 
 ### 技術棧
-- **React 18**: 現代化 React hooks 和函數式組件
+- **React 19**: 現代化 React hooks 和函數式組件
 - **Vite**: 快速構建工具和開發服務器
 - **Tailwind CSS**: Utility-first CSS 框架
 - **Context API**: React 原生狀態管理
@@ -220,15 +236,39 @@ actions.updateTable(tableId, updates);
 
 ## 疑難排解
 
-### 連接問題
-1. 檢查 Notion Token 是否正確
-2. 確認 Database ID 格式正確
-3. 驗證 Integration 權限設定
+### 常見問題
+1. **無法啟動開發服務器**
+   - 確認已安裝 Node.js 16+
+   - 執行 `npm install` 重新安裝依賴
 
-### 資料同步問題
-1. 確認網路連線狀態
-2. 檢查 Notion API 限制
-3. 查看瀏覽器 Console 錯誤訊息
+2. **Notion 連接失敗**
+   - 檢查 Notion Token 是否正確（應以 `secret_` 開頭）
+   - 確認 Database 已分享給 Integration
+   - 驗證 Database ID 格式正確（32字元）
+
+3. **資料同步問題**
+   - 確認網路連線狀態
+   - 檢查 Notion API 限制
+   - 查看瀏覽器 Console 錯誤訊息
+
+4. **樣式顯示異常**
+   - 確認已正確安裝 Tailwind CSS
+   - 檢查 `postcss.config.js` 配置
+
+### 開發除錯
+```bash
+# 檢查依賴
+npm list
+
+# 清除快取重新安裝
+rm -rf node_modules package-lock.json
+npm install
+
+# 檢查 Vite 配置
+npm run build -- --debug
+```
+
+詳細疑難排解請參考 `TROUBLESHOOTING.md`。
 
 ## 授權
 MIT License
