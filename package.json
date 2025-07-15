@@ -42,6 +42,7 @@
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
+    "@supabase/supabase-js": "^2.51.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

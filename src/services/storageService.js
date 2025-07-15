@@ -11,7 +11,10 @@ export const STORAGE_KEYS = {
   LAYOUT_CONFIG: 'restaurant_pos_layout',
   STATS: 'restaurant_pos_stats',
   NOTION_TOKEN: 'notionToken',
-  DATABASE_ID: 'databaseId'
+  DATABASE_ID: 'databaseId',
+  SUPABASE_URL: 'supabase_url',
+  SUPABASE_KEY: 'supabase_key',
+  THEME: 'restaurant_pos_theme'
 };
 
 // 平台檢測

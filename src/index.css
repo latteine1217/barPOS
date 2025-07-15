@@ -1,9 +1,17 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Mobile optimizations */
 @layer base {
+  /* Use Inter font family for better readability */
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
   /* Prevent zoom on input focus in iOS */
   input[type="color"],
   input[type="date"],
@@ -52,89 +60,272 @@
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
 }
 
-/* Custom components */
+/* Custom components with modern design */
 @layer components {
+  /* Modern button styles with better shadows and animations */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 text-center;
-    min-height: 44px; /* Mobile-friendly touch target */
+    @apply px-8 py-4 rounded-xl font-medium transition-all duration-300 text-center relative overflow-hidden;
+    min-height: 44px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   }
   
   .btn-xs {
-    @apply px-2 py-1 text-xs;
+    @apply px-4 py-2 text-xs rounded-lg;
+    min-height: 32px;
   }
   
   .btn-sm {
-    @apply px-3 py-1.5 text-sm;
+    @apply px-6 py-3 text-sm rounded-lg;
+    min-height: 36px;
   }
   
   .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400;
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+  }
+  
+  .btn-primary:hover {
+    @apply from-blue-700 to-blue-800;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45);
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+    @apply bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-gray-50 dark:bg-gray-700;
   }
   
   .btn-success {
-    @apply bg-green-600 text-white hover:bg-green-700;
+    @apply bg-gradient-to-r from-green-600 to-green-700 text-white;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.35);
+  }
+  
+  .btn-success:hover {
+    @apply from-green-700 to-green-800;
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.45);
   }
   
   .btn-info {
-    @apply bg-blue-500 text-white hover:bg-blue-600;
+    @apply bg-gradient-to-r from-sky-500 to-sky-600 text-white;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+  }
+  
+  .btn-info:hover {
+    @apply from-sky-600 to-sky-700;
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45);
   }
   
   .btn-warning {
-    @apply bg-yellow-500 text-white hover:bg-yellow-600;
+    @apply bg-gradient-to-r from-amber-500 to-amber-600 text-white;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+  }
+  
+  .btn-warning:hover {
+    @apply from-amber-600 to-amber-700;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.45);
   }
   
   .btn-error {
-    @apply bg-red-500 text-white hover:bg-red-600;
+    @apply bg-gradient-to-r from-red-500 to-red-600 text-white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
   }
   
+  .btn-error:hover {
+    @apply from-red-600 to-red-700;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
+  }
+
+  /* Modern glass-morphism card design */
   .card {
-    @apply bg-white rounded-lg shadow-md p-4 sm:p-6;
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/50 transition-all duration-300;
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .card-flat {
+    @apply bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
   
+  /* Navigation with modern styling */
   .nav-item {
-    @apply flex items-center px-3 sm:px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors text-sm sm:text-base;
+    @apply flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 rounded-xl cursor-pointer transition-all duration-200 relative;
+  }
+  
+  .nav-item:hover {
+    @apply bg-gray-100/70 dark:bg-gray-700/70 backdrop-blur-sm;
+    transform: translateX(4px);
   }
   
   .nav-item.active {
-    @apply bg-blue-600 text-white;
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  }
+
+  .nav-item.active::before {
+    content: '';
+    @apply absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full;
   }
   
+  /* Enhanced table cards with better visual hierarchy */
   .table-card {
-    @apply bg-white rounded-lg shadow-md p-3 sm:p-4 cursor-pointer transition-all hover:shadow-lg border-2;
+    @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl cursor-pointer transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
   
+  .table-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .table-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  }
+
+  .table-card:hover::before {
+    @apply opacity-100;
+  }
+  
+  /* Modal with modern design */
   .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
+    @apply fixed inset-0 flex items-center justify-center z-50 p-4;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
   }
   
   .modal-content {
-    @apply bg-white rounded-lg shadow-xl max-w-full max-h-full overflow-auto;
+    @apply bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-full max-h-full overflow-auto border border-white/20 dark:border-gray-700/50;
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
   
+  /* Enhanced form inputs */
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply w-full px-6 py-4 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 transition-all duration-200;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .form-input:focus {
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
   }
   
   .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-2;
+    @apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2;
   }
   
-  /* 觸控友善的按鈕 */
+  /* Touch-friendly elements */
   .btn-touch {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
   
+  /* Status indicators with better visual design */
   .table-available {
-    @apply border-l-4 border-green-500;
+    @apply border-l-4 border-emerald-500 dark:border-emerald-400;
+  }
+  
+  .table-available::after {
+    content: '';
+    @apply absolute top-2 right-2 w-3 h-3 bg-emerald-500 rounded-full;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
   }
   
   .table-occupied {
-    @apply border-l-4 border-red-500;
+    @apply border-l-4 border-red-500 dark:border-red-400;
+  }
+
+  .table-occupied::after {
+    content: '';
+    @apply absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  }
+
+  /* Status badges with glow effect */
+  .status-badge {
+    @apply inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold;
+  }
+
+  .status-pending {
+    @apply bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  }
+
+  .status-preparing {
+    @apply bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .status-completed {
+    @apply bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .status-paid {
+    @apply bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300;
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+  }
+
+  /* Floating action button */
+  .fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 z-50;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5);
   }
 }

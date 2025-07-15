@@ -71,9 +71,14 @@ const getInitialState = async () => {
     tables,
     layoutConfig,
     stats,
+    theme: await loadFromStorage(STORAGE_KEYS.THEME, 'light'),
     notionConfig: {
       token: await storageService.getItem(STORAGE_KEYS.NOTION_TOKEN, ''),
       databaseId: await storageService.getItem(STORAGE_KEYS.DATABASE_ID, '')
+    },
+    supabaseConfig: {
+      url: await storageService.getItem(STORAGE_KEYS.SUPABASE_URL, 'https://nexvfdomttzwfrwwprko.supabase.co'),
+      key: await storageService.getItem(STORAGE_KEYS.SUPABASE_KEY, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leHZmZG9tdHR6d2Zyd3dwcmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTkzNDksImV4cCI6MjA2ODE3NTM0OX0.9Nn9HDXkIgJtwIm5la4lUBqtwNRCUiUOctQbV1xqMIg')
     }
   };
 };
@@ -119,9 +124,14 @@ const initialState = {
     todayOrders: 0,
     activeCustomers: 0
   },
+  theme: 'light',
   notionConfig: {
     token: '',
     databaseId: ''
+  },
+  supabaseConfig: {
+    url: 'https://nexvfdomttzwfrwwprko.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leHZmZG9tdHR6d2Zyd3dwcmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTkzNDksImV4cCI6MjA2ODE3NTM0OX0.9Nn9HDXkIgJtwIm5la4lUBqtwNRCUiUOctQbV1xqMIg'
   }
 };
 
@@ -137,12 +147,16 @@ const actionTypes = {
   DELETE_MENU_ITEM: 'DELETE_MENU_ITEM',
   UPDATE_STATS: 'UPDATE_STATS',
   UPDATE_NOTION_CONFIG: 'UPDATE_NOTION_CONFIG',
+  UPDATE_SUPABASE_CONFIG: 'UPDATE_SUPABASE_CONFIG',
   SET_ORDERS: 'SET_ORDERS',
+  SET_TABLES: 'SET_TABLES',
+  SET_MENU_ITEMS: 'SET_MENU_ITEMS',
   UPDATE_TABLE_LAYOUT: 'UPDATE_TABLE_LAYOUT',
   SAVE_LAYOUT_CONFIG: 'SAVE_LAYOUT_CONFIG',
   ADD_TABLE: 'ADD_TABLE',
   DELETE_TABLE: 'DELETE_TABLE',
-  CLEAR_ALL_DATA: 'CLEAR_ALL_DATA'
+  CLEAR_ALL_DATA: 'CLEAR_ALL_DATA',
+  TOGGLE_THEME: 'TOGGLE_THEME'
 };
 
 // Reducer
@@ -289,6 +303,12 @@ function appReducer(state, action) {
           notionConfig: { ...state.notionConfig, ...action.payload }
         };
 
+      case actionTypes.UPDATE_SUPABASE_CONFIG:
+        return {
+          ...state,
+          supabaseConfig: { ...state.supabaseConfig, ...action.payload }
+        };
+
       case actionTypes.SET_ORDERS:
         if (!Array.isArray(action.payload)) {
           console.error('Invalid set orders payload - must be array:', action.payload);
@@ -298,6 +318,28 @@ function appReducer(state, action) {
         return {
           ...state,
           orders: action.payload
+        };
+
+      case actionTypes.SET_TABLES:
+        if (!Array.isArray(action.payload)) {
+          console.error('Invalid set tables payload - must be array:', action.payload);
+          return state;
+        }
+        
+        return {
+          ...state,
+          tables: action.payload
+        };
+
+      case actionTypes.SET_MENU_ITEMS:
+        if (!Array.isArray(action.payload)) {
+          console.error('Invalid set menu items payload - must be array:', action.payload);
+          return state;
+        }
+        
+        return {
+          ...state,
+          menuItems: action.payload
         };
 
       case actionTypes.UPDATE_TABLE_LAYOUT:
@@ -374,6 +416,15 @@ function appReducer(state, action) {
           notionConfig: state.notionConfig // 保留 Notion 設定
         };
 
+      case actionTypes.TOGGLE_THEME:
+        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+        // 保存主題到儲存
+        saveToStorage(STORAGE_KEYS.THEME, newTheme);
+        return {
+          ...state,
+          theme: newTheme
+        };
+
       default:
         console.warn('Unknown action type:', action.type);
         return state;
@@ -421,6 +472,8 @@ export function AppProvider({ children }) {
             dispatch({ type: actionTypes.UPDATE_STATS, payload: value });
           } else if (key === 'notionConfig') {
             dispatch({ type: actionTypes.UPDATE_NOTION_CONFIG, payload: value });
+          } else if (key === 'supabaseConfig') {
+            dispatch({ type: actionTypes.UPDATE_SUPABASE_CONFIG, payload: value });
           }
         });
         
@@ -533,14 +586,24 @@ export function AppProvider({ children }) {
     updateMenuItem: (id, updates) => dispatch({ type: actionTypes.UPDATE_MENU_ITEM, payload: { id, updates } }),
     deleteMenuItem: (id) => dispatch({ type: actionTypes.DELETE_MENU_ITEM, payload: id }),
     updateNotionConfig: (config) => dispatch({ type: actionTypes.UPDATE_NOTION_CONFIG, payload: config }),
+    updateSupabaseConfig: async (config) => {
+      dispatch({ type: actionTypes.UPDATE_SUPABASE_CONFIG, payload: config });
+      // 同時保存到跨平台儲存
+      await saveToStorage(STORAGE_KEYS.SUPABASE_URL, config.url);
+      await saveToStorage(STORAGE_KEYS.SUPABASE_KEY, config.key);
+    },
     setOrders: (orders) => dispatch({ type: actionTypes.SET_ORDERS, payload: orders }),
+    setTables: (tables) => dispatch({ type: actionTypes.SET_TABLES, payload: tables }),
+    setMenuItems: (menuItems) => dispatch({ type: actionTypes.SET_MENU_ITEMS, payload: menuItems }),
     // 桌位佈局相關 actions
     updateTableLayout: (id, layoutData) => dispatch({ type: actionTypes.UPDATE_TABLE_LAYOUT, payload: { id, layoutData } }),
     saveLayoutConfig: (config) => dispatch({ type: actionTypes.SAVE_LAYOUT_CONFIG, payload: config }),
     addTable: (tableData) => dispatch({ type: actionTypes.ADD_TABLE, payload: tableData }),
     deleteTable: (id) => dispatch({ type: actionTypes.DELETE_TABLE, payload: id }),
     // 資料管理
-    clearAllData: () => dispatch({ type: actionTypes.CLEAR_ALL_DATA })
+    clearAllData: () => dispatch({ type: actionTypes.CLEAR_ALL_DATA }),
+    // 主題管理
+    toggleTheme: () => dispatch({ type: actionTypes.TOGGLE_THEME })
   };
 
   return (

@@ -220,7 +220,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
   if (error) {
     return (
       <div className="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+        <div className="bg-white rounded-lg p-8 max-w-md mx-4">
           <h2 className="text-xl font-bold text-red-600 mb-4">系統錯誤</h2>
           <p className="text-gray-700 mb-4">{error}</p>
           <div className="flex gap-3">
@@ -274,7 +274,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                   selectedCategory === category
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-700 dark:bg-gray-600 text-gray-300 dark:text-gray-200 hover:bg-gray-600 dark:hover:bg-gray-500'
                 }`}
               >
                 {getCategoryDisplayName(category)}
@@ -288,15 +288,15 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               <button
                 key={item.id}
                 onClick={() => addToOrder(item)}
-                className="bg-white rounded-lg p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-left"
+                className="bg-white dark:bg-gray-800 rounded-lg p-5 sm:p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-left"
               >
-                <div className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">
+                <div className="font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 text-xs sm:text-sm">
                   {item.name}
                 </div>
-                <div className="text-green-600 font-bold text-sm sm:text-lg">
+                <div className="text-green-600 dark:text-green-400 font-bold text-sm sm:text-lg">
                   ${item.price}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {item.category}
                 </div>
               </button>
@@ -306,8 +306,8 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
       </div>
 
       {/* 右側：訂單詳情與控制 */}
-      <div className="w-full lg:w-96 bg-white flex flex-col max-h-[50vh] lg:max-h-full">
-        <div className="p-4 sm:p-6 border-b flex-1 overflow-y-auto">
+      <div className="w-full lg:w-96 bg-white dark:bg-gray-800 flex flex-col max-h-[50vh] lg:max-h-full">
+        <div className="p-6 sm:p-8 border-b border-gray-200 dark:border-gray-700 flex-1 overflow-y-auto">
           {/* 模式切換按鈕 */}
           {isAddOnMode && existingOrder && (
             <div className="flex gap-2 mb-4">
@@ -316,7 +316,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                 className={`flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
                   viewMode === 'view'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 查看訂單
@@ -326,7 +326,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                 className={`flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg font-medium transition-colors ${
                   viewMode === 'add'
                     ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 繼續加點
@@ -334,27 +334,27 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
             </div>
           )}
 
-          <h3 className="text-lg sm:text-xl font-bold mb-4">
+          <h3 className="text-lg sm:text-xl font-bold mb-4 text-gray-900 dark:text-white">
             {viewMode === 'view' ? '當前訂單詳情' :
              viewMode === 'add' ? '新增餐點' : '新增訂單'}
           </h3>
           
           {/* 顯示現有訂單資訊（查看模式或加點模式） */}
           {existingOrder && (viewMode === 'view' || viewMode === 'add') && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold text-blue-800 mb-2">
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
                 {viewMode === 'view' ? '完整訂單' : '現有訂單'}
               </h4>
-              <div className="text-sm text-blue-700 mb-3">
+              <div className="text-sm text-blue-700 dark:text-blue-300 mb-3">
                 <p>訂單編號：#{existingOrder.id}</p>
                 <p>桌號：{selectedTable?.name || `桌 ${existingOrder.tableNumber}`}</p>
                 <p>人數：{existingOrder.customers || initialCustomers} 人</p>
                 <p>狀態：
                   <span className={`px-2 py-1 rounded-full text-xs ml-1 ${
-                    existingOrder.status === 'paid' ? 'bg-purple-100 text-purple-600' :
-                    existingOrder.status === 'completed' ? 'bg-green-100 text-green-600' :
-                    existingOrder.status === 'preparing' ? 'bg-blue-100 text-blue-600' :
-                    'bg-yellow-100 text-yellow-600'
+                    existingOrder.status === 'paid' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' :
+                    existingOrder.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300' :
+                    existingOrder.status === 'preparing' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300' :
+                    'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-300'
                   }`}>
                     {existingOrder.status === 'paid' ? '已結帳' :
                      existingOrder.status === 'completed' ? '已完成' :
@@ -363,24 +363,23 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                 </p>
                 <p className="font-semibold">訂單金額：${existingOrder.total}</p>
                 {existingOrder.notes && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium text-blue-800">備註：</p>
-                    <p className="text-sm text-blue-700 bg-blue-50 p-2 rounded border">
-                      {existingOrder.notes}
-                    </p>
-                  </div>
-                )}
+                    <div className="mt-2">
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-300">備註：</p>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/50 p-2 rounded border border-blue-100 dark:border-blue-700">
+                        {existingOrder.notes}
+                      </p>
+                    </div>                )}
               </div>
               
               {viewMode === 'view' && (
                 <div className="space-y-2">
-                  <h5 className="font-medium text-blue-800">餐點明細：</h5>
+                  <h5 className="font-medium text-blue-800 dark:text-blue-300">餐點明細：</h5>
                   {existingOrder.items?.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
+                    <div key={index} className="flex justify-between text-sm text-blue-700 dark:text-blue-300">
                       <span>{item.name} x{item.quantity}</span>
                       <span>${item.price * item.quantity}</span>
                     </div>
-                  )) || <p className="text-sm text-gray-500">無餐點資訊</p>}
+                  )) || <p className="text-sm text-gray-500 dark:text-gray-400">無餐點資訊</p>}
                 </div>
               )}
             </div>
@@ -392,11 +391,11 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               {!isAddOnMode && !initialTableNumber && (
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">桌號</label>
+                    <label className="form-label">桌號</label>
                     <select
                       value={orderDetails.tableNumber}
                       onChange={(e) => setOrderDetails({ ...orderDetails, tableNumber: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="form-input text-sm"
                       required
                     >
                       <option value="">選擇桌號</option>
@@ -409,7 +408,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                          ))}                    </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">人數</label>
+                    <label className="form-label">人數</label>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -417,11 +416,11 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                           ...orderDetails, 
                           customers: Math.max(1, orderDetails.customers - 1) 
                         })}
-                        className="w-8 h-8 bg-gray-200 rounded text-sm hover:bg-gray-300 flex items-center justify-center"
+                        className="w-8 h-8 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center"
                       >
                         −
                       </button>
-                      <span className="w-12 text-center text-sm font-medium">
+                      <span className="w-12 text-center text-sm font-medium text-gray-900 dark:text-white">
                         {orderDetails.customers} 人
                       </span>
                       <button
@@ -430,7 +429,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                           ...orderDetails, 
                           customers: Math.min(20, orderDetails.customers + 1) 
                         })}
-                        className="w-8 h-8 bg-gray-200 rounded text-sm hover:bg-gray-300 flex items-center justify-center"
+                        className="w-8 h-8 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center"
                       >
                         +
                       </button>
@@ -440,15 +439,15 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               )}
               
               {(isAddOnMode || initialTableNumber) && (
-                <div className="mb-6 p-3 bg-gray-100 rounded-lg">
+                <div className="mb-6 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-gray-700">
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
                         <strong>桌號：</strong>{selectedTable?.name || `桌 ${initialTableNumber}`}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">人數</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">人數</label>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -457,11 +456,11 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                             customers: Math.max(1, orderDetails.customers - 1) 
                           })}
                           disabled={isAddOnMode}
-                          className="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300 flex items-center justify-center disabled:opacity-50"
+                          className="w-6 h-6 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-500 flex items-center justify-center disabled:opacity-50"
                         >
                           −
                         </button>
-                        <span className="w-10 text-center text-sm">
+                        <span className="w-10 text-center text-sm text-gray-900 dark:text-white">
                           {orderDetails.customers} 人
                         </span>
                         <button
@@ -471,7 +470,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                             customers: Math.min(20, orderDetails.customers + 1) 
                           })}
                           disabled={isAddOnMode}
-                          className="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300 flex items-center justify-center disabled:opacity-50"
+                          className="w-6 h-6 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-500 flex items-center justify-center disabled:opacity-50"
                         >
                           +
                         </button>
@@ -484,12 +483,12 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               {/* 備註欄位 */}
               {!isAddOnMode && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">備註 (可選)</label>
+                  <label className="form-label">備註 (可選)</label>
                   <textarea
                     value={orderDetails.notes}
                     onChange={(e) => setOrderDetails({ ...orderDetails, notes: e.target.value })}
                     placeholder="客人的特殊需求、口味調整等..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none"
+                    className="form-input text-sm resize-none"
                     rows="3"
                   />
                 </div>
@@ -500,14 +499,14 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
           {/* 訂單項目或狀態管理 */}
           {viewMode === 'view' && existingOrder ? (
             <div className="space-y-4">
-              <h4 className="font-semibold">訂單管理</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">訂單管理</h4>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleStatusChange('pending')}
                   disabled={existingOrder.status === 'pending'}
                   className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                     existingOrder.status === 'pending'
-                      ? 'bg-gray-300 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400'
                       : 'bg-yellow-500 text-white hover:bg-yellow-600'
                   }`}
                 >
@@ -518,7 +517,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                   disabled={existingOrder.status === 'preparing'}
                   className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                     existingOrder.status === 'preparing'
-                      ? 'bg-gray-300 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400'
                       : 'bg-blue-500 text-white hover:bg-blue-600'
                   }`}
                 >
@@ -529,7 +528,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                   disabled={existingOrder.status === 'completed'}
                   className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                     existingOrder.status === 'completed'
-                      ? 'bg-gray-300 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400'
                       : 'bg-green-500 text-white hover:bg-green-600'
                   }`}
                 >
@@ -540,7 +539,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                   disabled={existingOrder.status === 'paid'}
                   className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                     existingOrder.status === 'paid'
-                      ? 'bg-gray-300 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400'
                       : 'bg-purple-500 text-white hover:bg-purple-600'
                   }`}
                 >
@@ -557,33 +556,33 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
           ) : (
             <div className="space-y-3">
               {orderItems.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                   {viewMode === 'add' ? '尚未選擇要加點的餐點' : '尚未選擇任何餐點'}
                 </p>
               ) : (
                 orderItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{item.name}</div>
-                      <div className="text-gray-600 text-xs">${item.price} × {item.quantity}</div>
+                      <div className="font-medium text-sm text-gray-900 dark:text-white">{item.name}</div>
+                      <div className="text-gray-600 dark:text-gray-400 text-xs">${item.price} × {item.quantity}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => updateQuantity(index, item.quantity - 1)}
-                        className="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300"
+                        className="w-6 h-6 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-500"
                       >
                         −
                       </button>
-                      <span className="w-8 text-center text-sm">{item.quantity}</span>
+                      <span className="w-8 text-center text-sm text-gray-900 dark:text-white">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(index, item.quantity + 1)}
-                        className="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300"
+                        className="w-6 h-6 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-500"
                       >
                         +
                       </button>
                       <button
                         onClick={() => removeFromOrder(index)}
-                        className="ml-2 text-red-600 hover:text-red-800 text-xs"
+                        className="ml-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs"
                       >
                         🗑️
                       </button>
@@ -596,20 +595,20 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
         </div>
 
         {/* 底部：總計和按鈕 */}
-        <div className="p-4 sm:p-6 border-t bg-gray-50">
+        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           {viewMode !== 'view' && (
             <>
               <div className="flex justify-between items-center mb-3 sm:mb-4">
-                <span className="text-base sm:text-lg font-semibold">
+                <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                   {viewMode === 'add' ? '新增金額' : '總計'}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-green-600">${calculateTotal()}</span>
+                <span className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">${calculateTotal()}</span>
               </div>
               
               {viewMode === 'add' && existingOrder && (
-                <div className="flex justify-between items-center mb-3 sm:mb-4 p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium text-blue-800">最終總計</span>
-                  <span className="text-base sm:text-lg font-bold text-blue-800">
+                <div className="flex justify-between items-center mb-3 sm:mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-300">最終總計</span>
+                  <span className="text-base sm:text-lg font-bold text-blue-800 dark:text-blue-300">
                     ${existingOrder.total + calculateTotal()}
                   </span>
                 </div>

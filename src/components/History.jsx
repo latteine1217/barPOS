@@ -16,12 +16,12 @@ const History = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'preparing': return 'text-blue-600 bg-blue-100';
-      case 'completed': return 'text-green-600 bg-green-100';
-      case 'paid': return 'text-purple-600 bg-purple-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'pending': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+      case 'preparing': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+      case 'completed': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+      case 'paid': return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
+      case 'cancelled': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50';
     }
   };
 
@@ -122,21 +122,21 @@ const History = () => {
   const uniqueTableNumbers = [...new Set(state.orders.map(order => order.tableNumber))].sort((a, b) => a - b);
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">歷史訂單</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">歷史訂單</h1>
       </div>
 
       {/* 過濾器 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">篩選條件</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">篩選條件</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">訂單狀態</label>
+            <label className="form-label">訂單狀態</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="form-input text-sm"
             >
               <option value="all">全部狀態</option>
               <option value="pending">待處理</option>
@@ -148,11 +148,11 @@ const History = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">時間範圍</label>
+            <label className="form-label">時間範圍</label>
             <select
               value={filters.dateRange}
               onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="form-input text-sm"
             >
               <option value="all">全部時間</option>
               <option value="today">今天</option>
@@ -164,11 +164,11 @@ const History = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">桌號</label>
+            <label className="form-label">桌號</label>
             <select
               value={filters.tableNumber}
               onChange={(e) => setFilters({ ...filters, tableNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="form-input text-sm"
             >
               <option value="all">全部桌號</option>
               {uniqueTableNumbers.map(tableNum => (
@@ -178,7 +178,7 @@ const History = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">操作</label>
+            <label className="form-label">操作</label>
             <button
               onClick={() => setFilters({
                 status: 'all',
@@ -187,7 +187,7 @@ const History = () => {
                 startDate: '',
                 endDate: ''
               })}
-              className="w-full px-3 py-2 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600"
+              className="btn btn-secondary w-full text-sm"
             >
               重置篩選
             </button>
@@ -196,23 +196,23 @@ const History = () => {
 
         {/* 自定義日期範圍 */}
         {filters.dateRange === 'custom' && (
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-6 mt-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">開始日期</label>
+              <label className="form-label">開始日期</label>
               <input
                 type="date"
                 value={filters.startDate}
                 onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="form-input text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">結束日期</label>
+              <label className="form-label">結束日期</label>
               <input
                 type="date"
                 value={filters.endDate}
                 onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="form-input text-sm"
               />
             </div>
           </div>
@@ -220,98 +220,98 @@ const History = () => {
       </div>
 
       {/* 統計概覽 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-blue-600">{statistics.totalOrders}</div>
-          <div className="text-sm text-gray-600">總訂單數</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="card text-center p-6 sm:p-8">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{statistics.totalOrders}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">總訂單數</div>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-green-600">${statistics.totalRevenue}</div>
-          <div className="text-sm text-gray-600">總營收</div>
+        <div className="card text-center p-6 sm:p-8">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">${statistics.totalRevenue}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">總營收</div>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-purple-600">${Math.round(statistics.avgOrderValue)}</div>
-          <div className="text-sm text-gray-600">平均客單價</div>
+        <div className="card text-center p-6 sm:p-8">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">${Math.round(statistics.avgOrderValue)}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">平均客單價</div>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-orange-600">{statistics.statusCounts.paid || 0}</div>
-          <div className="text-sm text-gray-600">已結帳訂單</div>
+        <div className="card text-center p-6 sm:p-8">
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{statistics.statusCounts.paid || 0}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">已結帳訂單</div>
         </div>
       </div>
 
       {/* 訂單列表 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
           訂單列表 ({filteredOrders.length} 筆)
         </h2>
         {filteredOrders.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     訂單編號
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     桌號
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     餐點
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     總額
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     狀態
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     建立時間
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     操作
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredOrders.map((order) => (
                   <tr 
                     key={order.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
                     onClick={() => handleOrderClick(order)}
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-6 py-5 text-sm font-medium text-gray-900 dark:text-white">
                       #{order.id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
+                    <td className="px-6 py-5 text-sm text-gray-900 dark:text-gray-300">
                       桌 {order.tableNumber}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
+                    <td className="px-6 py-5 text-sm text-gray-900 dark:text-gray-300">
                       <div className="max-w-xs">
                         {order.items?.map((item, index) => (
-                          <div key={index} className="text-xs">
+                          <div key={index} className="text-xs text-gray-600 dark:text-gray-400">
                             {item.name} x{item.quantity}
                           </div>
                         )) || '無餐點資訊'}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm font-semibold text-gray-900">
+                    <td className="px-6 py-5 text-sm font-semibold text-gray-900 dark:text-white">
                       ${order.total}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                    <td className="px-6 py-5 text-sm">
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusText(order.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(order.createdAt).toLocaleString('zh-TW')}
                     </td>
-                    <td className="px-4 py-4 text-sm">
+                    <td className="px-6 py-5 text-sm">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOrderClick(order);
                         }}
-                        className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                        className="btn btn-sm btn-primary"
                       >
                         詳情
                       </button>
@@ -322,7 +322,7 @@ const History = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-gray-500 dark:text-gray-400 text-center py-12">
             {state.orders.length === 0 ? '暫無訂單紀錄' : '無符合條件的訂單'}
           </p>
         )}

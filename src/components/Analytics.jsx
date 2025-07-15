@@ -147,29 +147,29 @@ const Analytics = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'preparing': return 'text-blue-600 bg-blue-100';
-      case 'completed': return 'text-green-600 bg-green-100';
-      case 'paid': return 'text-purple-600 bg-purple-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'pending': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+      case 'preparing': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+      case 'completed': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+      case 'paid': return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
+      case 'cancelled': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50';
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="p-6 space-y-8">
       {/* 標題和時間篩選 */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">營運分析</h1>
-        <div className="flex flex-wrap gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">營運分析</h1>
+        <div className="flex flex-wrap gap-3">
           {['today', 'week', 'month', 'all'].map(period => (
             <button
               key={period}
               onClick={() => setSelectedPeriod(period)}
-              className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+              className={`px-5 py-3 rounded-xl font-medium transition-all text-sm sm:text-base ${
                 selectedPeriod === period
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               {getPeriodText(period)}
@@ -179,38 +179,38 @@ const Analytics = () => {
       </div>
 
       {/* 主要統計卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="card text-center p-8">
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-3">
             {analyticsData.totalOrders}
           </div>
-          <div className="text-gray-600">總訂單數</div>
+          <div className="text-gray-600 dark:text-gray-400">總訂單數</div>
         </div>
-        <div className="card text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">
+        <div className="card text-center p-8">
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-3">
             ${analyticsData.totalRevenue.toLocaleString()}
           </div>
-          <div className="text-gray-600">總營收</div>
+          <div className="text-gray-600 dark:text-gray-400">總營收</div>
         </div>
-        <div className="card text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-2">
+        <div className="card text-center p-8">
+          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-3">
             ${Math.round(analyticsData.averageOrderValue)}
           </div>
-          <div className="text-gray-600">平均客單價</div>
+          <div className="text-gray-600 dark:text-gray-400">平均客單價</div>
         </div>
       </div>
 
       {/* 訂單狀態分析 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">訂單狀態分析</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">訂單狀態分析</h2>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
           {['pending', 'preparing', 'completed', 'paid', 'cancelled'].map(status => (
-            <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className={`text-2xl font-bold mb-2 ${getStatusColor(status).split(' ')[0]}`}>
+            <div key={status} className="text-center p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div className={`text-2xl font-bold mb-3 ${getStatusColor(status).split(' ')[0]} ${getStatusColor(status).split(' ')[2]}`}>
                 {analyticsData.ordersByStatus[status] || 0}
               </div>
-              <div className="text-sm text-gray-600 mb-2">{getStatusText(status)}</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{getStatusText(status)}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500">
                 ${(analyticsData.ordersByStatus[`${status}_revenue`] || 0).toLocaleString()}
               </div>
             </div>
@@ -219,29 +219,29 @@ const Analytics = () => {
       </div>
 
       {/* 桌位營收排行 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">桌位營收排行</h2>
-          <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="card p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">桌位營收排行</h2>
+          <div className="space-y-4">
             {analyticsData.ordersByTable.slice(0, 10).map((table, index) => (
-              <div key={table.tableNumber} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              <div key={table.tableNumber} className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    index === 1 ? 'bg-gray-300 text-gray-700' :
+                    index === 1 ? 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300' :
                     index === 2 ? 'bg-orange-300 text-orange-900' :
-                    'bg-blue-100 text-blue-700'
+                    'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400'
                   }`}>
                     {index + 1}
                   </div>
                   <div>
-                    <div className="font-medium">桌 {table.tableNumber}</div>
-                    <div className="text-sm text-gray-600">{table.orderCount} 筆訂單</div>
+                    <div className="font-medium text-gray-900 dark:text-white">桌 {table.tableNumber}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{table.orderCount} 筆訂單</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-green-600">${table.revenue.toLocaleString()}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-bold text-green-600 dark:text-green-400">${table.revenue.toLocaleString()}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-500">
                     平均 ${Math.round(table.revenue / table.orderCount)}
                   </div>
                 </div>
@@ -251,28 +251,28 @@ const Analytics = () => {
         </div>
 
         {/* 熱門餐點排行 */}
-        <div className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">熱門餐點排行</h2>
-          <div className="space-y-3">
+        <div className="card p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">熱門餐點排行</h2>
+          <div className="space-y-4">
             {analyticsData.topItems.slice(0, 8).map((item, index) => (
-              <div key={item.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              <div key={item.name} className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-red-400 text-red-900' :
                     index === 1 ? 'bg-orange-300 text-orange-900' :
                     index === 2 ? 'bg-yellow-300 text-yellow-900' :
-                    'bg-green-100 text-green-700'
+                    'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
                   }`}>
                     {index + 1}
                   </div>
                   <div>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-600">單價 ${item.price}</div>
+                    <div className="font-medium text-gray-900 dark:text-white">{item.name}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">單價 ${item.price}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-blue-600">{item.quantity} 份</div>
-                  <div className="text-sm text-gray-500">${item.revenue.toLocaleString()}</div>
+                  <div className="font-bold text-blue-600 dark:text-blue-400">{item.quantity} 份</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-500">${item.revenue.toLocaleString()}</div>
                 </div>
               </div>
             ))}
@@ -281,52 +281,52 @@ const Analytics = () => {
       </div>
 
       {/* 最近訂單 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">最近訂單</h2>
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">最近訂單</h2>
         {analyticsData.recentOrders.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     訂單編號
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     桌號
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     總額
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     狀態
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     建立時間
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {analyticsData.recentOrders.map((order) => (
                   <tr 
                     key={order.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
                     onClick={() => handleOrderClick(order)}
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-6 py-5 text-sm font-medium text-gray-900 dark:text-white">
                       #{order.id}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
+                    <td className="px-6 py-5 text-sm text-gray-900 dark:text-gray-300">
                       桌 {order.tableNumber}
                     </td>
-                    <td className="px-4 py-4 text-sm font-semibold text-gray-900">
+                    <td className="px-6 py-5 text-sm font-semibold text-gray-900 dark:text-white">
                       ${order.total}
                     </td>
-                    <td className="px-4 py-4 text-sm">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                    <td className="px-6 py-5 text-sm">
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusText(order.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(order.createdAt).toLocaleString('zh-TW')}
                     </td>
                   </tr>
@@ -335,7 +335,7 @@ const Analytics = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">暫無訂單資料</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-12">暫無訂單資料</p>
         )}
       </div>
 

@@ -6,6 +6,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // 啟用基於 class 的深色模式
   theme: {
     extend: {
       colors: {

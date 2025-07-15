@@ -1,30 +1,35 @@
 import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
-import NotionService from '../services/notionService';
+import SupabaseService from '../services/supabaseService';
 
 const Settings = () => {
   const { state, actions } = useApp();
-  const [config, setConfig] = useState({
-    token: state.notionConfig.token,
-    databaseId: state.notionConfig.databaseId
+  
+  // Supabase 設定
+  const [supabaseConfig, setSupabaseConfig] = useState({
+    url: state.supabaseConfig?.url || 'https://nexvfdomttzwfrwwprko.supabase.co',
+    key: state.supabaseConfig?.key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leHZmZG9tdHR6d2Zyd3dwcmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTkzNDksImV4cCI6MjA2ODE3NTM0OX0.9Nn9HDXkIgJtwIm5la4lUBqtwNRCUiUOctQbV1xqMIg'
   });
+  
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
-  const handleSave = () => {
-    // 保存到localStorage
-    localStorage.setItem('notionToken', config.token);
-    localStorage.setItem('databaseId', config.databaseId);
-    
-    // 更新應用狀態
-    actions.updateNotionConfig(config);
-    
-    alert('設定已保存！');
+  // === Supabase 相關函數 ===
+  
+  const handleSupabaseSave = async () => {
+    try {
+      // 更新應用狀態
+      await actions.updateSupabaseConfig(supabaseConfig);
+      alert('Supabase 設定已保存！');
+    } catch (error) {
+      alert('保存失敗: ' + error.message);
+    }
   };
 
-  const handleTest = async () => {
-    if (!config.token || !config.databaseId) {
-      setTestResult({ success: false, message: '請填寫Token和Database ID' });
+  const handleSupabaseTest = async () => {
+    if (!supabaseConfig.url || !supabaseConfig.key) {
+      setTestResult({ success: false, message: '請填寫 Project URL 和 API Key' });
       return;
     }
 
@@ -32,13 +37,13 @@ const Settings = () => {
     setTestResult(null);
 
     try {
-      const notionService = new NotionService(config.token, config.databaseId);
-      const result = await notionService.testConnection();
+      const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
+      const result = await supabaseService.testConnection();
       
       if (result.success) {
         setTestResult({ 
           success: true, 
-          message: '連接成功！資料庫名稱: ' + result.data.title[0]?.plain_text || '未命名'
+          message: '連接成功！' + result.message
         });
       } else {
         setTestResult({ 
@@ -56,80 +61,186 @@ const Settings = () => {
     }
   };
 
-  const syncFromNotion = async () => {
-    if (!config.token || !config.databaseId) {
-      alert('請先設定並測試Notion連接');
+  const syncToSupabase = async () => {
+    if (!supabaseConfig.url || !supabaseConfig.key) {
+      alert('請先設定並測試 Supabase 連接');
       return;
     }
 
+    setSyncing(true);
     try {
-      const notionService = new NotionService(config.token, config.databaseId);
-      const result = await notionService.fetchOrders();
+      console.log('開始同步到 Supabase...');
+      const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
+      
+      // 準備本地資料
+      const localData = {
+        orders: state.orders,
+        tables: state.tables,
+        menuItems: state.menuItems
+      };
+
+      console.log('本地資料:', localData);
+      
+      // 執行同步
+      const result = await supabaseService.syncLocalData(localData);
       
       if (result.success) {
-        actions.setOrders(result.data);
-        alert(`成功同步 ${result.data.length} 筆訂單`);
+        const { results } = result;
+        const totalSuccess = results.orders.success + results.tables.success + results.menuItems.success;
+        const totalFailed = results.orders.failed + results.tables.failed + results.menuItems.failed;
+        
+        let message = `同步完成！\n成功: ${totalSuccess} 項`;
+        
+        if (totalFailed > 0) {
+          message += `\n失敗: ${totalFailed} 項`;
+          
+          // 顯示詳細錯誤
+          const allErrors = [
+            ...results.orders.errors,
+            ...results.tables.errors,
+            ...results.menuItems.errors
+          ];
+          
+          if (allErrors.length > 0) {
+            console.error('同步錯誤詳情:', allErrors);
+            message += '\n\n錯誤詳情:\n' + allErrors.slice(0, 5).join('\n');
+            if (allErrors.length > 5) {
+              message += `\n...還有 ${allErrors.length - 5} 個錯誤，請查看控制台`;
+            }
+          }
+        }
+        
+        alert(message);
       } else {
-        alert('同步失敗: ' + result.error);
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('同步錯誤:', error);
+      alert('同步錯誤: ' + error.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const syncFromSupabase = async () => {
+    if (!supabaseConfig.url || !supabaseConfig.key) {
+      alert('請先設定並測試 Supabase 連接');
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
+      
+      // 從 Supabase 獲取資料
+      const [ordersResult, tablesResult, menuResult] = await Promise.all([
+        supabaseService.fetchOrders(),
+        supabaseService.fetchTables(),
+        supabaseService.fetchMenuItems()
+      ]);
+
+      let successCount = 0;
+      let errorMessages = [];
+
+      if (ordersResult.success) {
+        actions.setOrders(ordersResult.data);
+        successCount++;
+      } else {
+        errorMessages.push('訂單同步失敗: ' + ordersResult.error);
+      }
+
+      if (tablesResult.success) {
+        actions.setTables(tablesResult.data);
+        successCount++;
+      } else {
+        errorMessages.push('桌位同步失敗: ' + tablesResult.error);
+      }
+
+      if (menuResult.success) {
+        actions.setMenuItems(menuResult.data);
+        successCount++;
+      } else {
+        errorMessages.push('菜單同步失敗: ' + menuResult.error);
+      }
+
+      if (successCount > 0) {
+        alert(`成功同步 ${successCount} 項資料類型`);
+      }
+      
+      if (errorMessages.length > 0) {
+        alert('部分同步失敗:\n' + errorMessages.join('\n'));
       }
     } catch (error) {
       alert('同步錯誤: ' + error.message);
+    } finally {
+      setSyncing(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">設定</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">設定</h1>
       </div>
 
-      {/* Notion 設定 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Notion 整合設定</h2>
+      {/* Supabase 資料庫設定 */}
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">🚀 Supabase 雲端資料庫</h2>
         
-        <div className="space-y-4">
+        <div className="mb-6 p-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl">
+          <h3 className="font-medium text-blue-900 dark:text-blue-300 mb-3">✨ 功能特色</h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
+            <li>• 即時多裝置同步</li>
+            <li>• 完整的關聯資料庫功能</li>
+            <li>• 更快的查詢速度</li>
+            <li>• 離線優先設計</li>
+            <li>• 專業級資料管理</li>
+          </ul>
+        </div>
+        
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notion Integration Token
-            </label>
-            <input
-              type="password"
-              value={config.token}
-              onChange={(e) => setConfig({ ...config, token: e.target.value })}
-              placeholder="secret_..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              請到 Notion 的 Integrations 頁面創建一個新的 integration 並複製 token
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Database ID 或 URL
+            <label className="form-label">
+              Project URL
             </label>
             <input
               type="text"
-              value={config.databaseId}
-              onChange={(e) => setConfig({ ...config, databaseId: e.target.value })}
-              placeholder="32位字符的ID或完整的資料庫URL"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={supabaseConfig.url}
+              onChange={(e) => setSupabaseConfig({ ...supabaseConfig, url: e.target.value })}
+              placeholder="https://your-project.supabase.co"
+              className="form-input"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              複製 Notion 資料庫的 URL 或從 URL 中提取 32 位字符的 ID
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              從 Supabase Dashboard 的 Settings &gt; API 頁面複製
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div>
+            <label className="form-label">
+              API Key (anon, public)
+            </label>
+            <input
+              type="password"
+              value={supabaseConfig.key}
+              onChange={(e) => setSupabaseConfig({ ...supabaseConfig, key: e.target.value })}
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              className="form-input"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              使用 anon public key，不是 service_role key
+            </p>
+          </div>
+
+          <div className="flex gap-4">
             <button
-              onClick={handleTest}
+              onClick={handleSupabaseTest}
               disabled={testing}
               className="btn btn-secondary"
             >
               {testing ? '測試中...' : '測試連接'}
             </button>
             <button
-              onClick={handleSave}
+              onClick={handleSupabaseSave}
               className="btn btn-primary"
             >
               保存設定
@@ -137,10 +248,10 @@ const Settings = () => {
           </div>
 
           {testResult && (
-            <div className={`p-3 rounded-md ${
+            <div className={`p-4 rounded-xl ${
               testResult.success 
-                ? 'bg-green-100 text-green-800 border border-green-200' 
-                : 'bg-red-100 text-red-800 border border-red-200'
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700' 
+                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700'
             }`}>
               {testResult.message}
             </div>
@@ -149,36 +260,51 @@ const Settings = () => {
       </div>
 
       {/* 資料同步 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">資料管理</h2>
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">📊 資料管理</h2>
         
-        <div className="space-y-4">
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center p-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
             <div>
-              <h3 className="font-medium">從 Notion 同步訂單</h3>
-              <p className="text-sm text-gray-600">將 Notion 資料庫中的訂單同步到本地</p>
+              <h3 className="font-medium text-gray-900 dark:text-white">上傳到 Supabase</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">將本地資料上傳到雲端資料庫</p>
             </div>
             <button
-              onClick={syncFromNotion}
+              onClick={syncToSupabase}
+              disabled={syncing}
               className="btn btn-primary"
             >
-              同步訂單
+              {syncing ? '同步中...' : '上傳資料'}
             </button>
           </div>
 
-          <div className="flex justify-between items-center p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex justify-between items-center p-6 bg-green-50 dark:bg-green-900/30 rounded-xl">
             <div>
-              <h3 className="font-medium text-red-800">重置系統資料</h3>
-              <p className="text-sm text-red-600">清除所有本地儲存資料（訂單、菜單、桌位佈局等），但保留 Notion 設定</p>
+              <h3 className="font-medium text-gray-900 dark:text-white">從 Supabase 下載</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">從雲端資料庫同步最新資料到本地</p>
+            </div>
+            <button
+              onClick={syncFromSupabase}
+              disabled={syncing}
+              className="btn btn-primary"
+            >
+              {syncing ? '同步中...' : '下載資料'}
+            </button>
+          </div>
+
+          <div className="flex justify-between items-center p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
+            <div>
+              <h3 className="font-medium text-red-800 dark:text-red-300">重置系統資料</h3>
+              <p className="text-sm text-red-600 dark:text-red-400">清除所有本地儲存資料，但保留雲端資料庫設定</p>
             </div>
             <button
               onClick={() => {
-                if (window.confirm('⚠️ 確定要重置系統嗎？\n\n這將清除以下資料：\n• 所有訂單記錄\n• 自訂菜單項目\n• 桌位佈局設定\n• 統計數據\n\n此操作無法復原！')) {
+                if (window.confirm('⚠️ 確定要重置系統嗎？\n\n這將清除以下本地資料：\n• 所有訂單記錄\n• 自訂菜單項目\n• 桌位佈局設定\n• 統計數據\n\n雲端資料庫不受影響！')) {
                   actions.clearAllData();
                   alert('✅ 系統已重置到初始狀態');
                 }
               }}
-              className="btn bg-red-500 hover:bg-red-600 text-white"
+              className="btn bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white"
             >
               重置系統
             </button>
@@ -187,25 +313,33 @@ const Settings = () => {
       </div>
 
       {/* 系統資訊 */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">系統資訊</h2>
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">ℹ️ 系統資訊</h2>
         
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
-            <span className="text-gray-600">訂單總數:</span>
-            <span className="ml-2 font-medium">{state.orders.length}</span>
+            <span className="text-gray-600 dark:text-gray-400">資料庫:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">🚀 Supabase</span>
           </div>
           <div>
-            <span className="text-gray-600">菜單項目:</span>
-            <span className="ml-2 font-medium">{state.menuItems.length}</span>
+            <span className="text-gray-600 dark:text-gray-400">訂單總數:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">{state.orders.length}</span>
           </div>
           <div>
-            <span className="text-gray-600">桌位數量:</span>
-            <span className="ml-2 font-medium">{state.tables.length}</span>
+            <span className="text-gray-600 dark:text-gray-400">菜單項目:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">{state.menuItems.length}</span>
           </div>
           <div>
-            <span className="text-gray-600">今日營收:</span>
-            <span className="ml-2 font-medium">${state.stats.todayRevenue}</span>
+            <span className="text-gray-600 dark:text-gray-400">桌位數量:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">{state.tables.length}</span>
+          </div>
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">今日營收:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">${state.stats.todayRevenue}</span>
+          </div>
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">版本:</span>
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">v2.2 Supabase</span>
           </div>
         </div>
       </div>

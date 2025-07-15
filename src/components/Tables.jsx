@@ -179,19 +179,39 @@ const Tables = () => {
       padding: '4px'
     };
 
-    // 根據狀態設定顏色
+    // 根據狀態和主題設定顏色
+    const isDark = state.theme === 'dark';
+    
     if (table.status === 'occupied') {
-      baseStyle.backgroundColor = '#fef3c7';
-      baseStyle.borderColor = '#f59e0b';
-      baseStyle.color = '#92400e';
+      if (isDark) {
+        baseStyle.backgroundColor = '#451a03'; // dark amber
+        baseStyle.borderColor = '#f59e0b';
+        baseStyle.color = '#fbbf24';
+      } else {
+        baseStyle.backgroundColor = '#fef3c7';
+        baseStyle.borderColor = '#f59e0b';
+        baseStyle.color = '#92400e';
+      }
     } else if (table.status === 'available') {
-      baseStyle.backgroundColor = '#f0f9ff';
-      baseStyle.borderColor = '#0ea5e9';
-      baseStyle.color = '#0c4a6e';
+      if (isDark) {
+        baseStyle.backgroundColor = '#082f49'; // dark sky
+        baseStyle.borderColor = '#0ea5e9';
+        baseStyle.color = '#7dd3fc';
+      } else {
+        baseStyle.backgroundColor = '#f0f9ff';
+        baseStyle.borderColor = '#0ea5e9';
+        baseStyle.color = '#0c4a6e';
+      }
     } else {
-      baseStyle.backgroundColor = '#fef3c7';
-      baseStyle.borderColor = '#eab308';
-      baseStyle.color = '#a16207';
+      if (isDark) {
+        baseStyle.backgroundColor = '#422006'; // dark yellow
+        baseStyle.borderColor = '#eab308';
+        baseStyle.color = '#facc15';
+      } else {
+        baseStyle.backgroundColor = '#fef3c7';
+        baseStyle.borderColor = '#eab308';
+        baseStyle.color = '#a16207';
+      }
     }
 
     // 桌位形狀
@@ -206,19 +226,25 @@ const Tables = () => {
 
     // VIP 桌位特殊樣式
     if (table.type === 'vip') {
-      baseStyle.background = 'linear-gradient(45deg, #fef3c7, #fde68a)';
-      baseStyle.borderColor = '#d97706';
+      if (isDark) {
+        baseStyle.background = 'linear-gradient(45deg, #451a03, #78350f)';
+        baseStyle.borderColor = '#d97706';
+        baseStyle.color = '#fbbf24';
+      } else {
+        baseStyle.background = 'linear-gradient(45deg, #fef3c7, #fde68a)';
+        baseStyle.borderColor = '#d97706';
+      }
     }
 
     return baseStyle;
-  }, []);
+  }, [state.theme]);
 
   // 渲染自定義佈局模式
   const renderLayoutMode = () => {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div
-          className="relative bg-gray-50 border-2 border-dashed border-gray-300 overflow-auto"
+          className="relative bg-gray-50 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-auto"
           style={{
             width: `${state.layoutConfig.canvasWidth}px`,
             height: `${state.layoutConfig.canvasHeight}px`,
@@ -232,8 +258,8 @@ const Tables = () => {
               className="absolute inset-0 opacity-20"
               style={{
                 backgroundImage: `
-                  linear-gradient(to right, #d1d5db 1px, transparent 1px),
-                  linear-gradient(to bottom, #d1d5db 1px, transparent 1px)
+                  linear-gradient(to right, ${state.theme === 'dark' ? '#9ca3af' : '#d1d5db'} 1px, transparent 1px),
+                  linear-gradient(to bottom, ${state.theme === 'dark' ? '#9ca3af' : '#d1d5db'} 1px, transparent 1px)
                 `,
                 backgroundSize: `${state.layoutConfig.gridSize}px ${state.layoutConfig.gridSize}px`
               }}
@@ -295,13 +321,13 @@ const Tables = () => {
             <div
               key={table.id}
               onClick={() => handleTableClick(table)}
-              className={`table-card ${getTableStatusColor(table.status)} ${
+              className={`table-card p-6 ${getTableStatusColor(table.status)} ${
                 table.status === 'available' || table.status === 'occupied' ? 'cursor-pointer' : ''
               } min-h-[120px] sm:min-h-[140px]`}
             >
               <div className="text-center h-full flex flex-col justify-between">
                 <div>
-                  <div className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">
+                  <div className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2 text-gray-900 dark:text-white">
                     {table.name || `桌 ${table.number}`}
                   </div>
                   <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
@@ -314,23 +340,23 @@ const Tables = () => {
                 
                 {table.status === 'occupied' && (
                   <div className="space-y-1 sm:space-y-2 flex-1 flex flex-col justify-center">
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 dark:text-gray-300">
                       {currentOrder?.customers || table.customers || 0} 人 | {tableSizes[table.size]?.label || '4人桌'}
                     </div>
                     {currentOrder && (
                       <>
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
                           訂單: #{currentOrder.id}
                         </div>
-                        <div className="text-xs font-semibold">
+                        <div className="text-xs font-semibold text-gray-900 dark:text-white">
                           ${currentOrder.total}
                         </div>
                         <div className={`text-xs px-1 sm:px-2 py-1 rounded-full ${
                           currentOrder.status === 'paid' 
-                            ? 'bg-purple-100 text-purple-600' 
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' 
                             : currentOrder.status === 'completed' 
-                            ? 'bg-green-100 text-green-600' 
-                            : 'bg-yellow-100 text-yellow-600'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300' 
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-300'
                         }`}>
                           {currentOrder.status === 'paid' ? '已結帳' : 
                            currentOrder.status === 'completed' ? '已完成' : '製作中'}
@@ -389,7 +415,7 @@ const Tables = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">桌位管理</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">桌位管理</h1>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setViewMode(viewMode === 'layout' ? 'grid' : 'layout')}
@@ -415,25 +441,25 @@ const Tables = () => {
           <div className="text-xl sm:text-2xl font-bold text-green-600">
             {state.tables.filter(t => t.status === 'available').length}
           </div>
-          <div className="text-xs sm:text-sm text-gray-600">空桌</div>
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">空桌</div>
         </div>
         <div className="card text-center p-3 sm:p-4">
           <div className="text-xl sm:text-2xl font-bold text-red-600">
             {state.tables.filter(t => t.status === 'occupied').length}
           </div>
-          <div className="text-xs sm:text-sm text-gray-600">用餐中</div>
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">用餐中</div>
         </div>
         <div className="card text-center p-3 sm:p-4">
           <div className="text-xl sm:text-2xl font-bold text-yellow-600">
             {state.tables.filter(t => t.status === 'cleaning').length}
           </div>
-          <div className="text-xs sm:text-sm text-gray-600">清潔中</div>
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">清潔中</div>
         </div>
       </div>
 
       {/* 提示文字 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <p className="text-sm text-blue-800 dark:text-blue-200">
           {viewMode === 'layout' 
             ? '🎨 佈局檢視模式：顯示真實店內桌位排列。點擊「佈局編輯」可自定義桌位位置和屬性。'
             : '🔲 網格檢視模式：以網格方式顯示所有桌位資訊，適合快速操作。'

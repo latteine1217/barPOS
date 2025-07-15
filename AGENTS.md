@@ -6,20 +6,20 @@
 
 ## 1. 專案總覽
 
-本專案是一個功能類似 iChef 的餐廳銷售時點情報系統 (POS)，使用 Notion 作為後端資料庫。系統完全在前端運行，透過 React + Vite 實現，並透過 Notion API 與資料庫進行互動。
+本專案是一個功能類似 iChef 的餐廳銷售時點情報系統 (POS)，主要使用 Supabase 作為雲端資料庫後端，並保留 Notion API 作為向後相容選項。系統完全在前端運行，透過 React 19 + Vite 實現。
 
 **核心功能:**
-- **儀表板**: 即時顯示營收、訂單數等關鍵指標。
-- **桌位管理**: 以視覺化方式呈現桌位狀態（空桌、用餐中），並可點擊進行操作。
-- **點餐系統**: （視覺化點餐） 模仿 iChef/POS 機的格狀菜單界面，方便快速點選。
-- **訂單管理**: 包含新增訂單、加點、結帳、更新訂單狀態等功能。
-- **Notion 整合**: 所有訂單資料都會自動同步到指定的 Notion 資料庫。
-- **設定**: 提供 UI 介面讓使用者設定自己的 Notion API Token 和 Database ID。
+- **儀表板**: 即時顯示營收、訂單數等關鍵指標
+- **桌位管理**: 自訂桌位佈局編輯器、視覺化狀態監控、拖拽操作
+- **點餐系統**: iChef/POS 機風格的格狀菜單界面，支援視覺化點餐
+- **訂單管理**: 新增訂單、加點、結帳、更新訂單狀態等功能
+- **雲端同步**: Supabase 即時同步或 Notion API 資料備份
+- **跨平台**: Web/Desktop/Mobile 全平台支援
 
 **相關文件參考:**
-- `@README.md`: 專案基本介紹與手動設定指南，若有其他md文件，請在此文件中提及並連結。
-- `@FEATURES_GUIDE.md`: 新的視覺化點餐與桌位管理功能的詳細說明。
-- `@NOTION_SETUP.md`: 如何設定 Notion Integration 與 Database 的詳細步驟。
+- `@README.md`: 專案總覽、快速開始指南和開發部署說明
+- `@SUPABASE_GUIDE.md`: Supabase 雲端資料庫設定詳細指南
+- `@supabase-setup-simple.sql`: 資料庫建立腳本
 
 ## 2. 技術架構
 
@@ -29,19 +29,27 @@
     - **樣式**: Tailwind CSS (取代傳統 CSS)
     - **架構**: 單頁應用程式 (SPA)，使用 React 組件和 Context API 進行狀態管理
 - **後端 / 資料庫**:
-    - **服務**: Notion API
-    - **資料庫**: 一個 Notion Database
-- **相依性**: React, Tailwind CSS, @tailwindcss/forms, ESLint plugins。
+    - **主要**: Supabase (PostgreSQL 雲端資料庫 + 即時同步)
+    - **備選**: Notion API (向後相容)
+- **跨平台支援**:
+    - **桌面**: Electron 37 (Windows/macOS/Linux)
+    - **移動**: Capacitor 7 (iOS/Android)
+- **相依性**: React, Tailwind CSS, @tailwindcss/forms, ESLint plugins
 - **開發工具**: opencode + GitHub Copilot (AI 輔助開發)
 
 ## 3. 專案結構
 
 ```
 /
+├── android/                # Android 原生專案目錄
+├── ios/                    # iOS 原生專案目錄
+├── electron/               # Electron 主進程檔案
+│   └── main.cjs           # Electron 應用程式入口點
 ├── src/
 │   ├── components/         # React 組件
 │   │   ├── Dashboard.jsx   # 儀表板組件
 │   │   ├── Tables.jsx      # 桌位管理組件
+│   │   ├── TableLayoutEditor.jsx # 桌位佈局編輯器
 │   │   ├── Menu.jsx        # 菜單管理組件
 │   │   ├── Settings.jsx    # 設定組件
 │   │   ├── Sidebar.jsx     # 側邊欄組件
@@ -53,18 +61,27 @@
 │   ├── contexts/
 │   │   └── AppContext.jsx  # 全域狀態管理
 │   ├── services/
-│   │   └── notionService.js # Notion API 服務
+│   │   ├── supabaseService.js # Supabase API 服務
+│   │   ├── notionService.js   # Notion API 服務 (向後相容)
+│   │   └── storageService.js  # 跨平台儲存服務
+│   ├── types/
+│   │   └── global.d.ts     # TypeScript 類型定義
 │   ├── App.jsx             # 主要應用組件
 │   ├── main.jsx            # React 入口點
 │   └── index.css           # Tailwind CSS 樣式
+├── dist/                   # 建置後的網頁檔案
+├── dist-electron/          # Electron 打包輸出目錄
+├── public/                 # 靜態資源
+├── capacitor.config.ts     # Capacitor 移動端配置
 ├── index.html              # HTML 入口點
 ├── package.json            # 依賴和腳本配置
 ├── vite.config.js          # Vite 配置
 ├── tailwind.config.js      # Tailwind 配置
 ├── postcss.config.js       # PostCSS 配置
-├── README.md               # 專案說明
-├── FEATURES_GUIDE.md       # 新功能指南
-├── NOTION_SETUP.md         # Notion 設定指南
+├── README.md               # 專案總覽說明
+├── SUPABASE_GUIDE.md       # Supabase 設定指南
+├── supabase-setup-simple.sql # 資料庫建立腳本
+├── setup-ios.sh            # iOS 開發環境設置腳本
 └── AGENTS.md               # (本檔案) AI 開發代理指南
 ```
 
@@ -179,5 +196,6 @@
 - **Constants**: 使用 `UPPER_SNAKE_CASE`（如 `NOTION_API_VERSION`）
 
 ## Rules
-- only create one README.md file, all new update should edit in it and do not create a new markdown file to explain it.
-- do not push to github automatically.
+- 說明文件已簡化整合，只保留 README.md (主要)、SUPABASE_GUIDE.md (設定) 和 AGENTS.md (開發)
+- README.md 已整合所有重要資訊，新功能說明直接更新到 README.md 中對應章節
+- do not push to github automatically

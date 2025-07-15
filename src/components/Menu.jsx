@@ -56,7 +56,7 @@ const Menu = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">菜單管理</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">菜單管理</h1>
         <button
           onClick={() => setShowAddModal(true)}
           className="btn btn-primary w-full sm:w-auto"
@@ -68,42 +68,42 @@ const Menu = () => {
       {/* 分類統計 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {categories.map(category => (
-          <div key={category} className="card text-center p-3 sm:p-6">
-            <div className="text-lg sm:text-2xl font-bold text-blue-600">
+          <div key={category} className="card text-center p-6 sm:p-8">
+            <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
               {state.menuItems.filter(item => item.category === category).length}
             </div>
-            <div className="text-xs sm:text-sm text-gray-600">{category}</div>
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{category}</div>
           </div>
         ))}
       </div>
 
       {/* 菜單列表 */}
       {categories.map(category => (
-        <div key={category} className="card">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">{category}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div key={category} className="card p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">{category}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {state.menuItems
               .filter(item => item.category === category)
               .map(item => (
-                <div key={item.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    <div className="flex gap-1">
+                <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-all bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-medium text-gray-900 dark:text-white">{item.name}</h3>
+                    <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1"
                       >
                         ✏️
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1"
                       >
                         🗑️
                       </button>
                     </div>
                   </div>
-                  <div className="text-lg font-semibold text-green-600">
+                  <div className="text-lg font-semibold text-green-600 dark:text-green-400">
                     ${item.price}
                   </div>
                 </div>
@@ -114,33 +114,33 @@ const Menu = () => {
 
       {/* 新增/編輯餐點模態框 */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">
+        <div className="modal-overlay">
+          <div className="modal-content p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {editingItem ? '編輯餐點' : '新增餐點'}
               </h2>
-              <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
+              <button onClick={resetForm} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="form-label">
                   餐點名稱
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="form-input"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="form-label">
                   價格
                 </label>
                 <input
@@ -149,19 +149,19 @@ const Menu = () => {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="form-input"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="form-label">
                   分類
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="form-input"
                   required
                 >
                   <option value="">選擇分類</option>
@@ -175,13 +175,13 @@ const Menu = () => {
                     type="text"
                     placeholder="輸入新分類名稱"
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md mt-2"
+                    className="form-input mt-3"
                     required
                   />
                 )}
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <button
                   type="button"
                   onClick={resetForm}
