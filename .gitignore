@@ -10,7 +10,20 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-electron
 *.local
+
+# Electron
+app/dist
+app/build
+release
+
+# Mobile platforms
+android/
+ios/
+
+# Capacitor
+.capacitor
 
 # Editor directories and files
 .vscode/*
