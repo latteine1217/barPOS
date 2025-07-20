@@ -5,6 +5,7 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
   const { state, actions } = useApp();
   const [orderItems, setOrderItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedBaseSpirit, setSelectedBaseSpirit] = useState('all'); // 新增基酒過濾器
   const [orderDetails, setOrderDetails] = useState({
     tableNumber: initialTableNumber || '',
     customers: initialCustomers || 1,
@@ -32,22 +33,63 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
     }
   })();
 
-  // 安全的過濾菜單項目
-  const filteredMenuItems = (() => {
-    try {
-      if (!state?.menuItems || !Array.isArray(state.menuItems)) {
-        return [];
-      }
-      return selectedCategory === 'all' 
-        ? state.menuItems 
-        : state.menuItems.filter(item => item?.category === selectedCategory);
-    } catch (err) {
-      console.error('Error filtering menu items:', err);
-      setError('無法載入菜單項目');
-      return [];
-    }
-  })();
-
+   // 安全的取得基酒列表（僅對有基酒的調酒類別）
+   const baseSpirits = (() => {
+     try {
+       if (!state?.menuItems || !Array.isArray(state.menuItems)) {
+         return [];
+       }
+       
+       // 根據選擇的類別來決定顯示的基酒
+       let relevantItems = [];
+       if (selectedCategory === 'all') {
+         // 顯示所有有基酒的調酒
+         relevantItems = state.menuItems.filter(item => 
+           item?.baseSpirit && 
+           (item?.category === '經典調酒' || item?.category === 'Signature')
+         );
+       } else if (selectedCategory === '經典調酒' || selectedCategory === 'Signature') {
+         // 顯示該類別的基酒
+         relevantItems = state.menuItems.filter(item => 
+           item?.category === selectedCategory && item?.baseSpirit
+         );
+       } else {
+         // Mocktail 和其他類別不顯示基酒過濾器
+         return [];
+       }
+       
+       const spirits = relevantItems
+         .map(item => item.baseSpirit)
+         .filter(Boolean);
+       return ['all', ...new Set(spirits)];
+     } catch (err) {
+       console.error('Error getting base spirits:', err);
+       return [];
+     }
+   })();
+   // 安全的過濾菜單項目
+   const filteredMenuItems = (() => {
+     try {
+       if (!state?.menuItems || !Array.isArray(state.menuItems)) {
+         return [];
+       }
+       
+       let filtered = selectedCategory === 'all' 
+         ? state.menuItems 
+         : state.menuItems.filter(item => item?.category === selectedCategory);
+       
+        // 如果有選擇基酒過濾器且不是 'all'，只過濾有基酒的項目
+        if (baseSpirits.length > 0 && selectedBaseSpirit !== 'all') {
+          filtered = filtered.filter(item => item?.baseSpirit === selectedBaseSpirit);
+        }
+        
+       return filtered;
+     } catch (err) {
+       console.error('Error filtering menu items:', err);
+       setError('無法載入菜單項目');
+       return [];
+     }
+   })();
   const addToOrder = (menuItem) => {
     try {
       if (!menuItem || typeof menuItem.id === 'undefined') {
@@ -216,6 +258,20 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
     return category || '其他';
   };
 
+  const getBaseSpiritDisplayName = (spirit) => {
+    const spiritNames = {
+      'all': '全部',
+      'gin': 'Gin 琴酒',
+      'whisky': 'Whisky 威士忌',
+      'whiskey': 'Whiskey 威士忌',
+      'rum': 'Rum 蘭姆酒',
+      'tequila': 'Tequila 龍舌蘭',
+      'vodka': 'Vodka 伏特加',
+      'brandy': 'Brandy 白蘭地',
+       'others': '其他'
+     };    return spiritNames[spirit] || spirit;
+  };
+
   // 顯示錯誤訊息
   if (error) {
     return (
@@ -270,7 +326,10 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
             {categories.map(category => (
               <button
                 key={category}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setSelectedBaseSpirit('all'); // 重設基酒過濾器
+                }}
                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                   selectedCategory === category
                     ? 'bg-blue-600 text-white'
@@ -281,6 +340,26 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
               </button>
             ))}
           </div>
+
+           {/* 基酒副分類標籤（當有基酒分類可顯示時） */}
+           {baseSpirits.length > 1 && (
+             <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+               <div className="w-full text-gray-400 text-sm mb-2">基酒分類：</div>
+               {baseSpirits.map(spirit => (
+                 <button
+                  key={spirit}
+                  onClick={() => setSelectedBaseSpirit(spirit)}
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    selectedBaseSpirit === spirit
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-600 dark:bg-gray-700 text-gray-300 dark:text-gray-200 hover:bg-gray-500 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {getBaseSpiritDisplayName(spirit)}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 菜單網格 */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 sm:gap-4">
@@ -298,6 +377,11 @@ const VisualOrderingInterface = ({ onOrderComplete, initialTableNumber, initialC
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {item.category}
+                  {item.baseSpirit && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-xs">
+                      {getBaseSpiritDisplayName(item.baseSpirit).split(' ')[0]}
+                    </span>
+                  )}
                 </div>
               </button>
             ))}

@@ -306,6 +306,7 @@ class SupabaseService {
         name: menuItem.name,
         price: menuItem.price,
         category: menuItem.category || '主食',
+        base_spirit: menuItem.baseSpirit || null,
         description: menuItem.description || '',
         image_url: menuItem.imageUrl || '',
         is_available: menuItem.isAvailable !== false,
@@ -339,6 +340,7 @@ class SupabaseService {
       if (updates.name) updateData.name = updates.name;
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.category) updateData.category = updates.category;
+      if (updates.baseSpirit !== undefined) updateData.base_spirit = updates.baseSpirit;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
       if (updates.isAvailable !== undefined) updateData.is_available = updates.isAvailable;
@@ -486,6 +488,7 @@ class SupabaseService {
       name: dbItem.name,
       price: dbItem.price,
       category: dbItem.category,
+      baseSpirit: dbItem.base_spirit,
       description: dbItem.description,
       imageUrl: dbItem.image_url,
       isAvailable: dbItem.is_available,

@@ -1,15 +1,16 @@
-# Supabase 設定指南
+# Supabase 設定指南 - 調酒酒吧 POS 系統
 
-本指南將幫助你將餐廳 POS 系統從 Notion API 遷移到 Supabase 雲端資料庫。
+本指南將幫助你將調酒酒吧 POS 系統設定 Supabase 雲端資料庫。
 
 ## 🎯 為什麼選擇 Supabase？
 
 相比 Notion，Supabase 提供：
 - **即時同步**: WebSocket 連線，多裝置即時更新
 - **真正的資料庫**: PostgreSQL，支援複雜查詢和關聯
-- **更好的效能**: 專為應用程式設計的 API
+- **更好的效能**: 專為酒吧應用程式設計的 API
 - **離線優先**: 完整的離線模式支援
 - **成本效益**: 慷慨的免費額度
+- **調酒專用**: 支援酒精濃度、成分等專業欄位
 
 ## 🚀 快速開始
 
@@ -18,17 +19,23 @@
 1. 前往 [Supabase Dashboard](https://supabase.com/dashboard)
 2. 點擊 "New Project"
 3. 設定專案資訊：
-   - **Project name**: `restaurant-pos`
+   - **Project name**: `cocktail-bar-pos`
    - **Database Password**: 設定安全密碼
    - **Region**: 選擇 Asia Pacific
 4. 點擊 "Create new project"
 
-### 步驟 2: 設定資料庫
+### 步驟 2: 設定酒吧資料庫
+
+**方法一: 使用完整 SQL 腳本（推薦）**
+
+複製 `cocktail-bar-supabase-setup.sql` 檔案的完整內容，然後在 **SQL Editor** 中執行。
+
+**方法二: 手動執行（僅供參考）**
 
 在 **SQL Editor** 中執行以下 SQL：
 
 ```sql
--- 建立桌位資料表
+-- 建立座位資料表（酒吧座位）
 CREATE TABLE tables (
   id INTEGER PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -39,7 +46,7 @@ CREATE TABLE tables (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 建立訂單資料表
+-- 建立訂單資料表（調酒訂單）
 CREATE TABLE orders (
   id VARCHAR(50) PRIMARY KEY,
   table_id INTEGER REFERENCES tables(id),
@@ -53,15 +60,17 @@ CREATE TABLE orders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 建立菜單項目資料表
+-- 建立酒單項目資料表
 CREATE TABLE menu_items (
   id INTEGER PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   price DECIMAL(8,2) NOT NULL,
-  category VARCHAR(50) DEFAULT '主食',
+  category VARCHAR(50) DEFAULT '經典調酒',
   description TEXT DEFAULT '',
   image_url VARCHAR(255) DEFAULT '',
   is_available BOOLEAN DEFAULT true,
+  alcohol_content DECIMAL(4,2) DEFAULT 0, -- 酒精濃度
+  ingredients TEXT[] DEFAULT '{}', -- 成分陣列
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -255,4 +264,4 @@ const supabase = createClient(url, key, {
 
 ---
 
-🎉 恭喜！你的餐廳 POS 系統現在已升級為專業級的雲端資料庫解決方案！
+🎉 恭喜！你的調酒酒吧 POS 系統現在已升級為專業級的雲端資料庫解決方案！

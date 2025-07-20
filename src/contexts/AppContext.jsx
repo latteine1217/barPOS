@@ -1,57 +1,47 @@
 import { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import storageService, { STORAGE_KEYS } from '../services/storageService';
+import storageService, { 
+  STORAGE_KEYS, 
+  saveToStorage, 
+  loadFromStorage
+} from '../services/storageService';
 
 // 本地儲存 keys（移到 storageService）
 // const STORAGE_KEYS = ... (現在從 storageService 導入)
 
-// 從跨平台儲存載入資料的工具函數
-const loadFromStorage = async (key, defaultValue) => {
-  try {
-    return await storageService.getItem(key, defaultValue);
-  } catch (error) {
-    console.warn(`Failed to load ${key} from storage:`, error);
-    return defaultValue;
-  }
-};
-
-// 儲存資料到跨平台儲存的工具函數
-const saveToStorage = async (key, data) => {
-  try {
-    await storageService.setItem(key, data);
-  } catch (error) {
-    console.warn(`Failed to save ${key} to storage:`, error);
-  }
-};
-
 // 初始狀態 - 改為異步載入
 const getInitialState = async () => {
-  const orders = await loadFromStorage(STORAGE_KEYS.ORDERS, []);
-  const menuItems = await loadFromStorage(STORAGE_KEYS.MENU_ITEMS, [
-    { id: 1, name: '招牌牛肉麵', price: 180, category: '主食' },
-    { id: 2, name: '蔥爆牛肉', price: 220, category: '主食' },
-    { id: 3, name: '宮保雞丁', price: 160, category: '主食' },
-    { id: 4, name: '麻婆豆腐', price: 120, category: '主食' },
-    { id: 5, name: '可樂', price: 30, category: '飲料' },
-    { id: 6, name: '熱茶', price: 20, category: '飲料' },
-  ]);
-  const tables = await loadFromStorage(STORAGE_KEYS.TABLES, [
-    ...Array.from({ length: 12 }, (_, i) => ({
-      id: i + 1,
-      number: i + 1,
-      name: `桌 ${i + 1}`,
-      status: 'available',
-      customers: 0,
-      currentOrder: null,
-      position: {
-        x: ((i % 4) * 200) + 50,
-        y: (Math.floor(i / 4) * 150) + 50
-      },
-      size: 'medium',
-      shape: 'round',
-      capacity: 4,
-      type: 'regular'
-    }))
-  ]);
+   const orders = await loadFromStorage(STORAGE_KEYS.ORDERS, []);
+   const menuItems = await loadFromStorage(STORAGE_KEYS.MENU_ITEMS, [
+     // 經典調酒 - Whisky/Whiskey 基酒
+     { id: 101, name: 'Old Fashioned', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、糖、苦精、橙皮' },
+     { id: 102, name: 'Manhattan', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、甜苦艾酒、苦精' },
+     { id: 105, name: 'Whiskey Sour', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、檸檬汁、糖漿、蛋白' },
+     // 經典調酒 - Gin 基酒
+     { id: 103, name: 'Negroni', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、甜苦艾酒、金巴利' },
+     { id: 104, name: 'Martini', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、乾苦艾酒、橄欖或檸檬皮' },
+     { id: 106, name: 'Gimlet', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、萊姆汁、糖漿' },
+     // 經典調酒 - Rum 基酒
+     { id: 107, name: 'Daiquiri', price: 150, category: '經典調酒', baseSpirit: 'rum', description: '蘭姆酒、萊姆汁、糖漿' },
+     // 經典調酒 - Tequila 基酒
+     { id: 108, name: 'Margarita', price: 150, category: '經典調酒', baseSpirit: 'tequila', description: '龍舌蘭、柑橘酒、萊姆汁' },
+     // 經典調酒 - Vodka 基酒
+     { id: 109, name: 'Cosmopolitan', price: 150, category: '經典調酒', baseSpirit: 'vodka', description: '伏特加、柑橘酒、蔓越莓汁、萊姆汁' },
+     { id: 110, name: 'Moscow Mule', price: 150, category: '經典調酒', baseSpirit: 'vodka', description: '伏特加、薑汁汽水、萊姆汁' },
+     // 經典調酒 - Brandy 基酒
+     { id: 111, name: 'Sidecar', price: 150, category: '經典調酒', baseSpirit: 'brandy', description: '干邑白蘭地、柑橘酒、檸檬汁' },
+     // 經典調酒 - Others 利口酒為主
+     { id: 112, name: 'B-52', price: 150, category: '經典調酒', baseSpirit: 'others', description: '咖啡利口酒、愛爾蘭奶酒、伏特加' },
+     { id: 113, name: 'Amaretto Sour', price: 150, category: '經典調酒', baseSpirit: 'others', description: '杏仁利口酒、檸檬汁、糖漿' },
+     { id: 114, name: 'Mudslide', price: 150, category: '經典調酒', baseSpirit: 'others', description: '咖啡利口酒、愛爾蘭奶酒、鮮奶油' },
+     // Signature 調酒
+     { id: 201, name: '招牌特調', price: 180, category: 'Signature', baseSpirit: 'others', description: '本店獨家配方' },
+     { id: 202, name: '金色黃昏', price: 200, category: 'Signature', baseSpirit: 'whisky', description: '威士忌、蜂蜜、檸檬、薑汁' },
+     { id: 203, name: '紫羅蘭之夢', price: 190, category: 'Signature', baseSpirit: 'gin', description: '琴酒、薰衣草、柚子、蘇打' },
+     // Mocktail 無酒精飲品
+     { id: 301, name: 'Virgin Mojito', price: 80, category: 'Mocktail', baseSpirit: null, description: '薄荷、萊姆、蘇打水' },
+     { id: 302, name: 'Shirley Temple', price: 80, category: 'Mocktail', baseSpirit: null, description: '薑汁汽水、紅石榴糖漿、櫻桃' },
+     { id: 303, name: '蘋果氣泡飲', price: 70, category: 'Mocktail', baseSpirit: null, description: '蘋果汁、薑汁汽水、檸檬' },
+   ]);
   const layoutConfig = await loadFromStorage(STORAGE_KEYS.LAYOUT_CONFIG, {
     canvasWidth: 1000,
     canvasHeight: 600,
@@ -73,12 +63,12 @@ const getInitialState = async () => {
     stats,
     theme: await loadFromStorage(STORAGE_KEYS.THEME, 'light'),
     notionConfig: {
-      token: await storageService.getItem(STORAGE_KEYS.NOTION_TOKEN, ''),
-      databaseId: await storageService.getItem(STORAGE_KEYS.DATABASE_ID, '')
+      token: await loadFromStorage(STORAGE_KEYS.NOTION_TOKEN, ''),
+      databaseId: await loadFromStorage(STORAGE_KEYS.DATABASE_ID, '')
     },
     supabaseConfig: {
-      url: await storageService.getItem(STORAGE_KEYS.SUPABASE_URL, 'https://nexvfdomttzwfrwwprko.supabase.co'),
-      key: await storageService.getItem(STORAGE_KEYS.SUPABASE_KEY, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leHZmZG9tdHR6d2Zyd3dwcmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTkzNDksImV4cCI6MjA2ODE3NTM0OX0.9Nn9HDXkIgJtwIm5la4lUBqtwNRCUiUOctQbV1xqMIg')
+      url: await loadFromStorage(STORAGE_KEYS.SUPABASE_URL, ''),
+      key: await loadFromStorage(STORAGE_KEYS.SUPABASE_KEY, '')
     }
   };
 };
@@ -86,15 +76,37 @@ const getInitialState = async () => {
 // 同步初始狀態（用於 reducer 初始化）
 const initialState = {
   orders: [],
-  menuItems: [
-    { id: 1, name: '招牌牛肉麵', price: 180, category: '主食' },
-    { id: 2, name: '蔥爆牛肉', price: 220, category: '主食' },
-    { id: 3, name: '宮保雞丁', price: 160, category: '主食' },
-    { id: 4, name: '麻婆豆腐', price: 120, category: '主食' },
-    { id: 5, name: '可樂', price: 30, category: '飲料' },
-    { id: 6, name: '熱茶', price: 20, category: '飲料' },
-  ],
-  tables: [
+   menuItems: [
+     // 經典調酒 - Whisky/Whiskey 基酒
+     { id: 101, name: 'Old Fashioned', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、糖、苦精、橙皮' },
+     { id: 102, name: 'Manhattan', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、甜苦艾酒、苦精' },
+     { id: 105, name: 'Whiskey Sour', price: 150, category: '經典調酒', baseSpirit: 'whisky', description: '威士忌、檸檬汁、糖漿、蛋白' },
+     // 經典調酒 - Gin 基酒
+     { id: 103, name: 'Negroni', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、甜苦艾酒、金巴利' },
+     { id: 104, name: 'Martini', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、乾苦艾酒、橄欖或檸檬皮' },
+     { id: 106, name: 'Gimlet', price: 150, category: '經典調酒', baseSpirit: 'gin', description: '琴酒、萊姆汁、糖漿' },
+     // 經典調酒 - Rum 基酒
+     { id: 107, name: 'Daiquiri', price: 150, category: '經典調酒', baseSpirit: 'rum', description: '蘭姆酒、萊姆汁、糖漿' },
+     // 經典調酒 - Tequila 基酒
+     { id: 108, name: 'Margarita', price: 150, category: '經典調酒', baseSpirit: 'tequila', description: '龍舌蘭、柑橘酒、萊姆汁' },
+     // 經典調酒 - Vodka 基酒
+     { id: 109, name: 'Cosmopolitan', price: 150, category: '經典調酒', baseSpirit: 'vodka', description: '伏特加、柑橘酒、蔓越莓汁、萊姆汁' },
+     { id: 110, name: 'Moscow Mule', price: 150, category: '經典調酒', baseSpirit: 'vodka', description: '伏特加、薑汁汽水、萊姆汁' },
+     // 經典調酒 - Brandy 基酒
+     { id: 111, name: 'Sidecar', price: 150, category: '經典調酒', baseSpirit: 'brandy', description: '干邑白蘭地、柑橘酒、檸檬汁' },
+     // 經典調酒 - Others 利口酒為主
+     { id: 112, name: 'B-52', price: 150, category: '經典調酒', baseSpirit: 'others', description: '咖啡利口酒、愛爾蘭奶酒、伏特加' },
+     { id: 113, name: 'Amaretto Sour', price: 150, category: '經典調酒', baseSpirit: 'others', description: '杏仁利口酒、檸檬汁、糖漿' },
+     { id: 114, name: 'Mudslide', price: 150, category: '經典調酒', baseSpirit: 'others', description: '咖啡利口酒、愛爾蘭奶酒、鮮奶油' },
+     // Signature 調酒
+     { id: 201, name: '招牌特調', price: 180, category: 'Signature', baseSpirit: 'others', description: '本店獨家配方' },
+     { id: 202, name: '金色黃昏', price: 200, category: 'Signature', baseSpirit: 'whisky', description: '威士忌、蜂蜜、檸檬、薑汁' },
+     { id: 203, name: '紫羅蘭之夢', price: 190, category: 'Signature', baseSpirit: 'gin', description: '琴酒、薰衣草、柚子、蘇打' },
+     // Mocktail 無酒精飲品
+     { id: 301, name: 'Virgin Mojito', price: 80, category: 'Mocktail', baseSpirit: null, description: '薄荷、萊姆、蘇打水' },
+     { id: 302, name: 'Shirley Temple', price: 80, category: 'Mocktail', baseSpirit: null, description: '薑汁汽水、紅石榴糖漿、櫻桃' },
+     { id: 303, name: '蘋果氣泡飲', price: 70, category: 'Mocktail', baseSpirit: null, description: '蘋果汁、薑汁汽水、檸檬' },
+   ],  tables: [
     ...Array.from({ length: 12 }, (_, i) => ({
       id: i + 1,
       number: i + 1,

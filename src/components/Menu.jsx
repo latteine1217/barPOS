@@ -8,10 +8,22 @@ const Menu = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    category: ''
+    category: '',
+    baseSpirit: ''
   });
 
   const categories = [...new Set(state.menuItems.map(item => item.category))];
+  
+  // 基酒選項
+  const baseSpiritOptions = [
+    { value: '', label: '無基酒' },
+    { value: 'gin', label: 'Gin 琴酒' },
+    { value: 'whisky', label: 'Whisky 威士忌' },
+    { value: 'rum', label: 'Rum 蘭姆酒' },
+    { value: 'tequila', label: 'Tequila 龍舌蘭' },
+    { value: 'vodka', label: 'Vodka 伏特加' },
+    { value: 'brandy', label: 'Brandy 白蘭地' },
+     { value: 'others', label: '其他' }  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,7 +31,8 @@ const Menu = () => {
     const itemData = {
       name: formData.name,
       price: parseFloat(formData.price),
-      category: formData.category
+      category: formData.category,
+      baseSpirit: formData.baseSpirit || null
     };
 
     if (editingItem) {
@@ -32,7 +45,7 @@ const Menu = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', price: '', category: '' });
+    setFormData({ name: '', price: '', category: '', baseSpirit: '' });
     setShowAddModal(false);
     setEditingItem(null);
   };
@@ -42,7 +55,8 @@ const Menu = () => {
     setFormData({
       name: item.name,
       price: item.price.toString(),
-      category: item.category
+      category: item.category,
+      baseSpirit: item.baseSpirit || ''
     });
     setShowAddModal(true);
   };
@@ -87,7 +101,14 @@ const Menu = () => {
               .map(item => (
                 <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-all bg-gray-50 dark:bg-gray-800/50">
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-medium text-gray-900 dark:text-white">{item.name}</h3>
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">{item.name}</h3>
+                      {item.baseSpirit && (
+                        <span className="inline-block mt-1 px-2 py-1 bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 rounded text-xs">
+                          {baseSpiritOptions.find(opt => opt.value === item.baseSpirit)?.label || item.baseSpirit}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(item)}
@@ -180,6 +201,24 @@ const Menu = () => {
                   />
                 )}
               </div>
+
+              {/* 基酒選擇器（只對經典調酒顯示） */}
+              {formData.category === '經典調酒' && (
+                <div>
+                  <label className="form-label">
+                    基酒分類
+                  </label>
+                  <select
+                    value={formData.baseSpirit}
+                    onChange={(e) => setFormData({ ...formData, baseSpirit: e.target.value })}
+                    className="form-input"
+                  >
+                    {baseSpiritOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex gap-4">
                 <button

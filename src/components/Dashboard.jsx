@@ -22,7 +22,7 @@ const Dashboard = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending': return '待處理';
-      case 'preparing': return '製作中';
+      case 'preparing': return '調製中';
       case 'completed': return '已完成';
       case 'paid': return '已結帳';
       case 'cancelled': return '已取消';
@@ -98,7 +98,7 @@ const Dashboard = () => {
                 {state.stats.activeCustomers || 0}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                正在用餐
+                正在享用
               </p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -110,12 +110,12 @@ const Dashboard = () => {
         <div className="card p-6 group">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">空桌數量</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">空位數量</p>
               <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                 {state.tables.filter(t => t.status === 'available').length}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                / {state.tables.length} 總桌數
+                / {state.tables.length} 總位數
               </p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -130,7 +130,7 @@ const Dashboard = () => {
         <div className="xl:col-span-2">
           <div className="card p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">桌位概覽</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">座位概覽</h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">即時狀態</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -145,9 +145,9 @@ const Dashboard = () => {
                       : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700'
                   }`}
                 >
-                  <div className="text-lg font-bold mb-1">桌 {table.number}</div>
+                  <div className="text-lg font-bold mb-1">位 {table.number}</div>
                   <div className="text-xs opacity-75">
-                    {table.status === 'available' ? '空桌' : 
+                    {table.status === 'available' ? '空位' : 
                      table.status === 'occupied' ? `${table.customers || 0}人` : '清潔中'}
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const Dashboard = () => {
                         </span>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        桌 {order.tableNumber} • ${order.total}
+                        位 {order.tableNumber} • ${order.total}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {new Date(order.createdAt).toLocaleString('zh-TW')}

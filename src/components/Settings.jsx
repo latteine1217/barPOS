@@ -7,8 +7,8 @@ const Settings = () => {
   
   // Supabase 設定
   const [supabaseConfig, setSupabaseConfig] = useState({
-    url: state.supabaseConfig?.url || 'https://nexvfdomttzwfrwwprko.supabase.co',
-    key: state.supabaseConfig?.key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5leHZmZG9tdHR6d2Zyd3dwcmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTkzNDksImV4cCI6MjA2ODE3NTM0OX0.9Nn9HDXkIgJtwIm5la4lUBqtwNRCUiUOctQbV1xqMIg'
+    url: state.supabaseConfig?.url || '',
+    key: state.supabaseConfig?.key || ''
   });
   
   const [testing, setTesting] = useState(false);
@@ -227,7 +227,7 @@ const Settings = () => {
               className="form-input"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              使用 anon public key，不是 service_role key
+              使用 anon public key，不是 service_role key。確保已啟用 Row Level Security (RLS)
             </p>
           </div>
 
@@ -292,8 +292,27 @@ const Settings = () => {
             </button>
           </div>
 
-          <div className="flex justify-between items-center p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
-            <div>
+           <div className="flex justify-between items-center p-6 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-xl">
+             <div>
+               <h3 className="font-medium text-yellow-800 dark:text-yellow-300">重新載入菜單</h3>
+               <p className="text-sm text-yellow-600 dark:text-yellow-400">清除菜單快取並重新載入預設菜單（包含基酒分類）</p>
+             </div>
+             <button
+               onClick={() => {
+                 if (window.confirm('確定要重新載入菜單嗎？\n\n這將清除自訂的菜單項目，恢復為預設菜單。')) {
+                   // 清除菜單快取
+                   localStorage.removeItem('restaurant_pos_menu');
+                   // 重新載入頁面以使用預設菜單
+                   window.location.reload();
+                 }
+               }}
+               className="btn bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white"
+             >
+               重新載入菜單
+             </button>
+           </div>
+
+           <div className="flex justify-between items-center p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">            <div>
               <h3 className="font-medium text-red-800 dark:text-red-300">重置系統資料</h3>
               <p className="text-sm text-red-600 dark:text-red-400">清除所有本地儲存資料，但保留雲端資料庫設定</p>
             </div>

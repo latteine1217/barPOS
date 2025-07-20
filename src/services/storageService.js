@@ -310,4 +310,8 @@ class StorageService {
 // 建立單例實例
 const storageService = new StorageService();
 
+// 匯出便捷的儲存函數
+export const saveToStorage = (key, value) => storageService.setItem(key, value);
+export const loadFromStorage = (key, defaultValue) => storageService.getItem(key, defaultValue);
+
 export default storageService;

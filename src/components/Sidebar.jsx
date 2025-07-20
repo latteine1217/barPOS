@@ -4,10 +4,10 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   const { state, actions } = useApp();
 
   const menuItems = [
-    { id: 'tables', label: '桌位管理', icon: '🪑' },
+    { id: 'tables', label: '座位管理', icon: '🪑' },
     { id: 'layout', label: '佈局編輯', icon: '🎨' },
     { id: 'dashboard', label: '儀表板', icon: '📊' },
-    { id: 'menu', label: '菜單管理', icon: '🍽️' },
+    { id: 'menu', label: '酒單管理', icon: '🍸' },
     { id: 'history', label: '歷史訂單', icon: '📋' },
     { id: 'analytics', label: '營運分析', icon: '📈' },
     { id: 'settings', label: '設定', icon: '⚙️' }
@@ -41,7 +41,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">餐廳POS系統</h1>
+              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">調酒酒吧POS</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{currentTime}</p>
             </div>
             {/* 主題切換按鈕 */}
@@ -108,7 +108,7 @@ const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">餐廳POS系統</h1>
+              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">調酒酒吧POS</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{currentTime}</p>
             </div>
             <div className="flex items-center space-x-2">

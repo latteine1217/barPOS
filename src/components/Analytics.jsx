@@ -137,7 +137,7 @@ const Analytics = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'pending': return '待處理';
-      case 'preparing': return '製作中';
+      case 'preparing': return '調製中';
       case 'completed': return '已完成';
       case 'paid': return '已結帳';
       case 'cancelled': return '已取消';
@@ -160,7 +160,7 @@ const Analytics = () => {
     <div className="p-6 space-y-8">
       {/* 標題和時間篩選 */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">營運分析</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">酒吧營運分析</h1>
         <div className="flex flex-wrap gap-3">
           {['today', 'week', 'month', 'all'].map(period => (
             <button
@@ -221,7 +221,7 @@ const Analytics = () => {
       {/* 桌位營收排行 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="card p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">桌位營收排行</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">座位營收排行</h2>
           <div className="space-y-4">
             {analyticsData.ordersByTable.slice(0, 10).map((table, index) => (
               <div key={table.tableNumber} className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
@@ -235,7 +235,7 @@ const Analytics = () => {
                     {index + 1}
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">桌 {table.tableNumber}</div>
+                    <div className="font-medium text-gray-900 dark:text-white">位 {table.tableNumber}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">{table.orderCount} 筆訂單</div>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ const Analytics = () => {
 
         {/* 熱門餐點排行 */}
         <div className="card p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">熱門餐點排行</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">熱門調酒排行</h2>
           <div className="space-y-4">
             {analyticsData.topItems.slice(0, 8).map((item, index) => (
               <div key={item.name} className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
@@ -292,7 +292,7 @@ const Analytics = () => {
                     訂單編號
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    桌號
+                    座位編號
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     總額
@@ -316,7 +316,7 @@ const Analytics = () => {
                       #{order.id}
                     </td>
                     <td className="px-6 py-5 text-sm text-gray-900 dark:text-gray-300">
-                      桌 {order.tableNumber}
+                      位 {order.tableNumber}
                     </td>
                     <td className="px-6 py-5 text-sm font-semibold text-gray-900 dark:text-white">
                       ${order.total}
