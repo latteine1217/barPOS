@@ -1,19 +1,21 @@
 # AGENTS.md - 調酒酒吧管理系統
 
-這份文件旨在為 AI 開發代理提供本專案的開發指南，使其能夠理解專案的架構、慣例和核心邏輯。
+## 0. 角色扮演
+
+請扮演一位擅長使用react開發程式的資深工程師，並對於現代化UI/UX的設計有研究
 
 > **開發工具**: 本專案使用 [opencode](https://opencode.ai) + GitHub Copilot 進行 AI 輔助開發
 
 ## 1. 專案總覽
 
-本專案是一個專為調酒酒吧設計的銷售時點情報系統 (POS)，主要使用 Supabase 作為雲端資料庫後端，並保留 Notion API 作為向後相容選項。系統完全在前端運行，透過 React 19 + Vite 實現。
+本專案是一個專為調酒酒吧設計的銷售時點情報系統 (POS)，主要使用 Supabase 作為雲端資料庫後端。系統完全在前端運行，透過 React 19 + Vite 實現。
 
 **核心功能:**
 - **儀表板**: 即時顯示營收、訂單數等關鍵指標
 - **座位管理**: 自訂座位佈局編輯器、視覺化狀態監控、拖拽操作
 - **點餐系統**: 專業調酒師風格的格狀酒單界面，支援視覺化點餐
 - **訂單管理**: 新增訂單、加點、結帳、更新訂單狀態等功能
-- **雲端同步**: Supabase 即時同步或 Notion API 資料備份
+- **雲端同步**: Supabase 即時同步&資料備份
 - **跨平台**: Web/Desktop/Mobile 全平台支援
 
 **相關文件參考:**
@@ -111,11 +113,6 @@
     - 參考 `@SUPABASE_GUIDE.md` 的說明，建立 Supabase 專案並取得 Project URL 和 API Key。
     - 在 SQL Editor 執行 `@cocktail-bar-supabase-setup.sql` 腳本建立調酒酒吧資料庫結構。
     - 複製 Project URL 和 anon public API key。
-3.  **設定 Notion (舊版支援)**:
-    - 參考 `@SUPABASE_GUIDE.md` 中的 Notion 設定說明，建立一個 Notion Integration 並取得 **Internal Integration Token**。
-    - 建立一個新的 Notion Database，並確保它包含必要的欄位（訂單編號、座位號、總額、狀態等）。
-    - 將此 Database 分享給您剛剛建立的 Integration。
-    - 複製您的 **Database ID** (通常是 URL 中的 32 位字元字串)。
 3.  **啟動應用**:
     ```bash
     npm run dev
@@ -240,16 +237,38 @@
 - 在功能前面加註解簡略說明
 - 輸出使用 '===' 或 '---' 分隔符使其一目瞭然
 
-## Rules
-- 說明文件已簡化整合，只保留 README.md (主要)、SUPABASE_GUIDE.md (設定) 和 AGENTS.md (開發)
-- README.md 已整合所有重要資訊，新功能說明直接更新到 README.md 中對應章節
-- **重要**: 不要主動執行 git push 或建立 GitHub repository
-- 在被告知要建立 GitHub repository 時，建立 .gitignore 文件
-- README.md 中必須標示本專案使用 opencode + GitHub Copilot 開發
-- 避免建立過多的 markdown 文件來描述專案
-- markdown 文件可以多使用 emoji 來增加豐富度
+## 角色扮演
+在執行專案時，請扮演一個專業工程師的視角來分析程式碼，並給出階段性計畫的建議
 
 ## Git 規則
 - 不要主動 git push 到遠端儲存庫
+- 檢查是否存在 .gitignore 文件
+- 被告知上傳至 GitHub 時先執行 `git status` 查看狀況
+- 上傳至 GitHub 前請先更新 @README.md 文檔
 - 提交訊息使用清晰的格式：`feat:`, `fix:`, `docs:`, `style:`, `refactor:`
 - 為每個新功能建立新分支：`git checkout -b feature/功能名稱`
+
+## Markdown 檔案原則（此處不包含 AGENTS.md）
+- README.md 中必須要標示本專案使用 opencode + GitHub Copilot 開發
+- 說明檔案請盡可能簡潔明瞭
+- 避免建立過多的 markdown 文件來描述專案
+- markdown 文件可以多使用 emoji 以及豐富排版來增加豐富度
+
+## 程式建構規則
+- 程式碼以邏輯清晰、精簡、易讀、高效這四點為主
+- 將各種獨立功能獨立成一個定義函數或是 api 檔案，並提供 api 文檔
+- 各 api 檔案需要有獨立性，避免循環嵌套
+- 盡量避免大於 3 層的迴圈以免程式效率低下
+- 使用註解在功能前面簡略說明
+- 若程式有輸出需求，讓輸出能一目瞭然並使用 '===' 或是 '---' 來做分隔
+
+## 檔案參考
+重要： 當您遇到檔案參考 (例如 @rules/general.md)，請使用你的 read 工具，依需要載入。它們與當前的 SPECIFIC 任務相關。
+
+### 說明：
+
+- 請勿預先載入所有參考資料 - 根據實際需要使用懶惰載入。
+- 載入時，將內容視為覆寫預設值的強制指示
+- 需要時，以遞迴方式跟蹤參照
+- 回應用戶時盡量先以計畫的方式告知用戶
+- 除非用戶說「請開始實作」這種直接命令，否則不要直接執行修改
