@@ -3,6 +3,39 @@
  * 支援網頁端(localStorage)、桌面端(Electron)、行動端(Capacitor)
  */
 
+type Platform = 'web' | 'mobile' | 'electron';
+
+interface StorageInfo {
+  platform: Platform;
+  totalKeys: number;
+  keys: string[];
+  size: number;
+}
+
+interface ExportData {
+  platform: Platform;
+  exportDate: string;
+  version: string;
+  data: Record<string, any>;
+}
+
+interface ElectronStore {
+  set: (key: string, value: string) => Promise<void>;
+  get: (key: string) => Promise<string | null>;
+  delete: (key: string) => Promise<void>;
+  keys: () => Promise<string[]>;
+}
+
+interface MobileStorage {
+  set: (options: { key: string; value: string }) => Promise<void>;
+  get: (options: { key: string }) => Promise<{ value: string | null }>;
+  remove: (options: { key: string }) => Promise<void>;
+  clear: () => Promise<void>;
+  keys: () => Promise<{ keys: string[] }>;
+}
+
+// 擴展全域 Window 介面，與其他已定義的介面合併
+
 // 儲存 keys 常數
 export const STORAGE_KEYS = {
   ORDERS: 'restaurant_pos_orders',
@@ -15,12 +48,12 @@ export const STORAGE_KEYS = {
   SUPABASE_URL: 'supabase_url',
   SUPABASE_KEY: 'supabase_key',
   THEME: 'restaurant_pos_theme'
-};
+} as const;
 
 // 平台檢測
-const detectPlatform = () => {
+const detectPlatform = (): Platform => {
   // 檢查是否為 Capacitor 環境（行動端）
-  if (window.Capacitor) {
+  if (typeof window !== 'undefined' && window.Capacitor) {
     return 'mobile';
   }
   
@@ -34,12 +67,16 @@ const detectPlatform = () => {
 };
 
 class StorageService {
+  private platform: Platform;
+  private mobileStorage?: MobileStorage;
+  private electronStore?: ElectronStore;
+
   constructor() {
     this.platform = detectPlatform();
     this.initializeStorage();
   }
 
-  async initializeStorage() {
+  private async initializeStorage(): Promise<void> {
     try {
       switch (this.platform) {
         case 'mobile':
@@ -62,22 +99,22 @@ class StorageService {
   }
 
   // 網頁端儲存（localStorage）
-  initWebStorage() {
+  private initWebStorage(): void {
     console.log('🌐 Using Web Storage (localStorage)');
   }
 
   // 行動端儲存（Capacitor Preferences）
-  async initMobileStorage() {
+  private async initMobileStorage(): Promise<void> {
     try {
       // 只在 Capacitor 環境中導入
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
         const { Preferences } = await import('@capacitor/preferences');
         this.mobileStorage = Preferences;
         console.log('📱 Using Mobile Storage (Capacitor Preferences)');
       } else {
         throw new Error('Not in Capacitor environment');
       }
-    } catch (error) {
+    } catch {
       console.warn('Capacitor Preferences not available, falling back to localStorage');
       this.platform = 'web';
       this.initWebStorage();
@@ -85,7 +122,7 @@ class StorageService {
   }
 
   // 桌面端儲存（Electron Store）
-  async initElectronStorage() {
+  private async initElectronStorage(): Promise<void> {
     try {
       if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.store) {
         this.electronStore = window.electronAPI.store;
@@ -93,7 +130,7 @@ class StorageService {
       } else {
         throw new Error('Electron store API not available');
       }
-    } catch (error) {
+    } catch {
       console.warn('Electron store not available, falling back to localStorage');
       this.platform = 'web';
       this.initWebStorage();
@@ -101,16 +138,20 @@ class StorageService {
   }
 
   // 統一的儲存介面
-  async setItem(key, value) {
+  async setItem(key: string, value: any): Promise<void> {
     try {
       const stringValue = JSON.stringify(value);
       
       switch (this.platform) {
         case 'mobile':
-          await this.mobileStorage.set({ key, value: stringValue });
+          if (this.mobileStorage) {
+            await this.mobileStorage.set({ key, value: stringValue });
+          }
           break;
         case 'electron':
-          await this.electronStore.set(key, stringValue);
+          if (this.electronStore) {
+            await this.electronStore.set(key, stringValue);
+          }
           break;
         case 'web':
         default:
@@ -124,17 +165,21 @@ class StorageService {
   }
 
   // 統一的讀取介面
-  async getItem(key, defaultValue = null) {
+  async getItem<T = any>(key: string, defaultValue: T | null = null): Promise<T | null> {
     try {
-      let stringValue = null;
+      let stringValue: string | null = null;
       
       switch (this.platform) {
         case 'mobile':
-          const result = await this.mobileStorage.get({ key });
-          stringValue = result.value;
+          if (this.mobileStorage) {
+            const result = await this.mobileStorage.get({ key });
+            stringValue = result.value;
+          }
           break;
         case 'electron':
-          stringValue = await this.electronStore.get(key);
+          if (this.electronStore) {
+            stringValue = await this.electronStore.get(key);
+          }
           break;
         case 'web':
         default:
@@ -154,14 +199,18 @@ class StorageService {
   }
 
   // 統一的刪除介面
-  async removeItem(key) {
+  async removeItem(key: string): Promise<void> {
     try {
       switch (this.platform) {
         case 'mobile':
-          await this.mobileStorage.remove({ key });
+          if (this.mobileStorage) {
+            await this.mobileStorage.remove({ key });
+          }
           break;
         case 'electron':
-          await this.electronStore.delete(key);
+          if (this.electronStore) {
+            await this.electronStore.delete(key);
+          }
           break;
         case 'web':
         default:
@@ -175,17 +224,21 @@ class StorageService {
   }
 
   // 清除所有資料
-  async clear() {
+  async clear(): Promise<void> {
     try {
       const keys = Object.values(STORAGE_KEYS);
       
       switch (this.platform) {
         case 'mobile':
-          await this.mobileStorage.clear();
+          if (this.mobileStorage) {
+            await this.mobileStorage.clear();
+          }
           break;
         case 'electron':
-          for (const key of keys) {
-            await this.electronStore.delete(key);
+          if (this.electronStore) {
+            for (const key of keys) {
+              await this.electronStore.delete(key);
+            }
           }
           break;
         case 'web':
@@ -202,18 +255,25 @@ class StorageService {
   }
 
   // 取得所有儲存的 keys
-  async getAllKeys() {
+  async getAllKeys(): Promise<string[]> {
     try {
       switch (this.platform) {
         case 'mobile':
-          const result = await this.mobileStorage.keys();
-          return result.keys || [];
+          if (this.mobileStorage) {
+            const result = await this.mobileStorage.keys();
+            return result.keys || [];
+          }
+          break;
         case 'electron':
-          return await this.electronStore.keys();
+          if (this.electronStore) {
+            return await this.electronStore.keys();
+          }
+          break;
         case 'web':
         default:
           return Object.keys(localStorage);
       }
+      return [];
     } catch (error) {
       console.error('Failed to get keys:', error);
       return [];
@@ -221,14 +281,14 @@ class StorageService {
   }
 
   // 取得儲存統計資訊
-  async getStorageInfo() {
+  async getStorageInfo(): Promise<StorageInfo> {
     try {
       const keys = await this.getAllKeys();
       const appKeys = keys.filter(key => 
-        Object.values(STORAGE_KEYS).includes(key)
+        Object.values(STORAGE_KEYS).includes(key as any)
       );
       
-      const info = {
+      const info: StorageInfo = {
         platform: this.platform,
         totalKeys: appKeys.length,
         keys: appKeys,
@@ -260,9 +320,9 @@ class StorageService {
   }
 
   // 匯出資料（用於備份）
-  async exportData() {
+  async exportData(): Promise<ExportData> {
     try {
-      const data = {};
+      const data: Record<string, any> = {};
       const keys = Object.values(STORAGE_KEYS);
       
       for (const key of keys) {
@@ -285,7 +345,7 @@ class StorageService {
   }
 
   // 匯入資料（用於還原備份）
-  async importData(exportedData) {
+  async importData(exportedData: ExportData): Promise<boolean> {
     try {
       if (!exportedData || !exportedData.data) {
         throw new Error('Invalid export data');
@@ -294,7 +354,7 @@ class StorageService {
       const { data } = exportedData;
       
       for (const [key, value] of Object.entries(data)) {
-        if (Object.values(STORAGE_KEYS).includes(key)) {
+        if (Object.values(STORAGE_KEYS).includes(key as any)) {
           await this.setItem(key, value);
         }
       }
@@ -311,7 +371,41 @@ class StorageService {
 const storageService = new StorageService();
 
 // 匯出便捷的儲存函數
-export const saveToStorage = (key, value) => storageService.setItem(key, value);
-export const loadFromStorage = (key, defaultValue) => storageService.getItem(key, defaultValue);
+export const saveToStorage = (key: string, value: any): Promise<void> => storageService.setItem(key, value);
+export const loadFromStorage = <T = any>(key: string, defaultValue?: T | null): Promise<T | null> => storageService.getItem<T>(key, defaultValue);
+
+// 防抖儲存函數
+import { debounce } from '../hooks/useDebounce';
+
+// 創建防抖儲存函數，避免頻繁寫入
+const debouncedSaveMap = new Map<string, (value: any) => void>();
+
+export const saveDebouncedToStorage = (key: string, value: any, delay: number = 1000): void => {
+  if (!debouncedSaveMap.has(key)) {
+    // 為每個 key 創建獨立的防抖函數
+    const debouncedSave = debounce(async (val: any) => {
+      try {
+        await storageService.setItem(key, val);
+        console.log(`防抖儲存完成: ${key}`);
+      } catch (error) {
+        console.error(`防抖儲存失敗 ${key}:`, error);
+      }
+    }, delay);
+    
+    debouncedSaveMap.set(key, debouncedSave);
+  }
+  
+  const debouncedFn = debouncedSaveMap.get(key);
+  if (debouncedFn) {
+    debouncedFn(value);
+  }
+};
+
+// 批量防抖儲存
+export const saveBatchDebouncedToStorage = (data: Record<string, any>, delay: number = 1000): void => {
+  Object.entries(data).forEach(([key, value]) => {
+    saveDebouncedToStorage(key, value, delay);
+  });
+};
 
 export default storageService;

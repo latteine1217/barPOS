@@ -146,9 +146,10 @@ export const calculateTrends = (orders: Order[], period: TrendPeriod = 'daily'):
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}`;
       case 'daily':
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-      case 'weekly':
+      case 'weekly': {
         const weekStart = startOfWeek(date, { weekStartsOn: 1 });
         return `${weekStart.getFullYear()}-W${Math.ceil((weekStart.getDate()) / 7)}`;
+      }
       case 'monthly':
         return `${date.getFullYear()}-${date.getMonth() + 1}`;
       default:

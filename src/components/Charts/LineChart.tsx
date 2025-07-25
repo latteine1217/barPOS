@@ -12,25 +12,30 @@ import {
 import { chartTheme, chartColors, formatters } from '../../utils/chartHelpers';
 import CustomTooltip from './CustomTooltip';
 
+// 定義圖表數據的基本結構
+interface ChartDataItem {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface LineConfig {
   dataKey: string;
   name?: string;
   color?: string;
   strokeWidth?: number;
   showDots?: boolean;
-  props?: any;
+  props?: Record<string, unknown>;
 }
 
 interface CustomLineChartProps {
-  data?: any[];
+  data?: ChartDataItem[];
   lines?: LineConfig[];
   height?: number;
   showGrid?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  xAxisFormatter?: (value: any) => string;
-  yAxisFormatter?: (value: any) => string;
-  tooltipFormatter?: (value: any) => string;
+  xAxisFormatter?: (value: string | number) => string;
+  yAxisFormatter?: (value: string | number) => string;
+  tooltipFormatter?: (value: string | number) => string;
   className?: string;
 }
 

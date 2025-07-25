@@ -10,18 +10,23 @@ import {
 import { chartTheme, chartColors, formatters } from '../../utils/chartHelpers';
 import CustomTooltip from './CustomTooltip';
 
+// 定義圓餅圖數據的基本結構
+interface PieChartDataItem {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface CustomPieChartProps {
-  data?: any[];
+  data?: PieChartDataItem[];
   height?: number;
   showLegend?: boolean;
   valueKey?: string;
-  tooltipFormatter?: (value: any) => string;
+  tooltipFormatter?: (value: string | number) => string;
   colors?: string[];
   className?: string;
   innerRadius?: number;
   outerRadius?: number;
   showLabels?: boolean;
-  labelFormatter?: (value: any) => string;
+  labelFormatter?: (value: number) => string;
 }
 
 interface LabelProps {

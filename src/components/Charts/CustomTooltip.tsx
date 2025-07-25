@@ -2,16 +2,16 @@ import React from 'react';
 
 interface TooltipPayload {
   name: string;
-  value: any;
+  value: string | number;
   color: string;
 }
 
 interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayload[];
-  label?: any;
-  labelFormatter?: (label: any) => string;
-  valueFormatter?: (value: any) => string;
+  label?: string | number;
+  labelFormatter?: (label: string | number) => string;
+  valueFormatter?: (value: string | number) => string;
 }
 
 // 自定義工具提示組件

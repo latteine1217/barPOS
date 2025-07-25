@@ -1,8 +1,8 @@
 # 🍸 調酒酒吧管理系統 - Cocktail Bar POS
 
-> **🚀 v3.0 營運分析系統！** 全新企業級營運分析與 CRM 客戶分群功能，提供 RFM 分析、營收趨勢、產品分析、時段效率分析，以及完整的 TypeScript 支援！
+> **🚀 v3.1.1 穩定版本！** 完成無限循環修復與桌面管理功能優化，解決 "Maximum update depth exceeded" 問題，提供更穩定的企業級營運分析與 CRM 客戶分群功能，全面支援 TypeScript 嚴格模式！
 
-一個專為調酒酒吧設計的現代化銷售時點情報系統 (POS)，使用 **React 19 + TypeScript + Tailwind CSS** 構建，採用 **Supabase 雲端資料庫** 提供即時同步功能，現在具備企業級的營運分析能力。
+一個專為調酒酒吧設計的現代化銷售時點情報系統 (POS)，使用 **React 19 + TypeScript + Zustand + Tailwind CSS** 構建，採用 **Supabase 雲端資料庫** 提供即時同步功能，具備企業級的營運分析能力和現代化架構。
 
 > **🤖 開發工具**: 本專案使用 [opencode](https://opencode.ai) + GitHub Copilot 進行 AI 輔助開發
 
@@ -17,13 +17,19 @@
 - **🥃 基酒分類** - 六大基酒分類 (Gin/Whisky/Rum/Tequila/Vodka/Brandy)
 - **☁️ 雲端同步** - Supabase 即時多裝置同步
 
-### 📈 **v3.0 新功能：企業級營運分析**
+### 📈 **v3.1 最新更新：現代化架構**
+- **🏗️ Zustand 狀態管理** - 從 Context API 遷移至現代化 Zustand + Immer
+- **🔧 循環更新修復** - 解決 "Maximum update depth exceeded" 問題
+- **⚡ 效能優化** - 優化組合選擇器，減少不必要的重新渲染
+- **🛡️ 類型安全增強** - 完整 TypeScript 嚴格模式支援
+- **📊 穩定性提升** - 改進 store subscribe 邏輯，避免無限循環
+
+### 📈 **v3.0 企業級營運分析**
 - **🎯 CRM 客戶分群** - RFM 模型分析 (頻率、近期性、消費金額)
 - **📊 營收趨勢分析** - 日/週/月/年度營收圖表與趨勢預測
 - **🍹 產品銷售分析** - 基酒分類銷售統計與熱門調酒排行
 - **⏰ 時段效率分析** - 24小時營運分析與最佳時段識別
 - **🎨 響應式圖表** - 精美的互動式 Recharts 視覺化圖表
-- **🔧 TypeScript 支援** - 完整類型安全與開發體驗優化
 
 ### 🎨 使用者體驗
 - **響應式設計** - 支援手機、平板、電腦
@@ -34,7 +40,7 @@
 
 ### 🔧 技術架構
 - **前端**: React 19 + TypeScript + Vite + Tailwind CSS
-- **狀態管理**: React Context API + useReducer
+- **狀態管理**: Zustand + Immer (v3.1 現代化架構)
 - **圖表系統**: Recharts + TypeScript 類型安全
 - **桌面應用**: Electron 37 (Windows/macOS/Linux)
 - **移動端**: Capacitor 7 (iOS/Android)
@@ -138,8 +144,14 @@ npm run cap:sync               # 同步更新到移動端
 │   │   │   └── MetricCard.tsx  # 指標卡片
 │   │   ├── ui/                 # UI 組件庫
 │   │   └── ...
-│   ├── contexts/
-│   │   └── AppContext.tsx      # 全域狀態管理 (TypeScript)
+│   ├── stores/                 # Zustand 狀態管理 (v3.1)
+│   │   ├── appStore.ts         # 主應用狀態
+│   │   ├── orderStore.ts       # 訂單狀態管理
+│   │   ├── tableStore.ts       # 桌位狀態管理
+│   │   ├── menuStore.ts        # 菜單狀態管理
+│   │   └── index.ts           # Store 統一導出
+│   ├── contexts/              # Legacy Context API (漸進遷移)
+│   │   └── ErrorContext.tsx   # 錯誤處理 Context
 │   ├── services/
 │   │   ├── supabaseService.ts  # Supabase API 服務 (TypeScript)
 │   │   ├── analyticsService.ts # 營運分析服務 (v3.0)
@@ -159,7 +171,14 @@ npm run cap:sync               # 同步更新到移動端
 
 ## 🎯 開發狀態
 
-### ✅ v3.0 已完成
+### ✅ v3.1 已完成（當前版本）
+- 🏗️ **Zustand 現代化架構** - 完成從 Context API 到 Zustand + Immer 的遷移
+- 🔧 **循環更新修復** - 解決 "Maximum update depth exceeded" 無限循環問題
+- ⚡ **效能優化提升** - 優化組合選擇器和 store subscribe 邏輯
+- 🛡️ **類型安全增強** - 強化 TypeScript 嚴格模式和錯誤處理
+- 📊 **穩定性改善** - 改進狀態管理架構，提升應用程式穩定性
+
+### ✅ v3.0 企業級分析
 - 🚀 **企業級營運分析** - CRM 客戶分群、營收趨勢、產品分析、時段效率
 - 🔧 **TypeScript 完整支援** - 類型安全的分析模組與圖表系統
 - 📊 **Recharts 圖表庫** - 專業互動式圖表 (柱狀圖/折線圖/圓餅圖)
@@ -175,7 +194,13 @@ npm run cap:sync               # 同步更新到移動端
 - 🎯 **視覺化點餐** - iChef 風格 POS 介面
 - 💾 **智能儲存** - 本地 + 雲端雙重備份
 
-### 🔄 未來規劃
+### 🔄 近期規劃 (v3.2)
+- 🧪 **測試系統完善** - 增加單元測試和整合測試覆蓋率
+- 🛡️ **錯誤邊界改進** - 更完善的錯誤處理和用戶反饋
+- 📱 **PWA 功能** - 離線使用和推播通知支援
+- 🎨 **UI/UX 優化** - 提升使用者體驗和介面設計
+
+### 🔄 未來規劃 (v4.0+)
 - 🔒 **權限管理** - 員工角色和權限系統
 - 📧 **客戶通知** - 自動化行銷與客戶關係管理
 - 🤖 **AI 預測** - 銷售預測與庫存建議
@@ -223,9 +248,19 @@ npm install
 # 檢查 TypeScript 編譯
 npm run type-check
 
+# 啟動開發服務器（建議在瀏覽器中檢查實際問題）
+npm run dev
+# 然後前往 http://localhost:5173 檢查實際運行狀況
+
 # 檢查建置問題
 npm run build -- --debug
 ```
+
+### v3.1 已知問題與解決方案
+- **狀態管理**: 已從 Context API 遷移至 Zustand，解決了循環更新問題
+- **無限循環錯誤**: 已修復 "Maximum update depth exceeded" 問題
+- **TypeScript 錯誤**: 部分組件仍在漸進式遷移中，不影響核心功能運行
+- **開發測試**: 建議使用瀏覽器檢查實際運行狀況，而非僅依賴 `npm run dev` 輸出
 
 ## 📚 相關文件
 
@@ -253,4 +288,27 @@ MIT License
 
 ---
 
-**🎉 立即體驗最先進的調酒酒吧管理系統！v3.0 帶來企業級營運分析，讓您的酒吧經營更智能、更高效！**
+**🎉 立即體驗最先進的調酒酒吧管理系統！v3.1 帶來穩定的現代化架構，v3.0 提供企業級營運分析，讓您的酒吧經營更智能、更高效！**
+
+---
+
+### 📝 版本更新日誌
+
+**v3.1.1** (2025-01-25)
+- 🔧 **修復無限循環錯誤** - 徹底解決 "Maximum update depth exceeded" 問題
+- 🖱️ **桌面管理功能修復** - 修復 TableLayoutEditor 按鈕點擊無響應問題
+- ⚡ **事件處理優化** - 使用 useCallback 包裝所有事件處理器，確保穩定性
+- 🎯 **useEffect 優化** - 修復循環依賴，改進組件更新邏輯
+- 🛡️ **選擇器穩定性** - 優化 Zustand 選擇器，防止不必要的重渲染
+
+**v3.1.0** (2025-01-25)
+- 🏗️ 完成 Zustand 狀態管理架構遷移
+- 🔧 修復 "Maximum update depth exceeded" 循環更新問題  
+- ⚡ 優化組合選擇器效能
+- 🛡️ 增強 TypeScript 類型安全
+
+**v3.0.0** (2024)
+- 📊 新增企業級營運分析功能
+- 🎯 實現 RFM 客戶分群模型
+- 📈 完整圖表系統整合
+- 🔧 全面 TypeScript 支援

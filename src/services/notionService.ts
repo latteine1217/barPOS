@@ -1,13 +1,37 @@
+import { Order, OrderItem, ApiResponse } from '../types';
+
 const NOTION_API_VERSION = '2022-06-28';
 const NOTION_BASE_URL = 'https://api.notion.com/v1';
 
+interface NotionOrderUpdates {
+  status?: string;
+  total?: number;
+}
+
+interface NotionPage {
+  id: string;
+  created_time: string;
+  properties: {
+    [key: string]: any;
+  };
+}
+
+interface NotionRichText {
+  text: {
+    content: string;
+  };
+}
+
 class NotionService {
-  constructor(token, databaseId) {
+  private token: string;
+  private databaseId: string;
+
+  constructor(token: string, databaseId: string) {
     this.token = token;
     this.databaseId = databaseId;
   }
 
-  async testConnection() {
+  async testConnection(): Promise<ApiResponse> {
     try {
       const response = await fetch(`${NOTION_BASE_URL}/databases/${this.databaseId}`, {
         headers: {
@@ -23,11 +47,11 @@ class NotionService {
 
       return { success: true, data: await response.json() };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   }
 
-  async createOrder(order) {
+  async createOrder(order: Order): Promise<ApiResponse> {
     try {
       const properties = {
         '訂單編號': {
@@ -76,13 +100,13 @@ class NotionService {
 
       return { success: true, data: await response.json() };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   }
 
-  async updateOrder(notionPageId, updates) {
+  async updateOrder(notionPageId: string, updates: NotionOrderUpdates): Promise<ApiResponse> {
     try {
-      const properties = {};
+      const properties: any = {};
       
       if (updates.status) {
         properties['狀態'] = { select: { name: updates.status } };
@@ -108,11 +132,11 @@ class NotionService {
 
       return { success: true, data: await response.json() };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   }
 
-  async fetchOrders() {
+  async fetchOrders(): Promise<ApiResponse<Order[]>> {
     try {
       const response = await fetch(`${NOTION_BASE_URL}/databases/${this.databaseId}/query`, {
         method: 'POST',
@@ -136,15 +160,15 @@ class NotionService {
       }
 
       const data = await response.json();
-      const orders = data.results.map(this.parseNotionPageToOrder);
+      const orders = data.results.map((page: NotionPage) => this.parseNotionPageToOrder(page));
       
       return { success: true, data: orders };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: (error as Error).message };
     }
   }
 
-  parseNotionPageToOrder(page) {
+  private parseNotionPageToOrder(page: NotionPage): Order {
     const properties = page.properties;
     
     return {
@@ -152,25 +176,35 @@ class NotionService {
       notionPageId: page.id,
       tableNumber: properties['桌號']?.number || 0,
       total: properties['總額']?.number || 0,
+      subtotal: properties['總額']?.number || 0,
       status: properties['狀態']?.select?.name || 'pending',
+      customers: 1,
       createdAt: properties['建立時間']?.date?.start || page.created_time,
+      updatedAt: page.created_time,
       items: this.parseItemsFromRichText(properties['餐點']?.rich_text)
-    };
+    } as Order;
   }
 
-  parseItemsFromRichText(richText) {
+  private parseItemsFromRichText(richText?: NotionRichText[]): OrderItem[] {
     if (!richText || richText.length === 0) return [];
     
     const itemsText = richText[0]?.text?.content || '';
-    return itemsText.split(', ').map(item => {
+    return itemsText.split(', ').map((item, index) => {
       const match = item.match(/^(.+) x(\d+)$/);
       if (match) {
         return {
+          id: `item-${index}`,
           name: match[1],
-          quantity: parseInt(match[2], 10)
+          quantity: parseInt(match[2], 10),
+          price: 0
         };
       }
-      return { name: item, quantity: 1 };
+      return { 
+        id: `item-${index}`,
+        name: item, 
+        quantity: 1,
+        price: 0
+      };
     });
   }
 }

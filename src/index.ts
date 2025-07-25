@@ -2,7 +2,6 @@
 export * from './types';
 
 // === 自定義 Hooks ===
-export { useOrder } from './hooks/useOrder';
 export { useModal } from './hooks/useModal';
 export { useFormData } from './hooks/useFormData';
 export { useLocalStorage } from './hooks/useLocalStorage';
@@ -11,8 +10,7 @@ export { useLocalStorage } from './hooks/useLocalStorage';
 export { Button } from './components/ui/Button';
 export { Modal, ModalHeader, ModalBody, ModalFooter } from './components/ui/Modal';
 
-// === Context ===
-export { useApp, AppProvider } from './contexts/AppContext';
+// === Context (僅保留 ErrorContext) ===
 export { useError, ErrorProvider, Toast } from './contexts/ErrorContext';
 
 // === 組件 ===

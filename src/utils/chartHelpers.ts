@@ -122,15 +122,20 @@ export const getResponsiveSize = (containerWidth: number): ResponsiveSize => {
 };
 
 // 數據源介面
+// 定義圖表數據項的類型
+interface ChartDataItem {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface DataSource {
   key?: string;
-  data: Array<{ [key: string]: any }>;
+  data: ChartDataItem[];
 }
 
 // 圖表數據處理工具
 export const chartDataHelpers = {
   // 合併多個數據源
-  mergeDataSources: (sources: DataSource[], keyField: string = 'date'): Array<{ [key: string]: any }> => {
+  mergeDataSources: (sources: DataSource[], keyField: string = 'date'): ChartDataItem[] => {
     const keyMap = new Map();
     
     sources.forEach((source, index) => {
@@ -155,14 +160,14 @@ export const chartDataHelpers = {
   },
   
   // 計算數據趨勢
-  calculateTrend: (data: Array<{ [key: string]: any }>, valueKey: string = 'value'): 'up' | 'down' | 'neutral' => {
+  calculateTrend: (data: ChartDataItem[], valueKey: string = 'value'): 'up' | 'down' | 'neutral' => {
     if (data.length < 2) return 'neutral';
     
     const recent = data.slice(-3); // 最近3個數據點
     const earlier = data.slice(-6, -3); // 之前3個數據點
     
-    const recentAvg = recent.reduce((sum, item) => sum + (item[valueKey] || 0), 0) / recent.length;
-    const earlierAvg = earlier.reduce((sum, item) => sum + (item[valueKey] || 0), 0) / earlier.length;
+    const recentAvg = recent.reduce((sum, item) => sum + (Number(item[valueKey]) || 0), 0) / recent.length;
+    const earlierAvg = earlier.reduce((sum, item) => sum + (Number(item[valueKey]) || 0), 0) / earlier.length;
     
     if (recentAvg > earlierAvg * 1.05) return 'up';
     if (recentAvg < earlierAvg * 0.95) return 'down';
@@ -206,25 +211,25 @@ export const chartDefaults: ChartConfig = {
 // 工具提示數據介面
 interface TooltipData {
   name: string;
-  value: any;
+  value: string | number;
   color: string;
 }
 
 interface CustomTooltipResult {
   active: boolean;
-  label: any;
+  label: string | number;
   data: TooltipData[];
 }
 
 // 工具提示自定義內容生成器
 export const createCustomTooltip = (
-  labelFormatter?: (label: any) => any, 
-  valueFormatter?: (value: any) => any
+  labelFormatter?: (label: string | number) => string | number, 
+  valueFormatter?: (value: string | number) => string | number
 ) => {
   return ({ active, payload, label }: { 
     active?: boolean; 
-    payload?: Array<{ name: string; value: any; color: string }>; 
-    label?: any 
+    payload?: Array<{ name: string; value: string | number; color: string }>; 
+    label?: string | number 
   }): CustomTooltipResult | null => {
     if (!active || !payload || payload.length === 0) return null;
     
