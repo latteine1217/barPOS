@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAppStore, useOrderStore, useTableStore, useMenuStore, initializeAllStores } from './stores';
-import { useSettingsStore } from './stores/settingsStore';
+import { useAppStore, useOrderStore, useTableStore, useMenuStore } from './stores';
 import { ErrorProvider } from './contexts/ErrorContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import GlobalErrorBoundary from './components/ErrorBoundary/GlobalErrorBoundary';
@@ -13,6 +12,7 @@ import Analytics from './components/EnhancedAnalytics';
 import Settings from './components/Settings';
 import TableLayoutEditor from './components/TableLayoutEditor';
 import BubbleBackground from './components/BubbleBackground';
+import LogViewer from './components/LogViewer';
 import './index.css';
 
 type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
@@ -23,10 +23,12 @@ function AppContent() {
   const orderLoaded = useOrderStore((state) => state.isLoaded);
   const tableLoaded = useTableStore((state) => state.isLoaded);
   const menuLoaded = useMenuStore((state) => state.isLoaded);
-  const settingsLoaded = useSettingsStore((state) => state.isLoaded);
   
-  // 計算載入狀態
-  const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
+  // 暫時移除 settingsStore 依賴以快速恢復功能
+  // const settingsLoaded = useSettingsStore((state) => state.isLoaded);
+  
+  // 計算載入狀態 - 簡化條件
+  const isLoaded = orderLoaded && tableLoaded && menuLoaded;
   
   const [activeTab, setActiveTab] = useState<TabType>('tables');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,12 +51,22 @@ function AppContent() {
       const initializeStores = async () => {
         try {
           console.log('Starting store initialization...');
-          await initializeAllStores();
-          // 初始化 Settings store
-          await useSettingsStore.getState().initialize();
+          
+          // 直接初始化個別 stores，避免循環依賴
+          await Promise.all([
+            useOrderStore.getState().initialize(),
+            useTableStore.getState().initialize(),
+            useMenuStore.getState().initialize(),
+          ]);
+          
+          // 設置 app store 為已初始化
+          useAppStore.getState().setInitialized(true);
+          
           console.log('Store initialization completed');
         } catch (error) {
           console.error('Failed to initialize stores:', error);
+          // 即使失敗也設為已初始化，避免無限載入
+          useAppStore.getState().setInitialized(true);
         }
       };
       
@@ -62,33 +74,25 @@ function AppContent() {
     }
   }, [isInitialized, initAttempted]);
 
-  const renderActiveTab = () => {
-    const TabComponent = () => {
-      switch (activeTab) {
-        case 'tables':
-          return <Tables />;
-        case 'dashboard':
-          return <Dashboard />;
-        case 'menu':
-          return <Menu />;
-        case 'history':
-          return <History />;
-        case 'analytics':
-          return <Analytics />;
-        case 'settings':
-          return <Settings />;
-        case 'layout':
-          return <TableLayoutEditor />;
-        default:
-          return <Tables />;
-      }
-    };
-
-    return (
-      <div className="page-transition active">
-        <TabComponent />
-      </div>
-    );
+const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'tables':
+        return <div className="page-transition active"><Tables /></div>;
+      case 'dashboard':
+        return <div className="page-transition active"><Dashboard /></div>;
+      case 'menu':
+        return <div className="page-transition active"><Menu /></div>;
+      case 'history':
+        return <div className="page-transition active"><History /></div>;
+      case 'analytics':
+        return <div className="page-transition active"><Analytics /></div>;
+      case 'settings':
+        return <div className="page-transition active"><Settings /></div>;
+      case 'layout':
+        return <div className="page-transition active"><TableLayoutEditor /></div>;
+      default:
+        return <div className="page-transition active"><Tables /></div>;
+    }
   };
 
   // 載入畫面
@@ -151,6 +155,9 @@ function AppContent() {
             {renderActiveTab()}
           </ErrorBoundary>
         </main>
+        
+        {/* 開發環境下顯示日誌查看器 */}
+        {import.meta.env.DEV && <LogViewer />}
       </div>
     </div>
   );
@@ -159,11 +166,9 @@ function AppContent() {
 function App() {
   return (
     <GlobalErrorBoundary>
-      <ErrorProvider>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </ErrorProvider>
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </GlobalErrorBoundary>
   );
 }

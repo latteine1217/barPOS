@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings } from '../stores/settingsStore';
 import { useOrders, useTables, useMenuItems, useOrderActions, useTableActions, useMenuActions } from '@/stores';
-import { useError } from '../contexts/ErrorContext';
-import type { SupabaseConfig, ErrorContextType } from '@/types';
+import { useError } from '../contexts/errorUtils';
+import type { SupabaseConfig } from '@/types';
 import SupabaseService from '../services/supabaseService';
+import { useRenderTracker, useStoreTracker } from '../utils/renderTracker';
 
 interface TestResult {
   success: boolean;
@@ -11,6 +12,9 @@ interface TestResult {
 }
 
 const Settings: React.FC = () => {
+  // 🔍 渲染追蹤
+  useRenderTracker('Settings');
+  
   const { state: settingsState, actions: settingsActions } = useSettings();
   const orders = useOrders();
   const tables = useTables();
@@ -19,9 +23,13 @@ const Settings: React.FC = () => {
   const tableActions = useTableActions();
   const menuActions = useMenuActions();
   
-  // 使用 useMemo 來穩定 errorContext 引用
-  const errorContext = useMemo(() => useError() as ErrorContextType, []);
-  const { showError, showSuccess } = errorContext;
+  // 🔍 Store 變化追蹤
+  useStoreTracker('SettingsState', settingsState);
+  useStoreTracker('Orders', orders);
+  useStoreTracker('Tables', tables);
+  useStoreTracker('MenuItems', menuItems);
+  
+
   
   // Supabase 設定 - 使用 useEffect 來避免循環依賴
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>({
@@ -157,21 +165,21 @@ const Settings: React.FC = () => {
       const errorMessages: string[] = [];
 
       if (ordersResult.success) {
-        orderActions.setOrders(ordersResult.data);
+        orderActions.setOrders(ordersResult.data ?? []);
         successCount++;
       } else {
         errorMessages.push('訂單同步失敗: ' + ordersResult.error);
       }
 
       if (tablesResult.success) {
-        tableActions.setTables(tablesResult.data);
+        tableActions.setTables(tablesResult.data ?? []);
         successCount++;
       } else {
         errorMessages.push('桌位同步失敗: ' + tablesResult.error);
       }
 
       if (menuResult.success) {
-        menuActions.setMenuItems(menuResult.data);
+        menuActions.setMenuItems(menuResult.data ?? []);
         successCount++;
       } else {
         errorMessages.push('菜單同步失敗: ' + menuResult.error);
@@ -182,10 +190,10 @@ const Settings: React.FC = () => {
       }
       
       if (errorMessages.length > 0) {
-        showError('部分同步失敗:\n' + errorMessages.join('\n'), 'Supabase 同步');
+        console.error('Supabase 同步', '部分同步失敗:\n' + errorMessages.join('\n'));
       }
     } catch (error) {
-      showError(error, '從 Supabase 同步');
+      console.error('從 Supabase 同步', error);
     } finally {
       setSyncing(false);
     }
