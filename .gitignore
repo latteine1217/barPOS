@@ -6,12 +6,26 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+# Local dev logs
+/dev.log
+/logs/
 
 node_modules
 dist
 dist-ssr
 dist-electron
 *.local
+
+# Environment variables
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build artifacts
+*.tsbuildinfo
 
 # Electron
 app/dist
@@ -25,13 +39,24 @@ ios/
 # Capacitor
 .capacitor
 
+# OS files
+.DS_Store
+Thumbs.db
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Backups
+*.backup
+*.bak
+~$*
+
+# Test coverage
+coverage/
