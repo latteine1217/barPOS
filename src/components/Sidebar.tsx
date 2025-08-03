@@ -1,5 +1,4 @@
 import { memo, useMemo, useCallback, useState, useEffect } from 'react';
-import { useSettingsStore, useStatsStore } from '../stores/settingsStore';
 
 type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
 
@@ -22,14 +21,15 @@ const Sidebar = memo<SidebarProps>(({
   sidebarOpen, 
   setSidebarOpen 
 }) => {
-  // ✅ 使用穩定的選擇器，避免複合選擇器造成循環渲染
-  const theme = useSettingsStore((state) => state.theme);
-  const toggleTheme = useSettingsStore((state) => state.toggleTheme);
+  // 🚨 臨時移除所有 Zustand store 調用以隔離問題
+  // const { theme, toggleTheme } = useSettingsStore(...);
+  // const { todayRevenue, todayOrders, activeCustomers } = useStatsStore(...);
   
-  // ✅ 使用單個選擇器避免循環渲染
-  const todayRevenue = useStatsStore((state) => state.todayRevenue);
-  const todayOrders = useStatsStore((state) => state.todayOrders);
-  const activeCustomers = useStatsStore((state) => state.activeCustomers);
+  // 🔧 使用靜態數據替代，避免無限循環
+  const theme = 'light'; // 暫時硬編碼
+  const todayRevenue = 8750;
+  const todayOrders = 23;
+  const activeCustomers = 8;
 
   // ✅ 修復：使用 useState + useEffect 來更新時間顯示
   const [currentTime, setCurrentTime] = useState(() => 
@@ -43,18 +43,22 @@ const Sidebar = memo<SidebarProps>(({
     })
   );
 
-  // ✅ 每秒更新時間
+  // ✅ 每分鐘更新時間（降低喚醒頻率）
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleString('zh-TW', {
+    const timer = setInterval(() => { if (typeof document !== 'undefined' && document.hidden) return;
+      const now = new Date();
+      const timeString = now.toLocaleString('zh-TW', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
-      }));
-    }, 1000);
+      });
+      
+      // ✅ 只在時間真正改變時更新
+      setCurrentTime(prev => prev !== timeString ? timeString : prev);
+    }, 60000);
 
     return () => clearInterval(timer);
   }, []);
@@ -72,16 +76,18 @@ const Sidebar = memo<SidebarProps>(({
 
   // 使用 useCallback 優化事件處理函數
   const handleNavClick = useCallback((tabId: TabType): void => {
+    if (activeTab === tabId) return; // 關鍵修復：避免重複點擊相同 tab
+    
     setActiveTab(tabId);
     // 在移動端點擊後關閉側邊欄
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => setSidebarOpen(false), 100); // ✅ 輕微延遲避免同步更新
     }
-  }, [setActiveTab, setSidebarOpen]);
+  }, [activeTab, setActiveTab, setSidebarOpen]);
 
   const handleThemeToggle = useCallback((): void => {
-    toggleTheme();
-  }, [toggleTheme]);
+    /* no-op while store disabled */
+  }, []);
 
   const handleSidebarClose = useCallback((): void => {
     setSidebarOpen(false);
@@ -128,7 +134,7 @@ const Sidebar = memo<SidebarProps>(({
                   }`}
                   aria-label={`切換到${item.label}`}
                 >
-                  <span className="mr-3" aria-hidden="true">{item.icon}</span>
+                  <span className="mr-3" aria-hidden="true" role="presentation">{item.icon}</span>
                   {item.label}
                 </button>
               </li>
@@ -211,7 +217,7 @@ const Sidebar = memo<SidebarProps>(({
                     }`}
                     aria-label={`切換到${item.label}`}
                   >
-                    <span className="mr-3" aria-hidden="true">{item.icon}</span>
+                    <span className="mr-3" aria-hidden="true" role="presentation">{item.icon}</span>
                     {item.label}
                   </button>
                 </li>
