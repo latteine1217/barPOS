@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { useMenuItems, useMenuActions } from '@/stores';
+import { useMenuStore } from '@/stores';
 import { MenuItem, MenuCategory, BaseSpirit } from '../types';
+// import { useRenderTracker, useStoreTracker } from '../utils/renderTracker';
 
 interface FormData {
   name: string;
@@ -10,8 +11,19 @@ interface FormData {
 }
 
 const Menu: React.FC = memo(() => {
-  const menuItems = useMenuItems();
-  const menuActions = useMenuActions();
+  // 🔍 渲染追蹤
+  // useRenderTracker('Menu');
+  
+  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem } = useMenuStore((state) => ({
+    menuItems: state.menuItems,
+    addMenuItem: state.addMenuItem,
+    updateMenuItem: state.updateMenuItem,
+    deleteMenuItem: state.deleteMenuItem
+  }));
+  /* availability snapshot removed to avoid extra subscriptions */
+  
+  // 🔍 Store 變化追蹤
+  // useStoreTracker('MenuItems', menuItems);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -77,9 +89,9 @@ const Menu: React.FC = memo(() => {
       };
 
       if (editingItem) {
-        await menuActions.updateMenuItem(editingItem.id, itemData);
+        await updateMenuItem(editingItem.id, itemData);
       } else {
-        await menuActions.addMenuItem(itemData as MenuItem);
+        await addMenuItem(itemData as MenuItem);
       }
 
       // 重置表單
@@ -90,7 +102,7 @@ const Menu: React.FC = memo(() => {
       console.error('操作失敗:', error);
       alert('操作失敗，請重試');
     }
-   }, [formData, editingItem, menuActions]);
+   }, [formData, editingItem, addMenuItem, updateMenuItem]);
   const handleEdit = useCallback((item: MenuItem) => {
     setEditingItem(item);
     setFormData({
@@ -105,25 +117,25 @@ const Menu: React.FC = memo(() => {
   const handleDelete = useCallback(async (itemId: string) => {
     if (window.confirm('確定要刪除這個品項嗎？')) {
       try {
-        await menuActions.deleteMenuItem(itemId);
+        await deleteMenuItem(itemId);
       } catch (error) {
         console.error('刪除失敗:', error);
         alert('刪除失敗，請重試');
       }
     }
-  }, [menuActions]);
+  }, [deleteMenuItem]);
 
   const handleToggleAvailability = useCallback(async (itemId: string) => {
     try {
       const item = menuItems.find((item: MenuItem) => item.id === itemId);
       if (item) {
-        await menuActions.updateMenuItem(itemId, { available: !item.available });
+        await updateMenuItem(itemId, { available: !item.available });
       }
     } catch (error) {
       console.error('更新失敗:', error);
       alert('更新失敗，請重試');
     }
-  }, [menuItems, menuActions]);
+  }, [menuItems, updateMenuItem]);
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -152,8 +164,8 @@ const Menu: React.FC = memo(() => {
 
       {/* Menu Items Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {menuItems.map((item: MenuItem) => (
-          <div key={item.id} className="card p-6 hover:shadow-lg transition-shadow">
+        {menuItems.map((item) => (
+            <div key={item.id} className="card p-6 hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
                 {item.name}
@@ -212,10 +224,9 @@ const Menu: React.FC = memo(() => {
                 </button>
               </div>
             </div>
-          </div>
-        ))}
+           </div>
+          ))}
       </div>
-
       {/* Add/Edit Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
