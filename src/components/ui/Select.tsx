@@ -30,10 +30,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 cursor-pointer';
   
   const variantStyles = {
-    default: 'bg-white/10 border-white/20 text-white focus:ring-blue-500 focus:border-blue-500',
-    filled: 'bg-gray-100 border-transparent text-gray-900 focus:ring-blue-500 focus:bg-white',
-    outlined: 'bg-transparent border-white/40 text-white focus:ring-blue-500 focus:border-blue-500'
-  };
+     default: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500',    filled: 'bg-gray-100 border-transparent text-gray-900 focus:ring-blue-500 focus:bg-white',
+     outlined: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'  };
   
   const sizeStyles = {
     sm: 'px-3 py-1.5 text-sm',
@@ -65,8 +63,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
             key={option.value} 
             value={option.value}
             disabled={option.disabled}
-            className="bg-gray-800 text-white"
-          >
+             className="bg-white text-gray-900"          >
             {option.label}
           </option>
         ))}

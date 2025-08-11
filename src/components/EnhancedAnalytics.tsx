@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { useApp } from '../contexts/AppContext';
-import AnalyticsService from '../services/analyticsService';
+import { useOrders } from '@/stores';
+import AnalyticsService from '@/services/analyticsService';
 import { LineChart, BarChart, PieChart, MetricCard } from './Charts';
-import { chartColors, formatters } from '../utils/chartHelpers';
+import { chartColors, formatters } from '@/utils/chartHelpers';
 import OrderDetailsModal from './OrderDetailsModal';
-import type { Order, TimePeriod } from '../types';
+import type { Order, TimePeriod } from '@/types';
 
 type ViewType = 'overview' | 'revenue' | 'products' | 'customers' | 'time';
 
 const EnhancedAnalytics: React.FC = () => {
-  const { state } = useApp();
+  const orders = useOrders();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('today');
   const [selectedView, setSelectedView] = useState<ViewType>('overview');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -17,8 +17,8 @@ const EnhancedAnalytics: React.FC = () => {
 
   // 初始化分析服務
   const analyticsService = useMemo(() => {
-    return new AnalyticsService(state.orders);
-  }, [state.orders]);
+    return new AnalyticsService(orders || []);
+  }, [orders]);
 
   // 計算基礎統計數據
   const basicStats = useMemo(() => {
@@ -113,7 +113,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">營收趨勢</h3>
         <LineChart
-          data={revenueTrends}
+          data={revenueTrends as any}
           height={300}
           lines={[
             {
@@ -141,7 +141,7 @@ const EnhancedAnalytics: React.FC = () => {
         <div className="card p-6">
           <h3 className="text-xl font-semibold text-white mb-6">熱門調酒 Top 5</h3>
           <BarChart
-            data={productAnalysis.topSellingProducts.slice(0, 5)}
+            data={productAnalysis.topSellingProducts.slice(0, 5) as any}
             height={250}
             layout="vertical"
             bars={[
@@ -181,7 +181,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">營收詳細分析</h3>
         <LineChart
-          data={revenueTrends}
+          data={revenueTrends as any}
           height={400}
           lines={[
             {
@@ -237,7 +237,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">產品銷售排行</h3>
         <BarChart
-          data={productAnalysis.topSellingProducts}
+          data={productAnalysis.topSellingProducts as any}
           height={400}
           layout="vertical"
           bars={[

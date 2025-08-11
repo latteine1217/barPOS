@@ -2,16 +2,16 @@ import React from 'react';
 
 interface TooltipPayload {
   name: string;
-  value: any;
+  value: string | number;
   color: string;
 }
 
 interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayload[];
-  label?: any;
-  labelFormatter?: (label: any) => string;
-  valueFormatter?: (value: any) => string;
+  label?: string | number;
+  labelFormatter?: ((label: string | number | undefined) => string) | null | undefined;
+  valueFormatter?: ((value: string | number | undefined) => string) | null | undefined;
 }
 
 // 自定義工具提示組件
@@ -27,7 +27,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   return (
     <div className="bg-gray-900/95 backdrop-blur border border-white/30 rounded-lg p-4 shadow-2xl">
       <p className="text-white font-semibold mb-3 text-sm">
-        {labelFormatter ? labelFormatter(label) : label}
+        {labelFormatter ? labelFormatter(label ?? '') : label}
       </p>
       {payload.map((entry, index) => (
         <p key={index} className="text-sm mb-1 flex items-center justify-between gap-3">

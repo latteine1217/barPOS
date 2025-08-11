@@ -1,274 +1,345 @@
-# AGENTS.md - 調酒酒吧管理系統
+# AGENTS.md - Cocktail Bar POS System 🍸
 
-## 0. 角色扮演
+## 🚀 開發指令集
 
-請扮演一位擅長使用react開發程式的資深工程師，並對於現代化UI/UX的設計有研究
-
-> **開發工具**: 本專案使用 [opencode](https://opencode.ai) + GitHub Copilot 進行 AI 輔助開發
-
-## 1. 專案總覽
-
-本專案是一個專為調酒酒吧設計的銷售時點情報系統 (POS)，主要使用 Supabase 作為雲端資料庫後端。系統完全在前端運行，透過 React 19 + Vite 實現。
-
-**核心功能:**
-- **儀表板**: 即時顯示營收、訂單數等關鍵指標
-- **座位管理**: 自訂座位佈局編輯器、視覺化狀態監控、拖拽操作
-- **點餐系統**: 專業調酒師風格的格狀酒單界面，支援視覺化點餐
-- **訂單管理**: 新增訂單、加點、結帳、更新訂單狀態等功能
-- **雲端同步**: Supabase 即時同步&資料備份
-- **跨平台**: Web/Desktop/Mobile 全平台支援
-
-**相關文件參考:**
-- `@README.md`: 專案總覽、快速開始指南和開發部署說明
-- `@SUPABASE_GUIDE.md`: Supabase 雲端資料庫設定詳細指南
-- `@supabase-setup.sql`: 資料庫建立腳本（餐廳版）
-- `@cocktail-bar-supabase-setup.sql`: 調酒酒吧資料庫建立腳本（推薦）
-
-## 2. 技術架構
-
-- **前端**:
-    - **框架**: React 19 + Vite
-    - **語言**: JavaScript (JSX), HTML5
-    - **樣式**: Tailwind CSS (取代傳統 CSS)
-    - **架構**: 單頁應用程式 (SPA)，使用 React 組件和 Context API 進行狀態管理
-- **後端 / 資料庫**:
-    - **主要**: Supabase (PostgreSQL 雲端資料庫 + 即時同步)
-    - **備選**: Notion API (向後相容)
-- **跨平台支援**:
-    - **桌面**: Electron 37 (Windows/macOS/Linux)
-    - **移動**: Capacitor 7 (iOS/Android)
-- **相依性**: React, Tailwind CSS, @tailwindcss/forms, ESLint plugins
-- **開發工具**: opencode + GitHub Copilot (AI 輔助開發)
-
-## 3. 專案結構
-
-```
-/
-├── android/                # Android 原生專案目錄
-├── ios/                    # iOS 原生專案目錄
-├── electron/               # Electron 主進程檔案
-│   └── main.cjs           # Electron 應用程式入口點
-├── src/
-│   ├── components/         # React 組件
-│   │   ├── Dashboard.jsx   # 儀表板組件
-│   │   ├── Tables.jsx      # 座位管理組件
-│   │   ├── TableLayoutEditor.jsx # 座位佈局編輯器
-│   │   ├── Menu.jsx        # 酒單管理組件
-│   │   ├── Settings.jsx    # 設定組件
-│   │   ├── Sidebar.jsx     # 側邊欄組件
-│   │   ├── Analytics.jsx   # 分析統計組件
-│   │   ├── History.jsx     # 歷史記錄組件
-│   │   ├── ErrorBoundary.jsx # 錯誤邊界組件
-│   │   ├── VisualOrderingInterface.jsx # 視覺化點餐介面
-│   │   └── OrderDetailsModal.jsx # 訂單詳情模態框
-│   ├── contexts/
-│   │   └── AppContext.jsx  # 全域狀態管理
-│   ├── services/
-│   │   ├── supabaseService.js # Supabase API 服務
-│   │   ├── notionService.js   # Notion API 服務 (向後相容)
-│   │   └── storageService.js  # 跨平台儲存服務
-│   ├── types/
-│   │   └── global.d.ts     # TypeScript 類型定義
-│   ├── App.jsx             # 主要應用組件
-│   ├── main.jsx            # React 入口點
-│   └── index.css           # Tailwind CSS 樣式
-├── dist/                   # 建置後的網頁檔案
-├── dist-electron/          # Electron 打包輸出目錄
-├── public/                 # 靜態資源
-├── capacitor.config.ts     # Capacitor 移動端配置
-├── index.html              # HTML 入口點
-├── package.json            # 依賴和腳本配置
-├── vite.config.js          # Vite 配置
-├── tailwind.config.js      # Tailwind 配置
-├── postcss.config.js       # PostCSS 配置
-├── README.md               # 專案總覽說明
-├── SUPABASE_GUIDE.md       # Supabase 設定指南
-├── supabase-setup.sql       # 餐廳版資料庫建立腳本 (舊版)
-├── cocktail-bar-supabase-setup.sql # 調酒酒吧資料庫建立腳本 (推薦)
-├── setup-ios.sh            # iOS 開發環境設置腳本
-└── AGENTS.md               # (本檔案) AI 開發代理指南
+### 基礎開發
+```bash
+npm run dev              # 開發服務器 (http://localhost:5173)
+npm run build            # 生產構建
+npm run lint             # ESLint 檢查
+npm run type-check       # TypeScript 類型檢查
 ```
 
-- `index.html`: React 應用的入口 HTML，包含 root div 和 Vite 模組腳本。
-- `src/App.jsx`: 主要應用組件，管理路由和整體佈局。
-- `src/contexts/AppContext.jsx`: 使用 React Context API 和 useReducer 進行全域狀態管理：
-    - **狀態管理**: 所有訂單、酒單、座位等資料都在 Context 中管理。
-    - **Actions**: 提供 addOrder, updateOrder, updateTable 等操作函數。
-    - **自動計算**: 統計數據會根據狀態變化自動重新計算。
-- `src/components/`: 各個功能的 React 組件，每個組件負責特定的 UI 區塊和邏輯。
-- `src/services/supabaseService.js`: 專門處理 Supabase API 的服務類別。
-- `src/services/notionService.js`: 專門處理 Notion API 的服務類別 (向後相容)。
-- `src/index.css`: 包含 Tailwind 基礎樣式和自定義組件樣式。
+### 測試指令
+```bash
+npm run test             # 運行所有測試
+npm run test:watch       # 監視模式測試
+npm run test:coverage    # 生成覆蓋率報告
+npm run test:ui          # 打開 Vitest UI
+# 特定測試
+npx vitest run src/path/to/file.test.ts
+npx vitest run --grep "test name"
+```
 
-## 4. 設定與啟動
+### 平台構建
+```bash
+npm run electron-dev     # Electron 桌面開發
+npm run dist            # 構建桌面應用
+npm run cap:run:ios     # iOS 應用
+npm run cap:run:android # Android 應用
+npm run log-server      # 日誌服務器
+```
 
-要啟動此應用程式，請遵循以下步驟：
+## 🏗️ 技術架構
 
-1.  **取得專案**:
-    ```bash
-    git clone [repository-url]
-    cd restaurant-pos
-    ```
-2.  **設定 Supabase (推薦)**:
-    - 參考 `@SUPABASE_GUIDE.md` 的說明，建立 Supabase 專案並取得 Project URL 和 API Key。
-    - 在 SQL Editor 執行 `@cocktail-bar-supabase-setup.sql` 腳本建立調酒酒吧資料庫結構。
-    - 複製 Project URL 和 anon public API key。
-3.  **啟動應用**:
-    ```bash
-    npm run dev
-    ```
-    這會啟動 Vite 開發服務器，通常在 http://localhost:5173
-4.  **在應用中設定**:
-    - 點擊側邊欄的「設定」。
-    - 選擇 Supabase 或 Notion 作為後端。
-    - **Supabase**: 填入 Project URL 和 API Key，點擊「測試連接」確認設定。
-    - **Notion**: 在「Notion Integration Token」欄位貼上您的 Token，在「Database ID 或 URL」欄位貼上您的 Database ID。
-    - 點擊「儲存設定」。系統會自動測試連線並給予提示。
+### 核心技術棧
+- **Frontend**: React 19 + TypeScript + Vite
+- **State**: Zustand stores (完整實現)
+- **Data**: TanStack Query v5 + Supabase
+- **Forms**: React Hook Form + Zod 驗證
+- **UI**: Tailwind CSS + Headless UI
+- **Testing**: Vitest + Testing Library
+- **Multi-platform**: Electron + Capacitor
 
-## 5. 開發慣例與程式碼風格
+### 專案結構
+```typescript
+src/
+├── stores/              # Zustand 狀態管理
+│   ├── appStore.ts     # 全局狀態
+│   ├── orderStore.ts   # 訂單管理
+│   └── tableStore.ts   # 餐桌狀態
+├── services/           # API 和業務邏輯
+│   ├── supabaseService.ts    # 數據庫操作
+│   ├── analyticsService.ts   # 分析報告
+│   └── storageService.ts     # 存儲管理
+├── components/
+│   ├── ui/            # 可重用 UI 組件
+│   ├── Charts/        # 圖表組件
+│   └── ErrorBoundary/ # 錯誤處理
+└── types/             # TypeScript 類型定義
+```
 
-- **框架**: 使用 React 19 和 JSX 語法。所有組件都應該是函數式組件並使用 React Hooks。
-- **狀態管理**: 使用 React Context API 進行全域狀態管理，本地狀態使用 useState。
-- **樣式**: 使用 Tailwind CSS utility classes，避免自定義 CSS（除非在 @layer components 中定義）。
-- **命名**:
-    - React 組件使用 `PascalCase`（如 `Dashboard`, `NewOrderModal`）。
-    - 變數和函數使用 `camelCase`。
-    - 檔案名稱使用 `PascalCase.jsx` 用於組件，`camelCase.js` 用於工具函數。
-- **組件結構**:
-    - 使用 `useApp()` hook 來存取全域狀態和 actions。
-    - 元件內部狀態用 `useState`，副作用用 `useEffect`。
-    - 事件處理函數以 `handle` 開頭（如 `handleSubmit`, `handleClick`）。
-- **API 呼叫**:
-    - 主要透過 `SupabaseService` 類別處理 Supabase API 請求。
-    - 向後相容透過 `NotionService` 類別處理 Notion API 請求。
-    - 使用 `async/await` 語法處理非同步操作。
-- **錯誤處理**:
-    - 使用 `try...catch` 區塊來處理 API 呼叫。
-    - 使用 `alert()` 或自定義通知組件向使用者顯示訊息。
+## 👨‍💻 開發者指引
 
-## 6. 核心邏輯與流程
+### 🎯 專家角色
+> 扮演 **TypeScript React 全端專家**，具備：
+> - 🔒 **類型安全至上** - 嚴格 TypeScript，避免 any
+> - ⚡ **性能優化導向** - 關注用戶體驗和響應速度
+> - 🧪 **測試驅動開發** - 80%+ 覆蓋率，重視品質
+> - 🏛️ **現代化架構** - Clean Code 和 SOLID 原則
 
-### 新增訂單流程
+### 📋 標準執行流程
+1. **📖 需求分析**
+   - 理解用戶故事和接受標準
+   - 識別技術依賴和潛在風險
+   - 評估對現有系統的影響
 
-1.  使用者點擊「新增訂單」或一個「空座」。
-2.  `VisualOrderingInterface` 或其他相關組件被渲染，顯示新增訂單的介面。
-3.  使用者選擇座位號、人數和調酒項目。
-4.  使用者點擊「建立訂單」，`handleSubmit` 函數被呼叫。
-5.  `handleSubmit` 函數會：
-    - 呼叫 `actions.addOrder()` 建立新訂單。
-    - 呼叫 `actions.updateTable()` 更新座位狀態為 'occupied'。
-    - Context 自動重新計算統計數據並更新所有相關組件。
-    - 關閉介面或模態視窗。
+2. **🏗️ 架構設計**
+   - 制定分階段實現計劃
+   - 設計數據流和狀態管理策略
+   - 考慮性能優化點和擴展性
 
-### Supabase/Notion 同步邏輯
+3. **👨‍💻 編碼實現**
+   - 遵循專案編碼規範
+   - 編寫高品質、可維護的程式碼
+   - 添加適當的類型定義和錯誤處理
 
-- 當訂單建立時，優先透過 `SupabaseService.createOrder()` 方法將訂單同步到 Supabase。
-- 或可透過 `NotionService.createOrder()` 方法將訂單同步到 Notion (向後相容)。
-- `SupabaseService` 類別使用 PostgreSQL 原生 SQL 操作，提供更好的效能和一致性。
-- `NotionService` 類別會動態建構符合 Notion API 格式的 `properties` 物件。
-- 程式會將訂單資料（如座位號、總額、調酒）對應到資料庫的相應欄位。
-- 如果同步失敗，錯誤會被捕獲並顯示給使用者。
+4. **🧪 測試驗證**
+   - 編寫單元測試和集成測試
+   - 確保關鍵用戶流程正常運作
+   - 驗證跨平台兼容性
 
-## 7. Git 工作流程
+5. **📝 文檔更新**
+   - 更新 API 文檔和使用說明
+   - 補充程式碼註釋和範例
 
-- **分支**: 為每個新功能或錯誤修復建立一個新的分支。
-  ```bash
-  git checkout -b feature/your-feature-name
-  ```
-- **提交**: 撰寫清晰且具描述性的提交訊息。
-  ```bash
-  git commit -m "feat: Add feature to do X"
-  git commit -m "fix: Resolve bug in Y"
-  ```
-- **拉取請求**: 當功能完成後，向上游儲存庫發起一個拉取請求 (Pull Request)。
+## 💻 編碼規範
 
-## 8. Build/Lint/Test Commands
+### TypeScript 嚴格規則
+```typescript
+// ✅ 推薦：明確的類型定義
+interface OrderProps {
+  id: string;
+  items: OrderItem[];
+  status: OrderStatus;
+}
 
-### 基本開發指令
-- **Development**: `npm run dev` - 啟動 Vite 開發服務器 (http://localhost:5173)
-- **Build**: `npm run build` - 打包生產版本到 dist/
-- **Preview**: `npm run preview` - 預覽生產版本
-- **Lint**: `npm run lint` - 執行 ESLint 檢查所有檔案
-- **Testing**: 目前無自動化測試框架 - 在瀏覽器中手動測試
+type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
-### Electron 桌面應用
-- **Electron Dev**: `npm run electron-dev` - 同時啟動 Vite 和 Electron (熱重載)
-- **Electron Build**: `npm run electron-build` - 建置並啟動 Electron
-- **Package**: `npm run dist` - 打包 Electron 應用程式
-- **Platform Specific**: `npm run dist-mac` / `npm run dist-win` / `npm run dist-linux`
+// ❌ 避免：any 類型
+// const data: any = response;
 
-### Mobile (Capacitor)
-- **Setup**: `npm run mobile:setup` - 初始設定 iOS 和 Android 平台
-- **Sync**: `npm run cap:sync` - 同步 Web 資源到原生平台
-- **iOS Dev**: `npm run mobile:dev:ios` - 建置並在 iOS 模擬器執行
-- **Android Dev**: `npm run mobile:dev:android` - 建置並在 Android 模擬器執行
-- **Open IDE**: `npm run cap:open:ios` / `npm run cap:open:android` - 開啟 Xcode/Android Studio
+// ✅ 推薦：具體類型
+const data: ApiResponse<Order> = response;
+```
 
-## 9. Code Style Guidelines
+### 導入順序規範
+```typescript
+// 1. React 核心
+import React, { useState, useEffect } from 'react';
 
-### 語言與框架
-- **Language**: React 19 + JSX, JavaScript ES6+ (非 TypeScript)
-- **Framework**: Vite + React 19 函數式組件 + React Hooks
-- **State Management**: React Context API (全域) + useState (本地)
-- **Styling**: Tailwind CSS 優先，避免內聯樣式和自定義 CSS
+// 2. 第三方庫
+import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
-### 命名慣例
-- **Components**: `PascalCase` (如 `Dashboard`, `OrderDetailsModal`)
-- **Functions/Variables**: `camelCase` (如 `handleSubmit`, `orderData`)
-- **Files**: React 組件用 `PascalCase.jsx`，服務/工具用 `camelCase.js`
-- **Constants**: `UPPER_SNAKE_CASE` (如 `SUPABASE_URL`, `NOTION_API_VERSION`)
-- **Event Handlers**: 以 `handle` 開頭 (如 `handleClick`, `handleFormSubmit`)
+// 3. 內部模塊 (@/ 路徑)
+import { Button, Modal } from '@/components/ui';
+import { useOrderStore } from '@/stores/orderStore';
 
-### 匯入與格式化
-- **Imports**: ES6 modules，React hooks 優先，Tailwind utilities
-- **Formatting**: 2-space 縮排，分號可選，使用 Prettier 格式化
-- **JSDoc**: 為複雜函數添加 JSDoc 註解（因無 TypeScript）
+// 4. 類型定義 (單獨導入)
+import type { Order, OrderItem } from '@/types/order';
+```
 
-### 組件結構與模式
-- **Components**: 函數式組件 + Hooks，props 解構，優先使用 `useApp()` hook
-- **State**: 全域狀態透過 Context API，本地狀態用 `useState`
-- **Effects**: 副作用用 `useEffect`，清理函數記得處理
-- **Error Handling**: 使用 `try...catch` 處理 API 呼叫，`alert()` 或通知組件顯示反饋
-- **API Calls**: 透過 `supabaseService.js` 或 `notionService.js`，使用 `async/await`
+### 命名約定
+```typescript
+// 組件: PascalCase
+const OrderModal: React.FC<OrderModalProps> = () => {};
 
-### 檔案組織原則
-- 獨立功能寫成獨立函數或檔案
-- 程式碼以邏輯清晰、精簡、易讀為主  
-- 在功能前面加註解簡略說明
-- 輸出使用 '===' 或 '---' 分隔符使其一目瞭然
+// Hook: camelCase + use 前綴
+const useOrderData = () => {};
 
-## 角色扮演
-在執行專案時，請扮演一個專業工程師的視角來分析程式碼，並給出階段性計畫的建議
+// 服務: camelCase
+const orderService = {};
 
-## Git 規則
-- 不要主動 git push 到遠端儲存庫
-- 檢查是否存在 .gitignore 文件
-- 被告知上傳至 GitHub 時先執行 `git status` 查看狀況
-- 上傳至 GitHub 前請先更新 @README.md 文檔
-- 提交訊息使用清晰的格式：`feat:`, `fix:`, `docs:`, `style:`, `refactor:`
-- 為每個新功能建立新分支：`git checkout -b feature/功能名稱`
+// 常量: UPPER_SNAKE_CASE
+const API_ENDPOINTS = {};
 
-## Markdown 檔案原則（此處不包含 AGENTS.md）
-- README.md 中必須要標示本專案使用 opencode + GitHub Copilot 開發
-- 說明檔案請盡可能簡潔明瞭
-- 避免建立過多的 markdown 文件來描述專案
-- markdown 文件可以多使用 emoji 以及豐富排版來增加豐富度
+// 檔案命名
+// - 組件: OrderModal.tsx
+// - Hook: useOrderData.ts
+// - 服務: orderService.ts
+```
 
-## 程式建構規則
-- 程式碼以邏輯清晰、精簡、易讀、高效這四點為主
-- 將各種獨立功能獨立成一個定義函數或是 api 檔案，並提供 api 文檔
-- 各 api 檔案需要有獨立性，避免循環嵌套
-- 盡量避免大於 3 層的迴圈以免程式效率低下
-- 使用註解在功能前面簡略說明
-- 若程式有輸出需求，讓輸出能一目瞭然並使用 '===' 或是 '---' 來做分隔
+## 🛡️ 錯誤處理標準
 
-## 檔案參考
-重要： 當您遇到檔案參考 (例如 @rules/general.md)，請使用你的 read 工具，依需要載入。它們與當前的 SPECIFIC 任務相關。
+### API 響應格式
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+}
 
-### 說明：
+// 標準錯誤處理範例
+const handleApiCall = async (): Promise<ApiResponse<Order[]>> => {
+  try {
+    const response = await orderService.getOrders();
+    return { success: true, data: response };
+  } catch (error) {
+    console.error('API Error:', error);
+    return { 
+      success: false, 
+      error: '無法載入數據，請稍後重試',
+      code: 'FETCH_ERROR'
+    };
+  }
+};
+```
 
-- 請勿預先載入所有參考資料 - 根據實際需要使用懶惰載入。
-- 載入時，將內容視為覆寫預設值的強制指示
-- 需要時，以遞迴方式跟蹤參照
-- 回應用戶時盡量先以計畫的方式告知用戶
-- 除非用戶說「請開始實作」這種直接命令，否則不要直接執行修改
+### React 錯誤邊界
+```typescript
+// 關鍵業務組件必須包裹錯誤邊界
+<ErrorBoundary fallback={<ErrorFallback />}>
+  <OrderManagement />
+</ErrorBoundary>
+```
+
+## 📊 性能與品質基準
+
+### 量化指標
+```typescript
+// Bundle 大小
+// - 主包: < 500KB gzipped
+// - 懶加載塊: < 200KB gzipped
+
+// Web Vitals
+// - First Contentful Paint: < 1.5s
+// - Largest Contentful Paint: < 2.5s
+// - First Input Delay: < 100ms
+
+// 測試覆蓋率
+// - 業務邏輯: 90%+
+// - UI 組件: 80%+
+// - 服務層: 95%+
+```
+
+### 優化策略
+```typescript
+// ✅ 防止不必要的重渲染
+const OrderItem = React.memo<OrderItemProps>(({ order, onUpdate }) => {
+  const handleUpdate = useCallback(
+    (updates: Partial<Order>) => onUpdate(order.id, updates),
+    [order.id, onUpdate]
+  );
+  return <div>{/* ... */}</div>;
+});
+
+// ✅ 懶加載重型組件
+const Analytics = lazy(() => import('@/components/Analytics'));
+
+// ✅ 避免深層嵌套 (< 3 層)
+const processOrder = (order: Order) => {
+  if (!order.items?.length) return;
+  
+  const validItems = order.items.filter(item => item.quantity > 0);
+  return validItems.map(processOrderItem);
+};
+```
+
+## 🧪 測試策略
+
+### 測試範例
+```typescript
+// 組件測試
+describe('OrderModal', () => {
+  it('應該正確顯示訂單信息', () => {
+    const mockOrder = createMockOrder();
+    render(<OrderModal order={mockOrder} />);
+    
+    expect(screen.getByText(mockOrder.customerName)).toBeInTheDocument();
+  });
+  
+  it('應該處理確認動作', async () => {
+    const onConfirm = vi.fn();
+    render(<OrderModal order={mockOrder} onConfirm={onConfirm} />);
+    
+    await user.click(screen.getByRole('button', { name: '確認' }));
+    expect(onConfirm).toHaveBeenCalled();
+  });
+});
+
+// 測試檔案命名
+// - 組件: ComponentName.test.tsx
+// - Hook: useHookName.test.ts
+// - 服務: serviceName.test.ts
+```
+
+## ⚠️ 重要開發約定
+
+### Git 工作流程
+- **🚫 不主動執行** git commit/push
+- **✅ 檢查狀態** 被要求時先執行 `git status`
+- **✅ 提交前測試** 確保 `npm run test` 和 `npm run lint` 通過
+- **✅ 更新文檔** 上傳前更新 README.md (註明使用 OpenCode + GitHub Copilot)
+
+### 檔案處理策略
+- **📁 懶惰載入** - 遇到 @filename 時才使用 Read 工具載入
+- **🔄 遞迴追蹤** - 根據需要逐步載入相關檔案
+- **💬 優先建議** - 提供計劃和建議，除非明確要求立即實作
+
+### 程式碼品質要求
+```typescript
+// 核心原則: 邏輯清晰 > 精簡 > 易讀 > 高效
+
+// ✅ 清晰的輸出格式
+console.log('=== 訂單處理結果 ===');
+console.log(`訂單ID: ${order.id}`);
+console.log(`總金額: $${total}`);
+console.log('========================');
+
+// ✅ 函數職責單一
+const calculateOrderTotal = (items: OrderItem[]): number => {
+  return items.reduce((total, item) => total + item.price * item.quantity, 0);
+};
+```
+
+## 🎯 專案特定指導
+
+### Zustand 狀態管理
+```typescript
+interface OrderStore {
+  orders: Order[];
+  loading: boolean;
+  error: string | null;
+  
+  // 動作函數使用動詞命名
+  fetchOrders: () => Promise<void>;
+  addOrder: (order: CreateOrderRequest) => Promise<void>;
+  updateOrder: (id: string, updates: Partial<Order>) => Promise<void>;
+  
+  // 重置和清理
+  reset: () => void;
+  clearError: () => void;
+}
+```
+
+### Supabase 實時集成
+```typescript
+// 實時訂閱處理
+const setupOrderSubscription = () => {
+  return supabase
+    .channel('orders')
+    .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' },
+        handleOrderChange
+    )
+    .subscribe();
+};
+```
+
+### 多平台適配
+```typescript
+// 平台檢測
+const isPlatform = {
+  web: !window.electronAPI && !window.Capacitor,
+  electron: !!window.electronAPI,
+  mobile: !!window.Capacitor
+};
+
+// 響應式設計 (移動優先)
+.order-card {
+  @apply w-full p-4;           /* 手機 */
+  @apply md:w-1/2 md:p-6;      /* 平板 */
+  @apply lg:w-1/3 lg:p-8;      /* 桌面 */
+}
+
+// 觸摸友好設計
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
+}
+```
+
+---
+
+*本專案使用 **OpenCode + GitHub Copilot** 開發 | 最後更新: 2025-08-09*

@@ -12,24 +12,29 @@ import {
 import { chartTheme, chartColors, formatters } from '../../utils/chartHelpers';
 import CustomTooltip from './CustomTooltip';
 
+// 定義圖表數據的基本結構
+interface ChartDataItem {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface BarConfig {
   dataKey: string;
   name?: string;
   color?: string;
-  radius?: number | number[];
-  props?: any;
+  radius?: number | [number, number, number, number];
+  props?: Record<string, unknown>;
 }
 
 interface CustomBarChartProps {
-  data?: any[];
+  data?: ChartDataItem[];
   bars?: BarConfig[];
   height?: number;
   showGrid?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  xAxisFormatter?: (value: any) => string;
-  yAxisFormatter?: (value: any) => string;
-  tooltipFormatter?: (value: any) => string;
+  xAxisFormatter?: ((value: string | number | undefined) => string) | undefined;
+  yAxisFormatter?: ((value: string | number | undefined) => string) | undefined;
+  tooltipFormatter?: ((value: string | number | undefined) => string) | undefined;
   className?: string;
   layout?: 'vertical' | 'horizontal';
 }
@@ -47,10 +52,21 @@ const CustomBarChart: React.FC<CustomBarChartProps> = ({
   className = '',
   layout = 'vertical' // 'vertical' 或 'horizontal'
 }) => {
+  // 創建統一的 tickFormatter 函數來處理類型安全
+  const createTickFormatter = (formatter?: (value: string | number | undefined) => string) => {
+    if (!formatter) return undefined;
+    return (value: any): string => {
+      return formatter(value);
+    };
+  };
+
+  const xAxisTickFormatter = createTickFormatter(xAxisFormatter);
+  const yAxisTickFormatter = createTickFormatter(yAxisFormatter);
+
   const customTooltip = (
     <CustomTooltip 
-      labelFormatter={xAxisFormatter}
-      valueFormatter={tooltipFormatter}
+      labelFormatter={xAxisFormatter ? (value) => xAxisFormatter(value) : null}
+      valueFormatter={tooltipFormatter ? (value) => tooltipFormatter(value) : null}
     />
   );
 
@@ -71,20 +87,22 @@ const CustomBarChart: React.FC<CustomBarChartProps> = ({
           
           <XAxis 
             type={layout === 'vertical' ? 'number' : 'category'}
-            dataKey={layout === 'vertical' ? undefined : xAxisKey}
+            {...(layout !== 'vertical' && { dataKey: xAxisKey || 'name' })}
             tick={chartTheme.axis.tick}
             axisLine={chartTheme.axis.axisLine}
             tickLine={chartTheme.axis.tickLine}
-            tickFormatter={layout === 'vertical' ? yAxisFormatter : xAxisFormatter}
+            {...(layout === 'vertical' && yAxisTickFormatter && { tickFormatter: yAxisTickFormatter })}
+            {...(layout !== 'vertical' && xAxisTickFormatter && { tickFormatter: xAxisTickFormatter })}
           />
           
           <YAxis 
             type={layout === 'vertical' ? 'category' : 'number'}
-            dataKey={layout === 'vertical' ? xAxisKey : undefined}
+            {...(layout === 'vertical' && { dataKey: xAxisKey || 'name' })}
             tick={chartTheme.axis.tick}
             axisLine={chartTheme.axis.axisLine}
             tickLine={chartTheme.axis.tickLine}
-            tickFormatter={layout === 'vertical' ? xAxisFormatter : yAxisFormatter}
+            {...(layout === 'vertical' && xAxisTickFormatter && { tickFormatter: xAxisTickFormatter })}
+            {...(layout !== 'vertical' && yAxisTickFormatter && { tickFormatter: yAxisTickFormatter })}
             width={layout === 'vertical' ? 80 : undefined}
           />
           

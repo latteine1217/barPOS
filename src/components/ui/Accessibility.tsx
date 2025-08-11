@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 interface ScreenReaderOnlyProps {
   children: React.ReactNode;
@@ -66,86 +66,9 @@ const SkipLink: React.FC<SkipLinkProps> = ({
         transition-transform duration-200
         ${className}
       `}
-      onFocus={(e) => {
-        // 確保跳過連結在焦點時可見
-        e.currentTarget.scrollIntoView();
-      }}
     >
       {children}
     </a>
-  );
-};
-
-interface FocusTrapProps {
-  children: React.ReactNode;
-  active?: boolean;
-  restoreFocus?: boolean;
-  className?: string;
-}
-
-// 焦點陷阱組件
-const FocusTrap: React.FC<FocusTrapProps> = ({
-  children,
-  active = true,
-  restoreFocus = true,
-  className = ''
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastFocusedElement = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!active || !containerRef.current) return;
-
-    // 記住當前焦點元素
-    lastFocusedElement.current = document.activeElement as HTMLElement;
-
-    const container = containerRef.current;
-    const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) as NodeListOf<HTMLElement>;
-
-    if (focusableElements.length === 0) return;
-
-    // 聚焦第一個元素
-    focusableElements[0].focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      if (event.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          event.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        // Tab
-        if (document.activeElement === lastElement) {
-          event.preventDefault();
-          firstElement.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      
-      // 恢復之前的焦點
-      if (restoreFocus && lastFocusedElement.current) {
-        lastFocusedElement.current.focus();
-      }
-    };
-  }, [active, restoreFocus]);
-
-  return (
-    <div ref={containerRef} className={className}>
-      {children}
-    </div>
   );
 };
 
@@ -163,16 +86,21 @@ const AriaAnnouncement: React.FC<AriaAnnouncementProps> = ({
 }) => {
   const [currentMessage, setCurrentMessage] = React.useState(message);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setCurrentMessage(message);
 
+    let timer: NodeJS.Timeout;
     if (clearAfter > 0) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setCurrentMessage('');
       }, clearAfter);
-
-      return () => clearTimeout(timer);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [message, clearAfter]);
 
   return (
@@ -337,12 +265,11 @@ const AccessibleInput: React.FC<AccessibleInputProps> = ({
   );
 };
 
-// 匯出所有無障礙組件
+// 匯出無障礙組件（移除 FocusTrap）
 export {
   ScreenReaderOnly,
   LiveRegion,
   SkipLink,
-  FocusTrap,
   AriaAnnouncement,
   AccessibleButton,
   AccessibleInput

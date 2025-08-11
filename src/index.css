@@ -1,331 +1,3217 @@
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
+/* Tailwind CSS 基礎樣式 */
 @tailwind base;
-@tailwind components;
+@tailwind components; 
 @tailwind utilities;
+@import "@fortawesome/fontawesome-free/css/all.min.css";
 
-/* Mobile optimizations */
+/* CSS 變數定義 - 調酒酒吧主題色彩 */
+:root {
+  --color-bg: #050505;
+  --color-text: #ffffff;
+  --color-primary: #ff3366;
+  --color-secondary: #3366ff;
+  --color-tertiary: #33ddff;
+  --color-accent: #ffcc00;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  /* 5層玻璃深度系統 - 視覺層次重構 */
+  /* 第1層 - 背景層：最底層元素，如背景容器 */
+  --glass-surface: rgba(255, 255, 255, 0.03);
+  --glass-surface-border: rgba(255, 255, 255, 0.08);
+  --glass-surface-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  
+  /* 第2層 - 卡片層：一般內容卡片 */
+  --glass-elevated: rgba(255, 255, 255, 0.08);
+  --glass-elevated-border: rgba(255, 255, 255, 0.12);
+  --glass-elevated-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  
+  /* 第3層 - 浮動元素：重要內容區域、側邊欄 */
+  --glass-floating: rgba(255, 255, 255, 0.15);
+  --glass-floating-border: rgba(255, 255, 255, 0.18);
+  --glass-floating-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  
+  /* 第4層 - 模態框：彈出窗口、下拉選單 */
+  --glass-modal: rgba(255, 255, 255, 0.25);
+  --glass-modal-border: rgba(255, 255, 255, 0.28);
+  --glass-modal-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  
+  /* 第5層 - 焦點狀態：主要操作按鈕、活躍狀態 */
+  --glass-focus: rgba(255, 255, 255, 0.35);
+  --glass-focus-border: rgba(255, 255, 255, 0.4);
+  --glass-focus-shadow: 0 20px 64px rgba(0, 0, 0, 0.55);
+  
+  /* 文字層次系統 - 增強對比度 */
+  --text-primary: rgba(255, 255, 255, 0.98);    /* 主要文字 */
+  --text-secondary: rgba(255, 255, 255, 0.85);  /* 次要文字 */
+  --text-muted: rgba(255, 255, 255, 0.65);      /* 輔助文字 */
+  --text-disabled: rgba(255, 255, 255, 0.45);   /* 禁用文字 */
+  
+  /* 舊版兼容變數（逐步淘汰） */
+  --card-radius: 16px;
+  --card-bg: var(--glass-elevated);
+  --card-border: var(--glass-elevated-border);
+  --card-shadow: var(--glass-elevated-shadow);
+  --glass-bg: var(--glass-floating);
+  --glass-border: var(--glass-floating-border);
+  --glass-shadow: var(--glass-floating-shadow);
+  
+  /* 動畫過渡 */
+  --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --transition-fast: all 0.3s ease;
+  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 全域字體和基礎設定 */
 @layer base {
-  /* Use Inter font family for better readability */
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  }
-
-  /* Prevent zoom on input focus in iOS */
-  input[type="color"],
-  input[type="date"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="email"],
-  input[type="month"],
-  input[type="number"],
-  input[type="password"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="text"],
-  input[type="time"],
-  input[type="url"],
-  input[type="week"],
-  select:focus,
-  textarea {
-    font-size: 16px;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
   
-  /* Better touch targets for mobile */
-  button,
-  input,
-  select,
-  textarea {
-    min-height: 44px; /* iOS recommended minimum touch target */
-  }
-  
-  /* Disable text selection on buttons for better mobile UX */
-  button {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  
-  /* Smooth scrolling */
   html {
-    scroll-behavior: smooth;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   
-  /* Safe area for mobile devices with notches */
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800 rounded-full;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+    font-size: 1rem;
   }
 }
 
-/* Custom components with modern design */
+/* 自定義組件樣式 */
 @layer components {
-  /* Modern button styles with better shadows and animations */
-  .btn {
-    @apply px-8 py-4 rounded-xl font-medium transition-all duration-300 text-center relative overflow-hidden;
-    min-height: 44px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
-  
-  .btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .btn-xs {
-    @apply px-4 py-2 text-xs rounded-lg;
-    min-height: 32px;
-  }
-  
-  .btn-sm {
-    @apply px-6 py-3 text-sm rounded-lg;
-    min-height: 36px;
-  }
-  
-  .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
-  }
-  
-  .btn-primary:hover {
-    @apply from-blue-700 to-blue-800;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45);
-  }
-  
-  .btn-secondary {
-    @apply bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .btn-secondary:hover {
-    @apply bg-gray-50 dark:bg-gray-700;
-  }
-  
-  .btn-success {
-    @apply bg-gradient-to-r from-green-600 to-green-700 text-white;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.35);
-  }
-  
-  .btn-success:hover {
-    @apply from-green-700 to-green-800;
-    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.45);
-  }
-  
-  .btn-info {
-    @apply bg-gradient-to-r from-sky-500 to-sky-600 text-white;
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
-  }
-  
-  .btn-info:hover {
-    @apply from-sky-600 to-sky-700;
-    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45);
-  }
-  
-  .btn-warning {
-    @apply bg-gradient-to-r from-amber-500 to-amber-600 text-white;
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
-  }
-  
-  .btn-warning:hover {
-    @apply from-amber-600 to-amber-700;
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.45);
-  }
-  
-  .btn-error {
-    @apply bg-gradient-to-r from-red-500 to-red-600 text-white;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
-  }
-  
-  .btn-error:hover {
-    @apply from-red-600 to-red-700;
-    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
+  /* 主背景容器 - 調酒酒吧風格漸變泡泡背景 */
+  .app-background {
+    @apply relative min-h-screen overflow-hidden;
+    background-color: var(--color-bg);
   }
 
-  /* Modern glass-morphism card design */
+  /* 5層玻璃深度系統基礎樣式 */
+  
+  /* 第1層 - 背景層玻璃效果 */
+  .glass-surface {
+    background: var(--glass-surface);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-surface-border);
+    box-shadow: var(--glass-surface-shadow);
+  }
+  
+  /* 第2層 - 卡片層玻璃效果（升級版） */
+  .glass-elevated {
+    background: var(--glass-elevated);
+    backdrop-filter: blur(12px) saturate(170%);
+    -webkit-backdrop-filter: blur(12px) saturate(170%);
+    border: 1px solid var(--glass-elevated-border);
+    box-shadow: var(--glass-elevated-shadow);
+    position: relative;
+  }
+  
+  .glass-elevated::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.12), 
+      rgba(255, 255, 255, 0.04)
+    );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  /* 第3層 - 浮動元素玻璃效果（升級版） */
+  .glass-floating {
+    background: var(--glass-floating);
+    backdrop-filter: blur(16px) saturate(180%) brightness(1.05);
+    -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(1.05);
+    border: 1px solid var(--glass-floating-border);
+    box-shadow: var(--glass-floating-shadow);
+    position: relative;
+  }
+  
+  .glass-floating::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.18), 
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.12)
+    );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  /* 第4層 - 模態框玻璃效果（升級版） */
+  .glass-modal {
+    background: var(--glass-modal);
+    backdrop-filter: blur(20px) saturate(200%) brightness(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.1);
+    border: 1px solid var(--glass-modal-border);
+    box-shadow: var(--glass-modal-shadow);
+    position: relative;
+  }
+  
+  .glass-modal::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.25), 
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.18)
+    );
+    border-radius: inherit;
+    z-index: -1;
+    filter: blur(0.5px);
+  }
+  
+  /* 第5層 - 焦點狀態玻璃效果（升級版） */
+  .glass-focus {
+    background: var(--glass-focus);
+    backdrop-filter: blur(24px) saturate(220%) brightness(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(220%) brightness(1.15);
+    border: 1px solid var(--glass-focus-border);
+    box-shadow: var(--glass-focus-shadow);
+    position: relative;
+  }
+  
+  .glass-focus::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.35), 
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.25)
+    );
+    border-radius: inherit;
+    z-index: -1;
+    filter: blur(1px);
+  }
+
+  /* 統一的磨砂玻璃基礎樣式（使用新的層次系統） */
+  .glass-effect {
+    @apply glass-elevated;
+    transition: var(--transition-smooth);
+  }
+
+  /* 統一的卡片樣式（第三階段互動升級版） */
   .card {
-    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/50 transition-all duration-300;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    @apply glass-elevated rounded-2xl;
+    @apply btn-micro-interaction glass-shine-subtle haptic-light;
+    @apply table-state-transition;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
   }
-
+  
   .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    @apply glass-floating;
+    transform: translateY(-4px) scale(1.02);
+    color: var(--text-primary);
+    filter: brightness(1.05);
   }
 
-  .card-flat {
-    @apply bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* 數據展示卡片（第三階段互動升級版） */
+  .card-data {
+    @apply glass-elevated rounded-2xl;
+    @apply btn-micro-interaction glass-shine-subtle haptic-light;
+    @apply table-state-transition;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-data:hover {
+    @apply glass-floating;
+    transform: translateY(-2px) scale(1.01);
+    filter: brightness(1.08);
+  }
+
+  /* 統一的按鈕樣式（第三階段微互動升級版） */
+  .btn {
+    @apply glass-elevated rounded-xl px-6 py-3 font-medium;
+    @apply btn-micro-interaction glass-shine-smart haptic-medium;
+    color: var(--text-primary);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: none;
+  }
+
+  .btn:hover {
+    @apply glass-floating;
+  }
+
+  .btn:active {
+    transform: translateY(-1px) scale(0.98);
+    @apply glass-elevated;
+  }
+
+  /* 主要操作按鈕（第三階段CTA升級版） */
+  .btn-cta {
+    @apply glass-focus rounded-xl px-8 py-4 font-semibold;
+    @apply btn-micro-interaction glass-shine-premium haptic-strong;
+    @apply btn-floating-hover;
+    color: var(--text-primary);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    border: none;
+  }
+
+  .btn-cta:hover {
+    transform: translateY(-8px) rotateX(5deg) scale(1.02);
+    box-shadow: 
+      0 30px 60px rgba(0, 0, 0, 0.3),
+      0 0 40px rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-cta:active {
+    transform: translateY(-4px) rotateX(2deg) scale(0.98);
+  }
+
+  /* 按鈕變體（使用新的層次系統） */
+  .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    box-shadow: 
+      var(--glass-floating-shadow),
+      0 8px 25px rgba(59, 130, 246, 0.4);
+  }
+
+  .btn-secondary {
+    @apply glass-elevated;
+    border: 1px solid var(--glass-elevated-border);
+  }
+
+  .btn-secondary:hover {
+    @apply glass-floating;
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: white;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: white;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+
+  /* 統一的輸入框樣式（第二階段升級版） */
+  .form-input {
+    @apply glass-elevated rounded-xl px-4 py-3 w-full;
+    @apply glass-border-dynamic glass-texture-fine;
+    border: none;
+    transition: var(--transition-smooth);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* === 第三階段：增強表單輸入互動體驗 === */
+  
+  /* 1. 智能焦點輸入框 */
+  .form-input-enhanced {
+    @apply glass-elevated rounded-xl px-4 py-3 w-full;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid var(--glass-elevated-border);
+    color: var(--text-primary);
+    background: var(--glass-elevated);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
   }
   
-  /* Navigation with modern styling */
-  .nav-item {
-    @apply flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 rounded-xl cursor-pointer transition-all duration-200 relative;
+  /* 輸入框內部光效 */
+  .form-input-enhanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.02),
+      rgba(255, 255, 255, 0.06)
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
   }
   
-  .nav-item:hover {
-    @apply bg-gray-100/70 dark:bg-gray-700/70 backdrop-blur-sm;
+  /* 聚焦狀態增強效果 */
+  .form-input-enhanced:focus {
+    outline: none;
+    background: var(--glass-floating);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      var(--glass-floating-shadow),
+      0 0 25px rgba(255, 255, 255, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .form-input-enhanced:focus::before {
+    opacity: 1;
+  }
+  
+  /* 2. 浮動標籤效果 */
+  .form-group-floating {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-label-floating {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    background: transparent;
+    padding: 0 4px;
+    z-index: 2;
+  }
+  
+  .form-input-floating:focus + .form-label-floating,
+  .form-input-floating:not(:placeholder-shown) + .form-label-floating {
+    top: 0;
+    transform: translateY(-50%) scale(0.85);
+    color: var(--text-primary);
+    background: var(--glass-elevated);
+    padding: 0 8px;
+    border-radius: 4px;
+  }
+  
+  /* 3. 動態邊框效果 */
+  .form-input-dynamic-border {
+    position: relative;
+    background: var(--glass-elevated);
+    border: 1px solid var(--glass-elevated-border);
+    transition: all 0.3s ease;
+  }
+  
+  .form-input-dynamic-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    background-size: 300% 300%;
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: border-flow 3s ease-in-out infinite;
+  }
+  
+  .form-input-dynamic-border:focus::after {
+    opacity: 1;
+  }
+  
+  @keyframes border-flow {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  /* 4. 輸入驗證視覺反饋 */
+  .form-input-success {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: var(--glass-floating);
+    animation: success-glow 0.6s ease-out;
+  }
+  
+  .form-input-success::before {
+    background: linear-gradient(
+      45deg,
+      rgba(34, 197, 94, 0.1),
+      rgba(34, 197, 94, 0.05)
+    );
+    opacity: 1;
+  }
+  
+  @keyframes success-glow {
+    0% {
+      box-shadow: var(--glass-elevated-shadow);
+    }
+    50% {
+      box-shadow: 
+        var(--glass-floating-shadow),
+        0 0 20px rgba(34, 197, 94, 0.3);
+    }
+    100% {
+      box-shadow: var(--glass-floating-shadow);
+    }
+  }
+  
+  .form-input-error {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--glass-floating);
+    animation: error-shake 0.6s ease-out;
+  }
+  
+  .form-input-error::before {
+    background: linear-gradient(
+      45deg,
+      rgba(239, 68, 68, 0.1),
+      rgba(239, 68, 68, 0.05)
+    );
+    opacity: 1;
+  }
+  
+  @keyframes error-shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-4px);
+    }
+    75% {
+      transform: translateX(4px);
+    }
+  }
+  
+  /* 5. 字數統計動畫 */
+  .form-counter {
+    position: absolute;
+    bottom: -20px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+  }
+  
+  .form-counter.warning {
+    color: var(--color-warning);
+    animation: counter-warning 1s ease-in-out infinite;
+  }
+  
+  .form-counter.error {
+    color: var(--color-error);
+    animation: counter-error 0.5s ease-in-out infinite;
+  }
+  
+  @keyframes counter-warning {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+  
+  @keyframes counter-error {
+    0%, 100% {
+      transform: scale(1) translateX(0);
+    }
+    25% {
+      transform: scale(1.1) translateX(-2px);
+    }
+    75% {
+      transform: scale(1.1) translateX(2px);
+    }
+  }
+  
+  /* 6. 自動完成建議動畫 */
+  .form-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--glass-modal);
+    border: 1px solid var(--glass-modal-border);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+  }
+  
+  .form-suggestions.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  
+  .form-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .form-suggestion-item:hover {
+    background: rgba(255, 255, 255, 0.1);
     transform: translateX(4px);
   }
   
-  .nav-item.active {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  .form-suggestion-item:last-child {
+    border-bottom: none;
   }
 
-  .nav-item.active::before {
-    content: '';
-    @apply absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full;
-  }
-  
-  /* Enhanced table cards with better visual hierarchy */
-  .table-card {
-    @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl cursor-pointer transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  }
-  
-  .table-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  }
-
-  .table-card::before {
-    content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-  }
-
-  .table-card:hover::before {
-    @apply opacity-100;
-  }
-  
-  /* Modal with modern design */
-  .modal-overlay {
-    @apply fixed inset-0 flex items-center justify-center z-50 p-4;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-  }
-  
-  .modal-content {
-    @apply bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-full max-h-full overflow-auto border border-white/20 dark:border-gray-700/50;
-    animation: modalSlideIn 0.3s ease-out;
-  }
-
-  @keyframes modalSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-  
-  /* Enhanced form inputs */
-  .form-input {
-    @apply w-full px-6 py-4 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 transition-all duration-200;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  .form-input::placeholder {
+    color: var(--text-muted);
   }
 
   .form-input:focus {
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    outline: none;
+    @apply glass-floating;
+    @apply shadow-glass-glow;
     transform: translateY(-1px);
   }
-  
+
+  /* 表單輸入框應用第三階段增強效果 */
+  .form-input,
+  .input-glass {
+    @apply form-input-enhanced haptic-light;
+  }
+
+  /* 統一的標籤樣式（使用新的文字層次） */
   .form-label {
-    @apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2;
+    @apply block text-sm font-medium mb-2;
+    color: var(--text-secondary);
   }
   
-  /* Touch-friendly elements */
-  .btn-touch {
-    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  /* 文字層次系統樣式類別 */
+  .text-hierarchy-primary {
+    color: var(--text-primary);
+    font-weight: 600;
   }
   
-  /* Status indicators with better visual design */
-  .table-available {
-    @apply border-l-4 border-emerald-500 dark:border-emerald-400;
+  .text-hierarchy-secondary {
+    color: var(--text-secondary);
+    font-weight: 500;
   }
   
-  .table-available::after {
+  .text-hierarchy-muted {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  
+  .text-hierarchy-disabled {
+    color: var(--text-disabled);
+    font-weight: 400;
+  }
+  
+  /* 標題文字樣式 */
+  .heading-primary {
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  
+  .heading-secondary {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  
+  .heading-tertiary {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  
+  /* 內文文字樣式 */
+  .body-large {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  .body-regular {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  .body-small {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  /* 特殊文字樣式 */
+  .text-accent {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  
+  .text-success {
+    color: var(--color-success);
+    font-weight: 500;
+  }
+  
+  .text-warning {
+    color: var(--color-warning);
+    font-weight: 500;
+  }
+  
+  .text-error {
+    color: var(--color-error);
+    font-weight: 500;
+  }
+  
+  /* 第二階段：純正Glassmorphism效果 */
+  
+  /* === 第三階段：高級微互動動效系統 === */
+  
+  /* 1. 智能按鈕反饋 - 多層次 hover/click 動效 */
+  .btn-micro-interaction {
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    will-change: transform, box-shadow, background;
+  }
+  
+  /* 按鈕內部光波動畫 */
+  .btn-micro-interaction::before {
     content: '';
-    @apply absolute top-2 right-2 w-3 h-3 bg-emerald-500 rounded-full;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.1) 40%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
   }
   
-  .table-occupied {
-    @apply border-l-4 border-red-500 dark:border-red-400;
+  /* Hover 狀態 - 多層次反饋 */
+  .btn-micro-interaction:hover::before {
+    opacity: 1;
+    animation: ripple-expand 0.6s ease-out;
   }
-
-  .table-occupied::after {
+  
+  .btn-micro-interaction:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+      var(--glass-floating-shadow),
+      0 0 25px rgba(255, 255, 255, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Click 狀態 - 即時反饋 */
+  .btn-micro-interaction:active {
+    transform: translateY(-1px) scale(0.98);
+    transition: all 0.1s ease-out;
+    box-shadow: var(--glass-elevated-shadow);
+  }
+  
+  /* 2. 磁性按鈕效果 - 滑鼠接近時的微動效 */
+  .btn-magnetic {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .btn-magnetic:hover {
+    transform: translateY(-2px) scale(1.05);
+    filter: brightness(1.1);
+  }
+  
+  /* 3. 液體按鈕效果 - 變形動畫 */
+  .btn-liquid {
+    border-radius: 24px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .btn-liquid:hover {
+    border-radius: 16px;
+    padding: 16px 32px;
+  }
+  
+  .btn-liquid:active {
+    border-radius: 32px;
+    padding: 12px 24px;
+  }
+  
+  /* 4. 脈衝按鈕效果 - 週期性強調 */
+  .btn-pulse-attention {
+    animation: gentle-pulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes gentle-pulse {
+    0%, 100% {
+      box-shadow: var(--glass-elevated-shadow);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 
+        var(--glass-floating-shadow),
+        0 0 20px rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+  }
+  
+  /* 5. 拖拽感知按鈕 - 可拖拽視覺提示 */
+  .btn-draggable {
+    cursor: grab;
+    user-select: none;
+  }
+  
+  .btn-draggable:active {
+    cursor: grabbing;
+    transform: rotate(2deg) scale(1.05);
+    z-index: 100;
+  }
+  
+  /* 6. 色彩呼吸效果 - 狀態變化的視覺回饋 */
+  .btn-breathing {
+    animation: color-breathing 4s ease-in-out infinite alternate;
+  }
+  
+  @keyframes color-breathing {
+    0% {
+      background: var(--glass-elevated);
+      border-color: var(--glass-elevated-border);
+    }
+    100% {
+      background: var(--glass-floating);
+      border-color: var(--glass-floating-border);
+    }
+  }
+  
+  /* 7. 智慧型光線掃描 - 增強版 */
+  .glass-shine-smart {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shine-smart::after {
     content: '';
-    @apply absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 150%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08) 20%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.08) 80%,
+      transparent
+    );
+    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    z-index: 1;
   }
-
-  /* Status badges with glow effect */
-  .status-badge {
-    @apply inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold;
+  
+  .glass-shine-smart:hover::after {
+    left: 150%;
   }
-
-  .status-pending {
-    @apply bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300;
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  
+  /* 8. 彈性變形效果 */
+  .btn-elastic {
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
-
-  .status-preparing {
-    @apply bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-  }
-
-  .status-completed {
-    @apply bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-  }
-
-  .status-paid {
-    @apply bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300;
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
-  }
-
-  /* Floating action button */
-  .fab {
-    @apply fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 z-50;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-  }
-
-  .fab:hover {
+  
+  .btn-elastic:hover {
     transform: scale(1.1);
-    box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5);
+  }
+  
+  .btn-elastic:active {
+    transform: scale(0.95);
+    transition: all 0.1s ease-out;
+  }
+  
+  /* 9. 漣漪擴散動畫 */
+  @keyframes ripple-expand {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  
+  /* 10. 浮動懸停效果 */
+  .btn-floating-hover {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .btn-floating-hover:hover {
+    transform: translateY(-8px) rotateX(5deg);
+    box-shadow: 
+      0 30px 60px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(255, 255, 255, 0.1);
+  }
+  
+  /* 光線反射系統 - 動態光線掃描效果 */
+  .glass-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.25),
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .glass-shine:hover::after {
+    left: 100%;
+  }
+  
+  /* 增強版光線掃描 - 用於重要元素 */
+  .glass-shine-premium {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shine-premium::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 120%;
+    height: 100%;
+    background: linear-gradient(
+      75deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    transition: left 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .glass-shine-premium:hover::after {
+    left: 120%;
+  }
+  
+  /* 微妙光線效果 - 用於文字和小元素 */
+  .glass-shine-subtle {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shine-subtle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    );
+    transition: left 0.6s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .glass-shine-subtle:hover::after {
+    left: 100%;
+  }
+  
+  /* 持續光線動畫 - 用於焦點元素 */
+  .glass-shine-pulse {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-shine-pulse::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.12),
+      transparent
+    );
+    animation: shine-pulse 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 升級邊框設計 - 漸層邊框系統 */
+  
+  /* 微妙漸層邊框 */
+  .glass-border-subtle {
+    border: none;
+    background: 
+      var(--glass-elevated) padding-box,
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.15), 
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.08)
+      ) border-box;
+    border: 1px solid transparent;
+  }
+  
+  /* 多層邊框效果 */
+  .glass-border-layered {
+    position: relative;
+    border: none;
+    background: var(--glass-elevated);
+  }
+  
+  .glass-border-layered::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.2), 
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.15)
+    );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  .glass-border-layered::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.1), 
+      rgba(255, 255, 255, 0.02),
+      rgba(255, 255, 255, 0.08)
+    );
+    border-radius: inherit;
+    z-index: -2;
+  }
+  
+  /* 發光邊框效果 */
+  .glass-border-glow {
+    position: relative;
+    border: none;
+    background: var(--glass-floating);
+  }
+  
+  .glass-border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.3), 
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.2)
+    );
+    border-radius: inherit;
+    z-index: -1;
+    filter: blur(0.5px);
+  }
+  
+  /* 動態邊框 - hover時變化 */
+  .glass-border-dynamic {
+    position: relative;
+    border: none;
+    background: var(--glass-elevated);
+    transition: all 0.3s ease;
+  }
+  
+  .glass-border-dynamic::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.1), 
+      rgba(255, 255, 255, 0.05)
+    );
+    border-radius: inherit;
+    z-index: -1;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-border-dynamic:hover::before {
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.25), 
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.2)
+    );
+    filter: blur(0.5px);
+  }
+  
+  /* 彩虹邊框 - 特殊場合使用 */
+  .glass-border-rainbow {
+    position: relative;
+    border: none;
+    background: var(--glass-focus);
+  }
+  
+  .glass-border-rainbow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, 
+      var(--color-primary), 
+      var(--color-secondary),
+      var(--color-tertiary),
+      var(--color-accent)
+    );
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0.6;
+    filter: blur(1px);
+  }
+  
+  /* 三層陰影系統 - 專業級光影效果 */
+  
+  /* 基礎三層陰影 */
+  .shadow-glass-premium {
+    box-shadow: 
+      /* 主陰影 - 物體投射的主要陰影 */
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      /* 接觸陰影 - 物體與表面接觸的陰影 */
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      /* 內部高光 - 玻璃內部的光線反射 */
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  }
+  
+  /* 浮動狀態陰影增強 */
+  .shadow-glass-floating {
+    box-shadow: 
+      /* 增強主陰影 */
+      0 32px 64px rgba(0, 0, 0, 0.2),
+      /* 擴大接觸陰影 */
+      0 8px 24px rgba(0, 0, 0, 0.15),
+      /* 增強內部高光 */
+      inset 0 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      /* 添加環境光 */
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  
+  /* 深度陰影 - 最高層級元素 */
+  .shadow-glass-depth {
+    box-shadow: 
+      /* 深層主陰影 */
+      0 40px 80px rgba(0, 0, 0, 0.25),
+      /* 中層陰影 */
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      /* 接觸陰影 */
+      0 8px 16px rgba(0, 0, 0, 0.1),
+      /* 雙重內部高光 */
+      inset 0 2px 0 rgba(255, 255, 255, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+  }
+  
+  /* 微妙陰影 - 適用於小元素 */
+  .shadow-glass-subtle {
+    box-shadow: 
+      /* 輕微主陰影 */
+      0 8px 16px rgba(0, 0, 0, 0.08),
+      /* 接觸陰影 */
+      0 2px 6px rgba(0, 0, 0, 0.06),
+      /* 內部高光 */
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  /* 發光陰影 - 特殊狀態 */
+  .shadow-glass-glow {
+    box-shadow: 
+      /* 主陰影 */
+      0 24px 48px rgba(0, 0, 0, 0.18),
+      /* 發光效果 */
+      0 0 24px rgba(255, 255, 255, 0.1),
+      /* 接觸陰影 */
+      0 6px 16px rgba(0, 0, 0, 0.12),
+      /* 內部高光 */
+      inset 0 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+  
+  /* 彩色發光陰影 - 用於強調 */
+  .shadow-glass-colored {
+    box-shadow: 
+      /* 主陰影 */
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      /* 彩色發光 */
+      0 0 20px rgba(255, 51, 102, 0.2),
+      /* 接觸陰影 */
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      /* 內部高光 */
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  
+  /* 動態陰影變化 */
+  .shadow-glass-dynamic {
+    box-shadow: 
+      0 12px 24px rgba(0, 0, 0, 0.12),
+      0 3px 8px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .shadow-glass-dynamic:hover {
+    box-shadow: 
+      0 28px 56px rgba(0, 0, 0, 0.2),
+      0 8px 20px rgba(0, 0, 0, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+  
+  /* 增強背景模糊和材質質感 */
+  
+  /* 增強的背景模糊效果 */
+  .backdrop-blur-enhanced {
+    backdrop-filter: 
+      blur(20px) 
+      saturate(180%) 
+      brightness(1.1);
+    -webkit-backdrop-filter: 
+      blur(20px) 
+      saturate(180%) 
+      brightness(1.1);
+  }
+  
+  /* 超級模糊效果 - 用於重要元素 */
+  .backdrop-blur-ultra {
+    backdrop-filter: 
+      blur(30px) 
+      saturate(200%) 
+      brightness(1.15)
+      contrast(1.1);
+    -webkit-backdrop-filter: 
+      blur(30px) 
+      saturate(200%) 
+      brightness(1.15)
+      contrast(1.1);
+  }
+  
+  /* 材質紋理效果 */
+  .glass-texture {
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+  /* 精細紋理 */
+  .glass-texture-fine {
+    background-image: 
+      radial-gradient(circle at 0.5px 0.5px, rgba(255,255,255,0.03) 0.5px, transparent 0);
+    background-size: 12px 12px;
+  }
+  
+  /* 噪點紋理 */
+  .glass-texture-noise {
+    background-image: 
+      repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.01) 0px,
+        rgba(255,255,255,0.01) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+  }
+  
+  /* 霜花效果 */
+  .glass-texture-frost {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.06) 2px, transparent 3px),
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.04) 1px, transparent 2px),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 1px, transparent 2px);
+    background-size: 30px 30px, 25px 25px, 20px 20px;
+  }
+  
+  /* 水波紋理 */
+  .glass-texture-ripple {
+    background-image: 
+      radial-gradient(ellipse at center, 
+        rgba(255,255,255,0.05) 0%, 
+        rgba(255,255,255,0.02) 30%, 
+        transparent 50%
+      );
+    background-size: 40px 40px;
+    animation: ripple 8s ease-in-out infinite;
+  }
+  
+  /* 動態材質 - 隨滑鼠移動變化 */
+  .glass-material-dynamic {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-material-dynamic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.02) 30%,
+        transparent 50%
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 移動端和觸控體驗優化 */
+  
+  /* 移動端優化的模糊效果 */
+  @media (max-width: 768px) {
+    .backdrop-blur-enhanced {
+      backdrop-filter: blur(15px) saturate(150%);
+      -webkit-backdrop-filter: blur(15px) saturate(150%);
+    }
+    
+    .backdrop-blur-ultra {
+      backdrop-filter: blur(20px) saturate(170%);
+      -webkit-backdrop-filter: blur(20px) saturate(170%);
+    }
+    
+    /* 減少複雜紋理以提升性能 */
+    .glass-texture-frost,
+    .glass-bubbles,
+    .glass-rainbow-refraction {
+      background-image: none;
+    }
+    
+    /* 簡化陰影效果 */
+    .shadow-glass-premium {
+      box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.12),
+        0 3px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+  }
+  
+  /* 觸控反饋效果 */
+  .touch-feedback {
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .touch-feedback::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      transparent 50%
+    );
+    transform: scale(0);
+    transition: transform 0.3s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .touch-feedback:active::after {
+    transform: scale(1);
+  }
+  
+  /* 增強觸控目標大小 */
+  @media (max-width: 768px) {
+    .btn, .btn-cta {
+      min-height: 44px;
+      padding: 12px 16px;
+    }
+    
+    .form-input {
+      min-height: 44px;
+      padding: 12px 16px;
+    }
+    
+    /* 增加導航項目的觸控區域 */
+    .nav-item {
+      min-height: 48px;
+    }
+  }
+  
+  /* 滑動手勢指示 */
+  .swipe-indicator {
+    position: relative;
+  }
+  
+  .swipe-indicator::before {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.3)
+    );
+    border-radius: 2px;
+    animation: pulse-fade 2s ease-in-out infinite;
+  }
+
+  /* === 第三階段：頁面切換過渡動效系統 === */
+  
+  /* 1. 頁面淡入淡出過渡 */
+  .page-transition {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .page-transition.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* 2. 側滑過渡效果 */
+  .page-slide-transition {
+    transform: translateX(100%);
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .page-slide-transition.active {
+    transform: translateX(0);
+  }
+  
+  .page-slide-transition.exit {
+    transform: translateX(-100%);
+  }
+  
+  /* 3. 縮放淡入效果 */
+  .page-scale-transition {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .page-scale-transition.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  /* 4. 旋轉進入效果 */
+  .page-rotate-transition {
+    opacity: 0;
+    transform: rotateY(15deg) translateX(20px);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .page-rotate-transition.active {
+    opacity: 1;
+    transform: rotateY(0deg) translateX(0);
+  }
+  
+  /* 5. 摺疊展開效果 */
+  .page-fold-transition {
+    opacity: 0;
+    transform: rotateX(-90deg);
+    transform-origin: top center;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .page-fold-transition.active {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+  
+  /* 6. 漣漪展開效果 */
+  .page-ripple-transition {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .page-ripple-transition::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-modal);
+    clip-path: circle(0% at center);
+    transition: clip-path 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: -1;
+  }
+  
+  .page-ripple-transition.active::before {
+    clip-path: circle(150% at center);
+  }
+  
+  /* === 觸覺反饋和音效提示系統 === */
+  
+  /* 1. 觸覺反饋基礎類別 */
+  .haptic-feedback {
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 輕觸反饋 */
+  .haptic-light::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--touch-x, 50%) var(--touch-y, 50%),
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      transparent 50%
+    );
+    transform: scale(0);
+    transition: transform 0.3s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .haptic-light:active::after {
+    transform: scale(1);
+    animation: haptic-ripple 0.6s ease-out;
+  }
+  
+  /* 中等反饋 */
+  .haptic-medium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--touch-x, 50%) var(--touch-y, 50%),
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.15) 40%,
+      transparent 60%
+    );
+    transform: scale(0);
+    transition: transform 0.2s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .haptic-medium:active::after {
+    transform: scale(1.2);
+    animation: haptic-pulse 0.4s ease-out;
+  }
+  
+  /* 強烈反饋 */
+  .haptic-strong::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--touch-x, 50%) var(--touch-y, 50%),
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 70%
+    );
+    transform: scale(0);
+    transition: transform 0.15s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .haptic-strong:active::after {
+    transform: scale(1.5);
+    animation: haptic-impact 0.3s ease-out;
+  }
+  
+  /* 觸覺反饋動畫 */
+  @keyframes haptic-ripple {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes haptic-pulse {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.3);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(2.5);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes haptic-impact {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    30% {
+      transform: scale(1.8);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+  
+  /* 2. 成功反饋動效 */
+  .feedback-success {
+    animation: success-feedback 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  @keyframes success-feedback {
+    0% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.05);
+      filter: brightness(1.2) hue-rotate(90deg);
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
+  
+  /* 3. 錯誤反饋動效 */
+  .feedback-error {
+    animation: error-feedback 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  @keyframes error-feedback {
+    0%, 100% {
+      transform: translateX(0) scale(1);
+    }
+    20% {
+      transform: translateX(-8px) scale(1.02);
+    }
+    40% {
+      transform: translateX(8px) scale(1.02);
+    }
+    60% {
+      transform: translateX(-4px) scale(1.01);
+    }
+    80% {
+      transform: translateX(4px) scale(1.01);
+    }
+  }
+  
+  /* 4. 載入反饋動效 */
+  .feedback-loading {
+    position: relative;
+    pointer-events: none;
+  }
+  
+  .feedback-loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-modal);
+    border-radius: inherit;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+  }
+  
+  .feedback-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: loading-spin 1s linear infinite;
+    z-index: 11;
+  }
+  
+  /* 5. 音效視覺提示 */
+  .sound-indicator {
+    position: relative;
+  }
+  
+  .sound-indicator::after {
+    content: '🔊';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 12px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .sound-indicator.playing::after {
+    opacity: 1;
+    transform: scale(1);
+    animation: sound-pulse 1s ease-in-out infinite;
+  }
+  
+  @keyframes sound-pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  /* 高對比度模式支援 */  @media (prefers-contrast: high) {
+    .glass-elevated,
+    .glass-floating,
+    .glass-modal,
+    .glass-focus {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .text-hierarchy-primary {
+      color: rgba(255, 255, 255, 1);
+    }
+    
+    .text-hierarchy-secondary {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+  
+  /* 動作偏好設定 */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-shine::after,
+    .glass-shine-premium::after,
+    .glass-shine-subtle::after,
+    .glass-shine-pulse::after {
+      animation: none;
+      transition: none;
+    }
+    
+    .glass-texture-ripple {
+      animation: none;
+    }
+    
+    .glass-rainbow-refraction::before {
+      animation: none;
+    }
+    
+    .glass-bubbles::before {
+      animation: none;
+    }
+    
+    /* 第三階段動效也要支援無障礙設計 */
+    .btn-micro-interaction,
+    .table-state-transition,
+    .page-transition,
+    .haptic-light,
+    .haptic-medium,
+    .haptic-strong {
+      animation: none;
+      transition: none;
+    }
+  }
+
+  /* === 第三階段：性能優化系統 === */
+  
+  /* 1. GPU 加速優化 */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* 2. 智能動畫控制 - 根據設備性能調整 */
+  @media (prefers-reduced-motion: no-preference) and (min-resolution: 2dppx) {
+    /* 高解析度設備的優化動效 */
+    .btn-micro-interaction {
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.175);
+    }
+    
+    .table-state-transition {
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+  }
+  
+  @media (prefers-reduced-motion: no-preference) and (max-resolution: 1dppx) {
+    /* 低解析度設備的簡化動效 */
+    .btn-micro-interaction {
+      transition: all 0.2s ease-out;
+    }
+    
+    .table-state-transition {
+      transition: all 0.25s ease-out;
+    }
+  }
+  
+  /* 3. 觸控設備專用優化 */
+  @media (hover: none) and (pointer: coarse) {
+    /* 觸控設備：增強點擊區域和反饋 */
+    .btn, .btn-cta {
+      min-height: 48px;
+      min-width: 48px;
+      padding: 12px 16px;
+    }
+    
+    .table-interactive {
+      min-height: 60px;
+      min-width: 60px;
+    }
+    
+    /* 移除 hover 效果，專注於 active 狀態 */
+    .btn-micro-interaction:hover {
+      transform: none;
+    }
+    
+    .btn-micro-interaction:active {
+      transform: scale(0.95);
+      transition: transform 0.1s ease-out;
+    }
+  }
+  
+  /* 4. 低功耗模式優化 */
+  @media (prefers-reduced-data: reduce) {
+    /* 減少複雜動畫和模糊效果 */
+    .glass-elevated,
+    .glass-floating,
+    .glass-modal,
+    .glass-focus {
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    
+    .glass-texture-frost,
+    .glass-bubbles,
+    .glass-rainbow-refraction {
+      background-image: none;
+    }
+  }
+  
+  /* 5. 流暢度監控和自適應 */
+  .performance-critical {
+    contain: layout style paint;
+    content-visibility: auto;
+  }
+  
+  /* === 響應式動畫和視差效果 === */
+  
+  /* 1. 視差滾動效果 */
+  .parallax-background {
+    transform: translateZ(-1px) scale(2);
+    transform-style: preserve-3d;
+  }
+  
+  .parallax-midground {
+    transform: translateZ(-0.5px) scale(1.5);
+    transform-style: preserve-3d;
+  }
+  
+  .parallax-container {
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    perspective: 1px;
+    perspective-origin: center top;
+  }
+  
+  /* 2. 滑鼠追蹤效果 */
+  .mouse-tracker {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .mouse-tracker::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle 200px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+  
+  .mouse-tracker:hover::before {
+    opacity: 1;
+  }
+  
+  /* 3. 彈性縮放動畫 */
+  .elastic-scale {
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .elastic-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .elastic-scale:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+  }
+  
+  /* 4. 波紋擴散效果 */
+  .ripple-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ripple-effect::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    left: var(--ripple-x, 50%);
+    top: var(--ripple-y, 50%);
+    width: 20px;
+    height: 20px;
+  }
+  
+  @keyframes ripple-animation {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  
+  /* 5. 呼吸燈效果 */
+  .breathing-glow {
+    animation: breathing-glow 3s ease-in-out infinite alternate;
+  }
+  
+  @keyframes breathing-glow {
+    0% {
+      box-shadow: 
+        var(--glass-elevated-shadow),
+        0 0 5px rgba(255, 255, 255, 0.1);
+    }
+    100% {
+      box-shadow: 
+        var(--glass-floating-shadow),
+        0 0 20px rgba(255, 255, 255, 0.2);
+    }
+  }
+  
+  /* 6. 磁性吸附效果 */
+  .magnetic-hover {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .magnetic-hover:hover {
+    transform: translateY(-4px) rotateX(2deg);
+    box-shadow: 
+      var(--glass-floating-shadow),
+      0 0 25px rgba(255, 255, 255, 0.15);
+  }
+  
+  /* 7. 液體變形效果 */
+  .liquid-morph {
+    border-radius: 16px;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .liquid-morph:hover {
+    border-radius: 24px;
+    transform: scale(1.02);
+  }
+  
+  .liquid-morph:active {
+    border-radius: 8px;
+    transform: scale(0.98);
+    transition: all 0.2s ease-out;
+  }
+  
+  /* 8. 響應式動畫查詢 */
+  @media (max-width: 768px) {
+    /* 移動端簡化動畫 */
+    .btn-micro-interaction,
+    .table-state-transition {
+      transition: all 0.2s ease-out;
+    }
+    
+    .parallax-background,
+    .parallax-midground {
+      transform: none;
+    }
+    
+    .mouse-tracker::before {
+      display: none;
+    }
+  }
+  
+  @media (min-width: 1024px) and (min-height: 768px) {
+    /* 大螢幕增強動畫 */
+    .btn-floating-hover:hover {
+      transform: translateY(-12px) rotateX(8deg);
+    }
+    
+    .magnetic-hover:hover {
+      transform: translateY(-6px) rotateX(3deg);
+    }
+  }
+
+  .glass-material-dynamic:hover::before {
+    opacity: 1;
+  }
+  
+  /* 高級材質組合 */
+  .glass-material-premium {
+    backdrop-filter: 
+      blur(25px) 
+      saturate(180%) 
+      brightness(1.1)
+      contrast(1.05);
+    -webkit-backdrop-filter: 
+      blur(25px) 
+      saturate(180%) 
+      brightness(1.1)
+      contrast(1.05);
+    background-image: 
+      radial-gradient(circle at 2px 2px, rgba(255,255,255,0.04) 1px, transparent 0),
+      linear-gradient(45deg, rgba(255,255,255,0.01) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(255,255,255,0.01) 25%, transparent 25%);
+    background-size: 24px 24px, 16px 16px, 16px 16px;
+  }
+  
+  /* 玻璃厚度視覺效果 */
+  
+  /* 基礎厚度效果 */
+  .glass-thickness {
+    position: relative;
+  }
+  
+  .glass-thickness::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: inherit;
+    border-radius: inherit;
+    filter: blur(1px);
+    opacity: 0.5;
+    z-index: -1;
+  }
+  
+  /* 增強厚度效果 */
+  .glass-thickness-enhanced {
+    position: relative;
+  }
+  
+  .glass-thickness-enhanced::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1), 
+        rgba(255, 255, 255, 0.03)
+      );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  .glass-thickness-enhanced::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05), 
+        rgba(255, 255, 255, 0.01)
+      );
+    border-radius: inherit;
+    filter: blur(0.5px);
+    z-index: -2;
+  }
+  
+  /* 多層厚度效果 */
+  .glass-thickness-layered {
+    position: relative;
+  }
+  
+  .glass-thickness-layered::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: inherit;
+    border-radius: inherit;
+    opacity: 0.7;
+    filter: blur(0.5px);
+    z-index: -1;
+  }
+  
+  .glass-thickness-layered::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: inherit;
+    border-radius: inherit;
+    opacity: 0.4;
+    filter: blur(1px);
+    z-index: -2;
+  }
+  
+  /* 3D厚度效果 */
+  .glass-thickness-3d {
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  
+  .glass-thickness-3d::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border-radius: inherit;
+    transform: translateZ(-1px) scale(0.98);
+    opacity: 0.6;
+    filter: blur(0.5px);
+    z-index: -1;
+  }
+  
+  .glass-thickness-3d::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border-radius: inherit;
+    transform: translateZ(-2px) scale(0.96);
+    opacity: 0.3;
+    filter: blur(1px);
+    z-index: -2;
+  }
+  
+  /* 邊緣厚度效果 */
+  .glass-thickness-edge {
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background-clip: padding-box;
+  }
+  
+  .glass-thickness-edge::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: 
+      linear-gradient(45deg, 
+        rgba(255, 255, 255, 0.15), 
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.1)
+      );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  /* 內部厚度效果 */
+  .glass-thickness-inner {
+    position: relative;
+    box-shadow: 
+      inset 0 1px 3px rgba(255, 255, 255, 0.2),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.1),
+      inset 1px 0 3px rgba(255, 255, 255, 0.1),
+      inset -1px 0 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 動態厚度變化 */
+  .glass-thickness-dynamic {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-thickness-dynamic::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: inherit;
+    border-radius: inherit;
+    opacity: 0.3;
+    filter: blur(0.5px);
+    z-index: -1;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-thickness-dynamic:hover::before {
+    inset: 1px;
+    opacity: 0.6;
+    filter: blur(1px);
+  }
+  
+  /* 表面紋理和折射效果 */
+  
+  /* 折射效果 */
+  .glass-refraction {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-refraction::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(45deg, 
+        transparent 45%, 
+        rgba(255, 255, 255, 0.05) 47%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        rgba(255, 255, 255, 0.05) 53%, 
+        transparent 55%
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 稜鏡效果 */
+  .glass-prism {
+    position: relative;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 51, 102, 0.03), 
+        rgba(51, 102, 255, 0.03),
+        rgba(51, 221, 255, 0.03),
+        rgba(255, 204, 0, 0.03)
+      );
+  }
+  
+  .glass-prism::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.06) 50%, 
+        transparent 70%
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 彩虹折射 */
+  .glass-rainbow-refraction {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-rainbow-refraction::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      conic-gradient(
+        from 0deg,
+        rgba(255, 0, 0, 0.02),
+        rgba(255, 165, 0, 0.02),
+        rgba(255, 255, 0, 0.02),
+        rgba(0, 255, 0, 0.02),
+        rgba(0, 0, 255, 0.02),
+        rgba(75, 0, 130, 0.02),
+        rgba(238, 130, 238, 0.02),
+        rgba(255, 0, 0, 0.02)
+      );
+    animation: rotate 20s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .glass-rainbow-refraction:hover::before {
+    opacity: 1;
+  }
+  
+  /* 水滴效果 */
+  .glass-droplet {
+    position: relative;
+  }
+  
+  .glass-droplet::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: 15%;
+    width: 8px;
+    height: 12px;
+    background: 
+      radial-gradient(ellipse at 30% 30%, 
+        rgba(255, 255, 255, 0.8), 
+        rgba(255, 255, 255, 0.4) 40%, 
+        rgba(255, 255, 255, 0.1) 70%,
+        transparent
+      );
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  /* 氣泡效果 */
+  .glass-bubbles {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-bubbles::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 2px, transparent 3px),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 1px, transparent 2px),
+      radial-gradient(circle at 40% 80%, rgba(255,255,255,0.06) 1.5px, transparent 2.5px),
+      radial-gradient(circle at 70% 20%, rgba(255,255,255,0.05) 1px, transparent 2px);
+    background-size: 
+      100px 100px,
+      80px 80px,
+      120px 120px,
+      90px 90px;
+    animation: float-bubbles 15s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 刮痕效果 */
+  .glass-scratches {
+    position: relative;
+  }
+  
+  .glass-scratches::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(15deg, transparent 48%, rgba(255,255,255,0.03) 49%, transparent 50%),
+      linear-gradient(75deg, transparent 48%, rgba(255,255,255,0.02) 49%, transparent 50%),
+      linear-gradient(165deg, transparent 48%, rgba(255,255,255,0.04) 49%, transparent 50%);
+    background-size: 200px 200px, 150px 150px, 180px 180px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 鏡面反射 */
+  .glass-mirror {
+    position: relative;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.05) 50%, 
+        rgba(255, 255, 255, 0.15) 100%
+      );
+  }
+  
+  .glass-mirror::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: 
+      linear-gradient(to bottom, 
+        rgba(255, 255, 255, 0.2), 
+        rgba(255, 255, 255, 0.1),
+        transparent
+      );
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* 動態漸變泡泡背景 */
+  .gradient-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+  }
+  
+  .gradient-blob {
+    position: absolute;
+    border-radius: 100%;
+    filter: blur(45px);
+    opacity: 0.4;
+    animation: float 25s infinite alternate ease-in-out;
+  }
+  
+  .gradient-blob:nth-child(1) {
+    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+    width: 160vw;
+    height: 160vw;
+    top: -110%;
+    left: -30%;
+    animation-delay: 0s;
+  }
+  
+  .gradient-blob:nth-child(2) {
+    background: linear-gradient(135deg, var(--color-tertiary), var(--color-secondary));
+    width: 160vw;
+    height: 160vw;
+    bottom: -110%;
+    right: -30%;
+    animation-delay: -7s;
+  }
+  
+  .gradient-blob:nth-child(3) {
+    background: linear-gradient(225deg, var(--color-accent), var(--color-primary));
+    width: 120vw;
+    height: 120vw;
+    top: 25%;
+    left: -60%;
+    animation-delay: -14s;
+  }
+  
+  .gradient-blob:nth-child(4) {
+    background: linear-gradient(315deg, var(--color-success), var(--color-tertiary));
+    width: 100vw;
+    height: 100vw;
+    top: 50%;
+    right: -50%;
+    animation-delay: -21s;
+  }
+
+  /* 舊版泡泡背景兼容 */
+  .app-background::before {
+    content: '';
+    @apply absolute inset-0 overflow-hidden pointer-events-none;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(255, 51, 102, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 40%, rgba(51, 102, 255, 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(51, 221, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 90% 10%, rgba(255, 204, 0, 0.18) 0%, transparent 50%),
+      radial-gradient(circle at 10% 60%, rgba(34, 197, 94, 0.14) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+  }
+
+  /* 浮動泡泡元素 */
+  .floating-bubble {
+    @apply absolute rounded-full opacity-20 pointer-events-none;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 70%, transparent 100%);
+    filter: blur(1px);
+  }
+
+  /* 泡泡尺寸變化 */
+  .bubble-sm { @apply w-8 h-8; }
+  .bubble-md { @apply w-16 h-16; }
+  .bubble-lg { @apply w-24 h-24; }
+  .bubble-xl { @apply w-32 h-32; }
+  .bubble-2xl { @apply w-40 h-40; }
+
+  /* 主要內容區域 */
+  .main-content {
+    width: 100%;
+    padding: 2rem 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 導航列項目基本樣式 */
+  .nav-item {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out;
+  }
+
+  /* 導航列項目 hover 前的偽元素效果 */
+  .nav-item::before {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-300;
+    content: '';
+    transform: translateX(-100%);
+    animation: reflection-sweep 4s ease-in-out infinite;
+  }
+
+  .nav-item:hover::before {
+    opacity: 1;
+  }
+
+  /* Active 項目的 hover 效果 */
+  .nav-item.active:hover {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.35) 0%, 
+      rgba(255, 255, 255, 0.25) 50%, 
+      rgba(255, 255, 255, 0.2) 100%);
+    backdrop-filter: blur(70px) saturate(220%);
+    box-shadow: 
+      0 25px 60px rgba(0, 0, 0, 0.2),
+      inset 0 3px 0 rgba(255, 255, 255, 0.6),
+      0 0 40px rgba(255, 255, 255, 0.3);
+  }
+
+  /* 調酒酒吧風格玻璃質感卡片 */
+  .cocktail-card {
+    position: relative;
+    border-radius: var(--card-radius);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    transform-style: preserve-3d;
+    transition: var(--transition);
+    cursor: pointer;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .cocktail-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--x, 50%) var(--y, 50%),
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .cocktail-card:hover::before {
+    opacity: 1;
+  }
+  
+  .cocktail-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.7),
+      0 0 40px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 卡片內容區域 */
+  .cocktail-card-content {
+    position: relative;
+    height: 100%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+  }
+  
+  .cocktail-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    transform: translateZ(20px);
+    background: linear-gradient(
+      to right,
+      var(--color-text),
+      rgba(255, 255, 255, 0.8)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .cocktail-card p {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    transform: translateZ(15px);
+  }
+  
+  .cocktail-card-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateZ(15px);
+  }
+
+  /* 調酒酒吧風格按鈕 */
+  .cocktail-button {
+    padding: 0.6rem 1.2rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    backdrop-filter: blur(5px);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .cocktail-button::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    transition: all 0.5s ease;
+    transform: translate(-50%, -50%);
+  }
+  
+  .cocktail-button:hover::before {
+    width: 200%;
+    height: 200%;
+  }
+  
+  .cocktail-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 主要按鈕樣式 */
+  .cocktail-button-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+  
+  .cocktail-button-primary:hover {
+    background: linear-gradient(135deg, 
+      color-mix(in srgb, var(--color-primary) 80%, white),
+      color-mix(in srgb, var(--color-secondary) 80%, white)
+    );
+    box-shadow: 
+      0 8px 25px rgba(255, 51, 102, 0.4),
+      0 0 20px rgba(51, 102, 255, 0.3);
+  }
+
+  /* 成功按鈕 */
+  .cocktail-button-success {
+    background: linear-gradient(135deg, var(--color-success), var(--color-tertiary));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+  
+  .cocktail-button-success:hover {
+    box-shadow: 
+      0 8px 25px rgba(34, 197, 94, 0.4),
+      0 0 20px rgba(51, 221, 255, 0.3);
+  }
+
+  /* 警告按鈕 */
+  .cocktail-button-warning {
+    background: linear-gradient(135deg, var(--color-warning), var(--color-accent));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  /* 錯誤按鈕 */
+  .cocktail-button-danger {
+    background: linear-gradient(135deg, var(--color-error), var(--color-primary));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  /* 圖示樣式 */
+  .cocktail-icon {
+    font-size: 1.25rem;
+    opacity: 0.7;
+    transition: transform 0.3s ease;
+  }
+  
+  .cocktail-card:hover .cocktail-icon {
+    transform: translateX(5px);
+    opacity: 1;
+  }
+
+  /* 玻璃材質效果 - 增強版 */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-fast);
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 15px 40px rgba(0, 0, 0, 0.4),
+      0 0 25px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .glass-card-dark {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10 shadow-glass;
+  }
+
+  /* 輸入框樣式 - 調酒酒吧風格 */
+  .input-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--color-text);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: var(--transition-fast);
+  }
+  
+  .input-glass::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .input-glass:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 
+      0 0 0 2px rgba(255, 51, 102, 0.2),
+      0 8px 25px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* 卡片樣式 - 調酒酒吧風格 */
+  .card-glass {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+  }
+  
+  .card-glass:hover {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 
+      0 20px 45px -15px rgba(0, 0, 0, 0.6),
+      0 0 30px rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+  }
+
+  /* 模態框樣式 - 調酒酒吧風格 */
+  .modal-glass {
+    background: rgba(5, 5, 5, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 
+      0 25px 60px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 特殊效果組件 */
+  .neon-glow {
+    position: relative;
+  }
+  
+  .neon-glow::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-tertiary), var(--color-accent));
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    filter: blur(8px);
+  }
+  
+  .neon-glow:hover::before {
+    opacity: 0.7;
+  }
+
+  /* 表格玻璃效果 */
+  .table-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+  }
+  
+  .table-glass th {
+    background: rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  
+  .table-glass tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* 側邊欄玻璃效果 - 升級為最高層級 */
+  .sidebar-glass {
+    background: var(--glass-floating);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--glass-floating-border);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* 自定義工具類 */
+@layer utilities {
+  /* 動畫效果 */
+  @keyframes float {
+    0% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(2%, 2%) scale(1.02);
+    }
+    100% {
+      transform: translate(-2%, -2%) scale(0.98);
+    }
+  }
+  
+  @keyframes glass-shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%) skewX(-15deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes reflection-sweep {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(255, 51, 102, 0.6);
+    }
+  }
+  
+  /* 第二階段新增動畫 */
+  @keyframes shine-pulse {
+    0% {
+      left: -100%;
+      opacity: 0;
+    }
+    50% {
+      left: 0%;
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  @keyframes ripple {
+    0%, 100% {
+      background-size: 40px 40px;
+      opacity: 1;
+    }
+    50% {
+      background-size: 60px 60px;
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes float-bubbles {
+    0%, 100% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(2px, -2px);
+    }
+    50% {
+      transform: translate(-1px, -4px);
+    }
+    75% {
+      transform: translate(1px, -2px);
+    }
+  }
+  
+  @keyframes pulse-fade {
+    0%, 100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* === 第三階段：座位狀態變化動效 === */
+  
+  /* 1. 座位狀態過渡動畫 */
+  .table-state-transition {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* 狀態變化的發光效果 */
+  .table-state-transition::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: transparent;
+    border-radius: inherit;
+    z-index: -1;
+    transition: all 0.6s ease;
+  }
+  
+  /* 可用狀態 */
+  .table-available {
+    background: var(--glass-elevated);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+  
+  .table-available::before {
+    background: linear-gradient(45deg, 
+      rgba(34, 197, 94, 0.1), 
+      rgba(34, 197, 94, 0.05)
+    );
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  }
+  
+  /* 佔用狀態 */
+  .table-occupied {
+    background: var(--glass-floating);
+    border: 1px solid rgba(255, 51, 102, 0.4);
+    transform: scale(1.02);
+  }
+  
+  .table-occupied::before {
+    background: linear-gradient(45deg, 
+      rgba(255, 51, 102, 0.15), 
+      rgba(255, 51, 102, 0.08)
+    );
+    box-shadow: 0 0 25px rgba(255, 51, 102, 0.3);
+  }
+  
+  /* 準備中狀態 */
+  .table-preparing {
+    background: var(--glass-floating);
+    border: 1px solid rgba(255, 204, 0, 0.4);
+    animation: preparing-pulse 2s ease-in-out infinite;
+  }
+  
+  .table-preparing::before {
+    background: linear-gradient(45deg, 
+      rgba(255, 204, 0, 0.12), 
+      rgba(255, 204, 0, 0.06)
+    );
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.25);
+  }
+  
+  @keyframes preparing-pulse {
+    0%, 100% {
+      transform: scale(1.02);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+  }
+  
+  /* 需要結帳狀態 */
+  .table-ready-to-pay {
+    background: var(--glass-focus);
+    border: 1px solid rgba(51, 102, 255, 0.5);
+    animation: ready-glow 3s ease-in-out infinite;
+  }
+  
+  .table-ready-to-pay::before {
+    background: linear-gradient(45deg, 
+      rgba(51, 102, 255, 0.2), 
+      rgba(51, 102, 255, 0.1)
+    );
+    box-shadow: 0 0 30px rgba(51, 102, 255, 0.4);
+  }
+  
+  @keyframes ready-glow {
+    0%, 100% {
+      box-shadow: 
+        var(--glass-focus-shadow),
+        0 0 20px rgba(51, 102, 255, 0.3);
+    }
+    50% {
+      box-shadow: 
+        var(--glass-focus-shadow),
+        0 0 40px rgba(51, 102, 255, 0.5);
+    }
+  }
+  
+  /* 2. 狀態變化動畫效果 */
+  .table-status-change {
+    animation: status-change-effect 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  @keyframes status-change-effect {
+    0% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.1);
+      filter: brightness(1.2) saturate(1.3);
+    }
+    100% {
+      transform: scale(1.02);
+      filter: brightness(1);
+    }
+  }
+  
+  /* 3. 座位 hover 互動效果 */
+  .table-interactive:hover {
+    transform: translateY(-4px) scale(1.03);
+    filter: brightness(1.1);
+    box-shadow: 
+      var(--glass-floating-shadow),
+      0 0 30px rgba(255, 255, 255, 0.15);
+  }
+  
+  /* 4. 座位點擊反饋 */
+  .table-interactive:active {
+    transform: translateY(-2px) scale(1.01);
+    transition: all 0.1s ease-out;
+  }
+  
+  /* 5. 座位加載狀態 */
+  .table-loading {
+    position: relative;
+    pointer-events: none;
+  }
+  
+  .table-loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-modal);
+    border-radius: inherit;
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  
+  .table-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: loading-spin 1s linear infinite;
+    z-index: 11;
+  }
+  
+  @keyframes loading-spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* 玻璃折射動畫 */
+  .animate-glass-shine {
+    animation: glass-shine 3s ease-in-out infinite;
+  }
+
+  .animate-reflection {
+    animation: reflection-sweep 4s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* 發光效果 */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 20px rgba(51, 102, 255, 0.4);
+  }
+
+  .glow-tertiary {
+    box-shadow: 0 0 20px rgba(51, 221, 255, 0.4);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+  }
+
+  .glow-warning {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  }
+
+  .glow-error {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  }
+
+  /* 文字漸變效果 */
+  .text-gradient-primary {
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .text-gradient-cocktail {
+    background: linear-gradient(to right, var(--color-tertiary), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .text-gradient-white {
+    background: linear-gradient(to right, var(--color-text), rgba(255, 255, 255, 0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* 互動效果 */
+  .interactive-transform {
+    transition: var(--transition-bounce);
+  }
+  
+  .interactive-transform:hover {
+    transform: translateY(-3px) scale(1.02);
+  }
+  
+  .interactive-transform:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  /* 背景模糊效果 */
+  .backdrop-blur-cocktail {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .backdrop-blur-heavy {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  /* 邊框漸變 */
+  .border-gradient {
+    border: 1px solid;
+    border-image: linear-gradient(45deg, var(--color-primary), var(--color-secondary)) 1;
   }
 }

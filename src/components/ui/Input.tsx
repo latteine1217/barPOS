@@ -20,10 +20,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2';
   
   const variantStyles = {
-    default: 'bg-white/10 border-white/20 text-white placeholder-white/60 focus:ring-blue-500 focus:border-blue-500',
-    filled: 'bg-gray-100 border-transparent text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:bg-white',
-    outlined: 'bg-transparent border-white/40 text-white placeholder-white/60 focus:ring-blue-500 focus:border-blue-500'
-  };
+     default: 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500',    filled: 'bg-gray-100 border-transparent text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:bg-white',
+     outlined: 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500'  };
   
   const sizeStyles = {
     sm: 'px-3 py-1.5 text-sm',

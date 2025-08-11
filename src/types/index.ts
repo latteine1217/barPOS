@@ -12,7 +12,7 @@ export interface OrderItem {
   notes?: string;
 }
 
-export type OrderStatus = 'pending' | 'preparing' | 'completed' | 'paid';
+export type OrderStatus = 'pending' | 'preparing' | 'completed' | 'paid' | 'cancelled';
 
 export interface Order {
   id: ID;
@@ -42,6 +42,9 @@ export interface NewOrderData {
 
 // ===== 桌位相關類型 =====
 export type TableStatus = 'available' | 'occupied' | 'reserved' | 'cleaning';
+export type TableType = 'regular' | 'vip' | 'booth' | 'bar';
+export type TableShape = 'round' | 'square' | 'rectangular' | 'bar';
+export type TableSize = 'small' | 'medium' | 'large' | 'xlarge';
 
 export interface Position {
   x: number;
@@ -55,6 +58,10 @@ export interface Table {
   status: TableStatus;
   customers: number;
   maxCapacity: number;
+  capacity?: number; // 座位數
+  type?: TableType; // 桌位類型
+  shape?: TableShape; // 桌位形狀
+  size?: TableSize; // 桌位大小
   position: Position;
   orderId?: ID;
   createdAt?: Timestamp;
@@ -65,6 +72,52 @@ export interface TableLayoutSettings {
   width: number;
   height: number;
   backgroundImage?: string;
+}
+
+// ===== 桌位擴展類型 =====
+export interface TableWithOrder extends Table {
+  currentOrder?: Order;
+}
+
+export interface NewTableData {
+  number: number;
+  name: string;
+  type: TableType;
+  shape: TableShape;
+  size: TableSize;
+  maxCapacity: number;
+  position: Position;
+}
+
+export interface TableState {
+  tables: Table[];
+  isLoaded: boolean;
+}
+
+export interface TableStoreActions {
+  updateTable: (id: number, updates: Partial<Table>) => void;
+  setTables: (tables: Table[]) => void;
+  addTable: (tableData: Partial<Table> & { id?: number }) => void;
+  deleteTable: (id: number) => void;
+  releaseTable: (orderId: ID) => void;
+  updateTableLayout: (id: number, layoutData: Partial<Table>) => void;
+  setLoaded: (loaded: boolean) => void;
+  initialize: () => Promise<void>;
+  getTableById: (id: number) => Table | undefined;
+  getTableByNumber: (number: number) => Table | undefined;
+  getTablesByStatus: (status: TableStatus) => Table[];
+  getAvailableTables: () => Table[];
+  getOccupiedTables: () => Table[];
+  resetAllTables: () => void;
+}
+
+export interface TableStats {
+  totalTables: number;
+  availableTables: number;
+  occupiedTables: number;
+  reservedTables: number;
+  cleaningTables: number;
+  utilizationRate: number;
 }
 
 // ===== 菜單相關類型 =====
@@ -111,22 +164,19 @@ export interface MenuSettings {
 }
 
 // ===== 設定相關類型 =====
-export type BackendType = 'supabase' | 'notion';
+export type BackendType = 'supabase';
 
 export interface SupabaseConfig {
   url: string;
   key: string;
 }
 
-export interface NotionConfig {
-  token: string;
-  databaseId: string;
-}
+
 
 export interface AppSettings {
   backendType: BackendType;
   supabaseConfig: SupabaseConfig;
-  notionConfig: NotionConfig;
+  
   currency: string;
   taxRate: number;
   businessName: string;
@@ -199,12 +249,20 @@ export interface MenuActions {
   toggleMenuItemAvailability: (itemId: ID) => Promise<void>;
 }
 
+// 定義可導入的數據類型
+type ImportableData = {
+  orders?: Order[];
+  tables?: Table[];
+  menuItems?: MenuItem[];
+  settings?: Partial<AppSettings>;
+};
+
 export interface SettingsActions {
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   testConnection: () => Promise<boolean>;
   syncData: () => Promise<void>;
   exportData: () => Promise<void>;
-  importData: (data: any) => Promise<void>;
+  importData: (data: ImportableData) => Promise<void>;
 }
 
 export interface AppContextType {
@@ -213,7 +271,7 @@ export interface AppContextType {
 }
 
 // ===== API 相關類型 =====
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -223,7 +281,13 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  details?: Record<string, unknown>;
 }
 
 // ===== 錯誤處理類型 =====
@@ -233,7 +297,7 @@ export interface AppError {
   id: ID;
   type: ErrorType;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: Timestamp;
   resolved: boolean;
 }
@@ -253,7 +317,7 @@ export interface ErrorContextType {
   showWarning: (message: string) => string;
   showInfo: (message: string) => string;
   handleApiError: (error: unknown, context?: string) => void;
-  toasts: any[];
+  toasts: ToastNotification[];
 }
 
 // ===== 分析相關類型 =====
@@ -309,7 +373,7 @@ export interface SeatingAnalysis {
 export interface ChartDataPoint {
   name: string;
   value: number;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ChartConfig {
@@ -339,11 +403,14 @@ export interface ToastNotification {
   autoClose?: boolean;
 }
 
+// 定義表單字段值的類型
+type FormFieldValue = string | number | boolean | null | undefined;
+
 export interface FormFieldProps {
   label: string;
   name: string;
-  value: any;
-  onChange: (value: any) => void;
+  value: FormFieldValue;
+  onChange: (value: FormFieldValue) => void;
   error?: string;
   required?: boolean;
   disabled?: boolean;
