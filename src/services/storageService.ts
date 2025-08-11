@@ -3,7 +3,11 @@
  * 支援網頁端(localStorage)、桌面端(Electron)、行動端(Capacitor)
  */
 
+import { logger } from './loggerService';
+
 type Platform = 'web' | 'mobile' | 'electron';
+
+/* removed unused STORAGE_LIMITS */
 
 interface StorageInfo {
   platform: Platform;
@@ -16,7 +20,7 @@ interface ExportData {
   platform: Platform;
   exportDate: string;
   version: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 interface ElectronStore {
@@ -43,7 +47,7 @@ export const STORAGE_KEYS = {
   TABLES: 'restaurant_pos_tables',
   LAYOUT_CONFIG: 'restaurant_pos_layout',
   STATS: 'restaurant_pos_stats',
-  NOTION_TOKEN: 'notionToken',
+  
   DATABASE_ID: 'databaseId',
   SUPABASE_URL: 'supabase_url',
   SUPABASE_KEY: 'supabase_key',
@@ -67,16 +71,31 @@ const detectPlatform = (): Platform => {
 };
 
 class StorageService {
+  private static instance: StorageService;
+  private static isInitialized = false;
+
   private platform: Platform;
   private mobileStorage?: MobileStorage;
   private electronStore?: ElectronStore;
 
-  constructor() {
+  private constructor() {
     this.platform = detectPlatform();
-    this.initializeStorage();
+    this.initializeStorage(); // 在建構時非同步初始化
+  }
+
+  public static getInstance(): StorageService {
+    if (!StorageService.instance) {
+      StorageService.instance = new StorageService();
+    }
+    return StorageService.instance;
   }
 
   private async initializeStorage(): Promise<void> {
+    if (StorageService.isInitialized) {
+      return;
+    }
+    StorageService.isInitialized = true;
+
     try {
       switch (this.platform) {
         case 'mobile':
@@ -91,7 +110,7 @@ class StorageService {
           break;
       }
     } catch (error) {
-      console.error('Storage initialization failed:', error);
+      logger.error('Storage initialization failed', { component: 'StorageService', action: 'init' }, error instanceof Error ? error : new Error(String(error)));
       // 降級到 localStorage
       this.platform = 'web';
       this.initWebStorage();
@@ -100,7 +119,7 @@ class StorageService {
 
   // 網頁端儲存（localStorage）
   private initWebStorage(): void {
-    console.log('🌐 Using Web Storage (localStorage)');
+    logger.info('Using Web Storage (localStorage)', { component: 'StorageService', action: 'initWebStorage' });
   }
 
   // 行動端儲存（Capacitor Preferences）
@@ -110,12 +129,12 @@ class StorageService {
       if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
         const { Preferences } = await import('@capacitor/preferences');
         this.mobileStorage = Preferences;
-        console.log('📱 Using Mobile Storage (Capacitor Preferences)');
+        logger.info('Using Mobile Storage (Capacitor Preferences)', { component: 'StorageService', action: 'initMobileStorage' });
       } else {
         throw new Error('Not in Capacitor environment');
       }
     } catch {
-      console.warn('Capacitor Preferences not available, falling back to localStorage');
+      logger.warn('Capacitor Preferences not available, falling back to localStorage', { component: 'StorageService', action: 'initMobileStorage' });
       this.platform = 'web';
       this.initWebStorage();
     }
@@ -126,19 +145,19 @@ class StorageService {
     try {
       if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.store) {
         this.electronStore = window.electronAPI.store;
-        console.log('🖥️ Using Desktop Storage (Electron Store)');
+        logger.info('Using Desktop Storage (Electron Store)', { component: 'StorageService', action: 'initElectronStorage' });
       } else {
         throw new Error('Electron store API not available');
       }
     } catch {
-      console.warn('Electron store not available, falling back to localStorage');
+      logger.warn('Electron store not available, falling back to localStorage', { component: 'StorageService', action: 'initElectronStorage' });
       this.platform = 'web';
       this.initWebStorage();
     }
   }
 
   // 統一的儲存介面
-  async setItem(key: string, value: any): Promise<void> {
+  async setItem<T>(key: string, value: T): Promise<void> {
     try {
       const stringValue = JSON.stringify(value);
       
@@ -159,13 +178,13 @@ class StorageService {
           break;
       }
     } catch (error) {
-      console.error(`Failed to save ${key}:`, error);
+      logger.error('Failed to save data', { component: 'StorageService', action: 'setItem', key, platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
 
   // 統一的讀取介面
-  async getItem<T = any>(key: string, defaultValue: T | null = null): Promise<T | null> {
+  async getItem<T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> {
     try {
       let stringValue: string | null = null;
       
@@ -193,7 +212,7 @@ class StorageService {
       
       return JSON.parse(stringValue);
     } catch (error) {
-      console.warn(`Failed to load ${key}:`, error);
+      logger.warn('Failed to load data', { component: 'StorageService', action: 'getItem', key, platform: this.platform, error: error instanceof Error ? error.message : String(error) });
       return defaultValue;
     }
   }
@@ -218,7 +237,7 @@ class StorageService {
           break;
       }
     } catch (error) {
-      console.error(`Failed to remove ${key}:`, error);
+      logger.error('Failed to remove data', { component: 'StorageService', action: 'removeItem', key, platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -249,7 +268,7 @@ class StorageService {
           break;
       }
     } catch (error) {
-      console.error('Failed to clear storage:', error);
+      logger.error('Failed to clear storage', { component: 'StorageService', action: 'clear', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -275,7 +294,7 @@ class StorageService {
       }
       return [];
     } catch (error) {
-      console.error('Failed to get keys:', error);
+      logger.error('Failed to get keys', { component: 'StorageService', action: 'keys', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -285,7 +304,7 @@ class StorageService {
     try {
       const keys = await this.getAllKeys();
       const appKeys = keys.filter(key => 
-        Object.values(STORAGE_KEYS).includes(key as any)
+        (Object.values(STORAGE_KEYS) as readonly string[]).includes(key)
       );
       
       const info: StorageInfo = {
@@ -309,7 +328,7 @@ class StorageService {
 
       return info;
     } catch (error) {
-      console.error('Failed to get storage info:', error);
+      logger.error('Failed to get storage info', { component: 'StorageService', action: 'getInfo', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       return {
         platform: this.platform,
         totalKeys: 0,
@@ -322,7 +341,7 @@ class StorageService {
   // 匯出資料（用於備份）
   async exportData(): Promise<ExportData> {
     try {
-      const data: Record<string, any> = {};
+      const data: Record<string, unknown> = {};
       const keys = Object.values(STORAGE_KEYS);
       
       for (const key of keys) {
@@ -339,7 +358,7 @@ class StorageService {
         data
       };
     } catch (error) {
-      console.error('Failed to export data:', error);
+      logger.error('Failed to export data', { component: 'StorageService', action: 'exportData', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -354,41 +373,46 @@ class StorageService {
       const { data } = exportedData;
       
       for (const [key, value] of Object.entries(data)) {
-        if (Object.values(STORAGE_KEYS).includes(key as any)) {
+        if ((Object.values(STORAGE_KEYS) as readonly string[]).includes(key)) {
           await this.setItem(key, value);
         }
       }
       
       return true;
     } catch (error) {
-      console.error('Failed to import data:', error);
+      logger.error('Failed to import data', { component: 'StorageService', action: 'importData', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
 }
 
-// 建立單例實例
-const storageService = new StorageService();
+
 
 // 匯出便捷的儲存函數
-export const saveToStorage = (key: string, value: any): Promise<void> => storageService.setItem(key, value);
-export const loadFromStorage = <T = any>(key: string, defaultValue?: T | null): Promise<T | null> => storageService.getItem<T>(key, defaultValue);
+export const saveToStorage = async <T>(key: string, value: T): Promise<void> => {
+  const service = StorageService.getInstance();
+  return service.setItem(key, value);
+};
+export const loadFromStorage = async <T = unknown>(key: string, defaultValue?: T | null): Promise<T | null> => {
+  const service = StorageService.getInstance();
+  return service.getItem<T>(key, defaultValue);
+};
 
 // 防抖儲存函數
-import { debounce } from '../hooks/useDebounce';
+import { debounce } from '../utils/debounce';
 
 // 創建防抖儲存函數，避免頻繁寫入
-const debouncedSaveMap = new Map<string, (value: any) => void>();
+const debouncedSaveMap = new Map<string, (value: unknown) => void>();
 
-export const saveDebouncedToStorage = (key: string, value: any, delay: number = 1000): void => {
+export const saveDebouncedToStorage = (key: string, value: unknown, delay: number = 1000): void => {
   if (!debouncedSaveMap.has(key)) {
     // 為每個 key 創建獨立的防抖函數
-    const debouncedSave = debounce(async (val: any) => {
+    const debouncedSave = debounce(async (val: unknown): Promise<void> => {
       try {
-        await storageService.setItem(key, val);
-        console.log(`防抖儲存完成: ${key}`);
+        await StorageService.getInstance().setItem(key, val);
+        logger.info('Debounced storage completed', { component: 'StorageService', action: 'debouncedSave', key });
       } catch (error) {
-        console.error(`防抖儲存失敗 ${key}:`, error);
+        logger.error('Debounced storage failed', { component: 'StorageService', action: 'debouncedSave', key }, error instanceof Error ? error : new Error(String(error)));
       }
     }, delay);
     
@@ -402,10 +426,9 @@ export const saveDebouncedToStorage = (key: string, value: any, delay: number = 
 };
 
 // 批量防抖儲存
-export const saveBatchDebouncedToStorage = (data: Record<string, any>, delay: number = 1000): void => {
+export const saveBatchDebouncedToStorage = (data: Record<string, unknown>, delay: number = 1000): void => {
   Object.entries(data).forEach(([key, value]) => {
     saveDebouncedToStorage(key, value, delay);
   });
 };
 
-export default storageService;

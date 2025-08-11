@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import type { Order, OrderStatus } from '../types';
+import type { Order, OrderStatus } from '@/types';
 
 interface OrderDetailsModalProps {
   order: Order | null;

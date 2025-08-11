@@ -151,7 +151,7 @@ const debouncedSave = useMemo(
 
 **目標檔案：**
 - `src/services/supabaseService.js` → `.ts`
-- `src/services/notionService.js` → `.ts`
+
 
 **優化重點：**
 - 添加請求快取機制

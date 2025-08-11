@@ -1,14 +1,12 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
+import { logger } from '@/services/loggerService';
 
 // 設定狀態接口
 interface SettingsState {
   theme: 'light' | 'dark';
-  notionConfig: {
-    token: string;
-    databaseId: string;
-  };
+  
   supabaseConfig: {
     url: string;
     key: string;
@@ -29,8 +27,7 @@ interface SettingsActions {
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
   
-  // Notion 設定
-  updateNotionConfig: (config: Partial<SettingsState['notionConfig']>) => void;
+  
   
   // Supabase 設定
   updateSupabaseConfig: (config: Partial<SettingsState['supabaseConfig']>) => void;
@@ -49,13 +46,10 @@ export type SettingsStore = SettingsState & SettingsActions;
 // 初始狀態
 const initialState: SettingsState = {
   theme: 'light',
-  notionConfig: {
-    token: '',
-    databaseId: ''
-  },
+  
   supabaseConfig: {
-    url: import.meta.env.VITE_SUPABASE_URL || '',
-    key: import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+    url: '',
+    key: ''
   },
   layoutConfig: {
     canvasWidth: 1000,
@@ -86,20 +80,15 @@ export const useSettingsStore = create<SettingsStore>()(
         });
       },
 
-      // Notion 設定
-      updateNotionConfig: (config: Partial<SettingsState['notionConfig']>) => {
-        set((state) => {
-          state.notionConfig = { ...state.notionConfig, ...config };
-        });
-      },
+
 
       // Supabase 設定
       updateSupabaseConfig: (config: Partial<SettingsState['supabaseConfig']>) => {
         set((state) => {
-          state.supabaseConfig = { ...state.supabaseConfig, ...config };
+          const next = { ...state.supabaseConfig, ...config };
+          state.supabaseConfig = next;
         });
       },
-
       // 佈局設定
       updateLayoutConfig: (config: Partial<SettingsState['layoutConfig']>) => {
         set((state) => {
@@ -114,19 +103,16 @@ export const useSettingsStore = create<SettingsStore>()(
           if (typeof window !== 'undefined') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const savedTheme = localStorage.getItem('settings-theme');
-            
-            if (!savedTheme && prefersDark) {
-              set((state) => {
-                state.theme = 'dark';
-              });
-            }
-          }
-          
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            set((state) => {
+              state.theme = theme as 'light' | 'dark';
+            });
+          }          
           set((state) => {
             state.isLoaded = true;
           });
         } catch (error) {
-          console.error('Failed to initialize settings:', error);
+          logger.storeLog.error('settingsStore', error as Error, { action: 'initialize' });
           set((state) => {
             state.isLoaded = true;
           });
@@ -143,7 +129,7 @@ export const useSettingsStore = create<SettingsStore>()(
       name: 'restaurant-pos-settings',
       partialize: (state) => ({
         theme: state.theme,
-        notionConfig: state.notionConfig,
+        
         supabaseConfig: state.supabaseConfig,
         layoutConfig: state.layoutConfig,
       }),
@@ -176,34 +162,38 @@ export const useStatsStore = create<StatsStore>()(
 
     updateStats: (stats: Partial<Omit<StatsState, 'isLoaded'>>) => {
       set((state) => {
-        Object.assign(state, stats);
+        if (stats.todayRevenue !== undefined) state.todayRevenue = stats.todayRevenue;
+        if (stats.todayOrders !== undefined) state.todayOrders = stats.todayOrders;
+        if (stats.activeCustomers !== undefined) state.activeCustomers = stats.activeCustomers;
       });
     },
 
     calculateStats: () => {
-      // 暫時使用模擬數據，避免循環依賴
-      // TODO: 實現適當的統計計算邏輯
       try {
-        set((state) => {
-          state.todayRevenue = Math.floor(Math.random() * 10000);
-          state.todayOrders = Math.floor(Math.random() * 50);
-          state.activeCustomers = Math.floor(Math.random() * 20);
-        });
+        const { isLoaded } = get();
+        if (!isLoaded) {
+          set((state) => {
+            state.todayRevenue = 0;
+            state.todayOrders = 0;
+            state.activeCustomers = 0;
+            state.isLoaded = true;
+          });
+        }
       } catch (error) {
-        console.error('Failed to calculate stats:', error);
+        logger.storeLog.error('settingsStore', error as Error, { action: 'calculate-stats' });
       }
     },
 
     initialize: async () => {
       try {
-        const { calculateStats } = get();
-        calculateStats();
-        
         set((state) => {
+          state.todayRevenue = 0;
+          state.todayOrders = 0;
+          state.activeCustomers = 0;
           state.isLoaded = true;
         });
       } catch (error) {
-        console.error('Failed to initialize stats:', error);
+        logger.storeLog.error('settingsStore', error as Error, { action: 'initialize-stats' });
         set((state) => {
           state.isLoaded = true;
         });
@@ -212,63 +202,20 @@ export const useStatsStore = create<StatsStore>()(
   }))
 );
 
-// 選擇器 hooks
-export const useSettings = () => {
-  const {
-    theme,
-    notionConfig,
-    supabaseConfig,
-    layoutConfig,
-    isLoaded,
-    toggleTheme,
-    setTheme,
-    updateNotionConfig,
-    updateSupabaseConfig,
-    updateLayoutConfig,
-    initialize
-  } = useSettingsStore();
-
-  return {
-    state: {
-      theme,
-      notionConfig,
-      supabaseConfig,
-      layoutConfig
-    },
-    actions: {
-      toggleTheme,
-      setTheme,
-      updateNotionConfig,
-      updateSupabaseConfig,
-      updateLayoutConfig,
-      initialize
-    },
-    isLoaded
-  };
-};
+// 選擇器 hooks - 修復無限循環問題
+export const useSettings = () =>
+  useSettingsStore((state) => state);
 
 export const useStats = () => {
-  const {
-    todayRevenue,
-    todayOrders,
-    activeCustomers,
-    isLoaded,
-    updateStats,
-    calculateStats,
-    initialize
-  } = useStatsStore();
-
-  return {
-    state: {
-      todayRevenue,
-      todayOrders,
-      activeCustomers
-    },
-    actions: {
-      updateStats,
-      calculateStats,
-      initialize
-    },
-    isLoaded
-  };
+  // ✅ 暫時移除 shallow，避免 TypeScript 錯誤
+  return useStatsStore(
+    (state) => ({
+      todayRevenue: state.todayRevenue,
+      todayOrders: state.todayOrders,
+      activeCustomers: state.activeCustomers,
+      isLoaded: state.isLoaded,
+      updateStats: state.updateStats,
+      calculateStats: state.calculateStats,
+      initialize: state.initialize,
+    })  );
 };

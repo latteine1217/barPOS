@@ -3,11 +3,14 @@ import { immer } from 'zustand/middleware/immer';
 import { useOrderStore, type OrderStore } from './orderStore';
 import { useTableStore, type TableStore } from './tableStore';
 import { useMenuStore, type MenuStore } from './menuStore';
+import { useSettingsStore } from './settingsStore';
+import { logger } from '@/services/loggerService';
 import type { Order, ID } from '@/types';
 
 // App Store 狀態接口 - 主要用於跨 store 的協調邏輯
 interface AppState {
   isInitialized: boolean;
+  isInitializing: boolean; // ✅ 新增：防止重複初始化
   isOffline: boolean;
   lastSyncTime?: string;
 }
@@ -35,30 +38,52 @@ export type AppStore = AppState & AppActions;
 
 // 創建 App Store
 export const useAppStore = create<AppStore>()(
-  immer((set) => ({
+  immer((set, get) => ({
     // 初始狀態
     isInitialized: false,
+    isInitializing: false, // ✅ 新增初始值
     isOffline: false,
-    lastSyncTime: undefined,
 
-    // 初始化
+    // 初始化 - 防止重複執行
     initialize: async () => {
+      const { isInitialized, isInitializing } = get();
+      
+      // ✅ 防止重複初始化
+      if (isInitialized || isInitializing) {
+        logger.info('Already initialized or initializing, skipping', { component: 'appStore' });
+        return;
+      }
+      
+      logger.storeLog.init('appStore', { component: 'appStore' });
+      set((state) => {
+        state.isInitializing = true;
+      });
+      
       try {
-        // 初始化所有子 stores
-        await Promise.all([
+        const results = await Promise.allSettled([
           useOrderStore.getState().initialize(),
           useTableStore.getState().initialize(),
           useMenuStore.getState().initialize(),
+          useSettingsStore.getState().initialize(),
         ]);
-        
+        const hasFailure = results.some(r => r.status === 'rejected');
         set((state) => {
-          state.isInitialized = true;
-          state.lastSyncTime = new Date().toISOString();
+          state.isInitialized = !hasFailure;
+          state.isInitializing = false;
+          if (!hasFailure) {
+            state.lastSyncTime = new Date().toISOString();
+          }
         });
+        if (hasFailure) {
+          logger.warn('Some child stores failed to initialize', { component: 'appStore', results });
+        } else {
+          logger.info('All child stores initialized successfully', { component: 'appStore' });
+        }
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        logger.storeLog.error('appStore', error as Error, { action: 'initialize' });
         set((state) => {
-          state.isInitialized = true; // 即使失敗也設為已初始化，避免無限載入
+          state.isInitialized = false;
+          state.isInitializing = false;
         });
       }
     },
@@ -78,20 +103,15 @@ export const useAppStore = create<AppStore>()(
 
     // 跨 store 操作 - 添加訂單並更新桌位
     addOrderWithTableUpdate: (order: Order) => {
-      // 添加訂單
       useOrderStore.getState().addOrder(order);
-      
-      // 更新相關桌位
-      if (order.tableNumber) {
-        const table = useTableStore.getState().getTableByNumber(order.tableNumber);
-        if (table) {
-          useTableStore.getState().updateTable(table.id, {
-            status: 'occupied',
-            orderId: order.id,
-            customers: order.customers || 0
-          });
-        }
-      }
+      if (!order.tableNumber) return;
+      const table = useTableStore.getState().getTableByNumber(order.tableNumber);
+      if (!table) return;
+      useTableStore.getState().updateTable(table.id, {
+        status: 'occupied',
+        orderId: order.id,
+        customers: order.customers || 0,
+      });
     },
 
     // 跨 store 操作 - 刪除訂單並釋放桌位
@@ -106,25 +126,22 @@ export const useAppStore = create<AppStore>()(
     // 清除所有資料
     clearAllData: async () => {
       try {
-        // 清除訂單
         useOrderStore.getState().clearAllOrders();
-        
-        // 保留預設菜單項目，清除自定義項目
         const defaultItemIds = new Set([
-          '101', '102', '103', '104', '105', '106', '107', '108', '109', '110',
-          '111', '112', '113', '114', '201', '202', '203', '301', '302', '303'
+          '101','102','103','104','105','106','107','108','109','110',
+          '111','112','113','114','201','202','203','301','302','303'
         ]);
-        
         const menuItems = useMenuStore.getState().menuItems;
         const defaultItems = menuItems.filter(item => defaultItemIds.has(item.id));
         useMenuStore.getState().setMenuItems(defaultItems);
-        
-        // 重置所有桌位狀態但保留桌位結構
         useTableStore.getState().resetAllTables();
-        
-        console.log('All data cleared successfully');
+        try { localStorage.removeItem('order-store'); } catch (e) { logger.warn('clear localStorage order-store failed', { component: 'appStore', error: e }); }
+        try { localStorage.removeItem('table-store'); } catch (e) { logger.warn('clear localStorage table-store failed', { component: 'appStore', error: e }); }
+        try { localStorage.removeItem('restaurant-pos-settings'); } catch (e) { logger.warn('clear localStorage settings failed', { component: 'appStore', error: e }); }
+        try { localStorage.removeItem('menu-items'); } catch (e) { logger.warn('clear localStorage menu-items failed', { component: 'appStore', error: e }); }
+        logger.info('All data cleared successfully', { component: 'appStore' });
       } catch (error) {
-        console.error('Failed to clear data:', error);
+        logger.error('Failed to clear data', { component: 'appStore' }, error as Error);
         throw error;
       }
     },
@@ -153,7 +170,8 @@ export const useAppState = () => {
   const menuLoaded = useMenuStore((state) => state.isLoaded);
   
   // 計算總載入狀態
-  const isLoaded = orderLoaded && tableLoaded && menuLoaded;
+  const settingsLoaded = useSettingsStore((state) => state.isLoaded);
+  const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
 
   return {
     isInitialized,

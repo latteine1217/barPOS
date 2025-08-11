@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useTables } from '@/stores';
 import { useTableStore } from '@/stores/tableStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import type { Table } from '../types';
+import type { Table, TableType, TableShape, TableSize } from '@/types';
 import type { CSSProperties } from 'react';
 
 interface DragState {
@@ -12,7 +12,8 @@ interface DragState {
   hasMoved: boolean;
 }
 
-const TableLayoutEditor = () => {
+interface TableLayoutEditorProps { readOnly?: boolean; onTableClick?: (table: Table) => void }
+const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditorProps) => {
   const tables = useTables();
   
   // 使用單一選擇器避免循環渲染
@@ -24,24 +25,24 @@ const TableLayoutEditor = () => {
   const theme = useSettingsStore((state) => state.theme);
   const layoutConfig = useSettingsStore((state) => state.layoutConfig);
   const updateLayoutConfig = useSettingsStore((state) => state.updateLayoutConfig);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [dragState, setDragState] = useState<DragState>({ 
+  const [isEditing, setIsEditing] = useState<boolean>(() => false);
+  const [selectedTable, setSelectedTable] = useState<Table | null>(() => null);
+  const [dragState, setDragState] = useState<DragState>(() => ({ 
     isDragging: false, 
     dragOffset: { x: 0, y: 0 },
     startPosition: { x: 0, y: 0 },
     hasMoved: false
-  });
-  const [showAddTableModal, setShowAddTableModal] = useState<boolean>(false);
+  }));
+  const [showAddTableModal, setShowAddTableModal] = useState<boolean>(() => false);
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   // 桌位形狀和大小選項
-  const tableShapes = {
+  const tableShapes = useMemo(() => ({
     round: '圓桌',
     square: '方桌',
     rectangular: '長桌',
     bar: '吧台'
-  };
+  }), []);
 
   const tableSizes = useMemo(() => ({
     small: { width: 60, height: 60, label: '2人桌' },
@@ -50,16 +51,16 @@ const TableLayoutEditor = () => {
     xlarge: { width: 120, height: 80, label: '8人桌' }
   }), []);
 
-  const tableTypes = {
+  const tableTypes = useMemo(() => ({
     regular: '一般桌',
     vip: 'VIP桌',
     booth: '包廂',
     bar: '吧台'
-  };
+  }), []);
 
   // 獲取桌位樣式
-  const getTableStyle = useCallback((table): CSSProperties => {
-    const size = tableSizes[table.size] || tableSizes.medium;
+  const getTableStyle = useCallback((table: Table): CSSProperties => {
+    const size = tableSizes[table.size as keyof typeof tableSizes] || tableSizes.medium;
     const baseStyle: CSSProperties = {
       position: 'absolute',
       left: `${table.position.x}px`,
@@ -115,44 +116,34 @@ const TableLayoutEditor = () => {
   }, [isEditing, selectedTable, tableSizes]);
 
   // 處理桌位鼠標按下事件
-  const handleMouseDown = (e, table) => {
-    if (!isEditing) return;
-    
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, table: Table) => {
+    if (!isEditing || !canvasRef.current) return;
     e.preventDefault();
     e.stopPropagation();
-    
     const rect = canvasRef.current.getBoundingClientRect();
     const offsetX = e.clientX - rect.left - table.position.x;
     const offsetY = e.clientY - rect.top - table.position.y;
-    
-    // 記錄起始位置，用於判斷是否為點擊或拖拽
-    setDragState({
-      isDragging: false, // 先不設為拖拽狀態
+    setDragState(() => ({ 
+      isDragging: false,
       dragOffset: { x: offsetX, y: offsetY },
       startPosition: { x: e.clientX, y: e.clientY },
       hasMoved: false
-    });
-    
-    // 切換選擇狀態：如果點擊的是已選中的桌位，則取消選擇；否則選擇該桌位
-    setSelectedTable(selectedTable?.id === table.id ? null : table);
-  };
+    }));    setSelectedTable((prev) => (prev?.id === table.id ? null : table));
+  }, [isEditing]);
 
   // 拖拽中
-  const handleMouseMove = useCallback((e) => {
-    if (!selectedTable || !isEditing) return;
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!selectedTable || !isEditing || !canvasRef.current) return;
     
-    // 計算移動距離，判斷是否開始拖拽
     const moveDistance = Math.sqrt(
       Math.pow(e.clientX - dragState.startPosition.x, 2) + 
       Math.pow(e.clientY - dragState.startPosition.y, 2)
     );
     
-    // 如果移動距離超過閾值（5px），開始拖拽
     if (moveDistance > 5 && !dragState.isDragging) {
       setDragState(prev => ({ ...prev, isDragging: true, hasMoved: true }));
     }
     
-    // 只有在拖拽模式下才更新位置
     if (dragState.isDragging) {
       e.preventDefault();
       const rect = canvasRef.current.getBoundingClientRect();
@@ -165,22 +156,22 @@ const TableLayoutEditor = () => {
         e.clientY - rect.top - dragState.dragOffset.y
       ));
       
-      updateTableLayout(selectedTable.id, {
-        position: { x: newX, y: newY }
-      });
+      setSelectedTable(prev => (prev ? { ...prev, position: { x: newX, y: newY } } : prev));
     }
-  }, [dragState, selectedTable, updateTableLayout, layoutConfig, isEditing]);
+  }, [dragState, selectedTable, layoutConfig, isEditing]);
 
   // 結束拖拽或點擊
   const handleMouseUp = useCallback(() => {
-    // 重置拖拽狀態
-    setDragState({ 
+    if (dragState.isDragging && selectedTable) {
+      updateTableLayout(selectedTable.id, { position: { ...selectedTable.position } });
+    }
+    setDragState(() => ({ 
       isDragging: false, 
       dragOffset: { x: 0, y: 0 },
       startPosition: { x: 0, y: 0 },
       hasMoved: false
-    });
-  }, []);
+    }));
+  }, [dragState.isDragging, selectedTable, updateTableLayout]);
 
   // 綁定全域事件
   useEffect(() => {
@@ -192,51 +183,47 @@ const TableLayoutEditor = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
+    return undefined;
   }, [dragState.startPosition, handleMouseMove, handleMouseUp]);
 
   // ✅ 優化：只在真正需要時同步 selectedTable，避免循環依賴
   useEffect(() => {
-    if (selectedTable) {
-      const updatedTable = tables.find((table: Table) => table.id === selectedTable.id);
-      if (updatedTable) {
-        // 使用 JSON.stringify 進行深度比較，避免淺比較問題
-        const currentData = JSON.stringify({
-          name: selectedTable.name,
-          number: selectedTable.number,
-          type: selectedTable.type,
-          shape: selectedTable.shape,
-          size: selectedTable.size,
-          capacity: selectedTable.capacity,
-          position: selectedTable.position
-        });
-        
-        const updatedData = JSON.stringify({
-          name: updatedTable.name,
-          number: updatedTable.number,
-          type: updatedTable.type,
-          shape: updatedTable.shape,
-          size: updatedTable.size,
-          capacity: updatedTable.capacity,
-          position: updatedTable.position
-        });
-        
-        if (currentData !== updatedData) {
-          setSelectedTable(updatedTable);
-        }
-      }
+    if (!selectedTable) return;
+    if (isEditing || dragState.isDragging) return;
+    const updatedTable = tables.find((table: Table) => table.id === selectedTable.id);
+    if (!updatedTable) {
+      setSelectedTable(null);
+      return;
     }
-  }, [tables.length]); // 只依賴 tables 的長度變化，避免每次 tables 更新都觸發
+    const currentData = JSON.stringify({
+      name: selectedTable.name,
+      number: selectedTable.number,
+      type: selectedTable.type,
+      shape: selectedTable.shape,
+      size: selectedTable.size,
+      capacity: selectedTable.capacity,
+      position: selectedTable.position
+    });
+    const updatedData = JSON.stringify({
+      name: updatedTable.name,
+      number: updatedTable.number,
+      type: updatedTable.type,
+      shape: updatedTable.shape,
+      size: updatedTable.size,
+      capacity: updatedTable.capacity,
+      position: updatedTable.position
+    });
+    if (currentData !== updatedData) {
+      setSelectedTable(() => updatedTable);
+    }
+  }, [selectedTable, tables, isEditing, dragState.isDragging]);
 
   // 更新桌位資訊
-  const updateSelectedTable = (updates) => {
+  const updateSelectedTable = useCallback((updates: Partial<Table>) => {
     if (!selectedTable) return;
-    
-    // 更新 context 中的桌位資料
     updateTableLayout(selectedTable.id, updates);
-    
-    // 直接更新本地 selectedTable 狀態，避免等待 useEffect 同步
-    setSelectedTable(prev => prev ? { ...prev, ...updates } : null);
-  };
+    setSelectedTable(prev => (prev ? { ...prev, ...updates } : null));
+  }, [selectedTable, updateTableLayout]);
 
   // ✅ 修復：優化按鈕事件處理，確保穩定的引用
   const handleEditToggle = useCallback(() => {
@@ -247,13 +234,13 @@ const TableLayoutEditor = () => {
     }
   }, [isEditing]);
 
-  const handleAddTable = useCallback((tableData) => {
+  const handleAddTable = useCallback((tableData: NewTable) => {
     addTable({
       ...tableData,
       position: { x: 100, y: 100 }
     });
     setShowAddTableModal(false);
-  }, [addTable]);
+  }, [addTable, setShowAddTableModal]);
 
   const handleDeleteTable = useCallback(() => {
     if (!selectedTable) return;
@@ -274,10 +261,8 @@ const TableLayoutEditor = () => {
       {/* 標題和工具列 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">桌位佈局編輯器</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
-            {isEditing ? '拖拽桌位調整位置，點選桌位編輯詳細資訊' : '預覽模式 - 點擊右上角編輯按鈕開始編輯'}
-          </p>
+           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{readOnly ? '桌位佈局' : '桌位佈局編輯器'}</h1>          <p className="text-gray-600 dark:text-gray-300 mt-1">
+             {readOnly ? '點擊桌位即可開始點餐' : (isEditing ? '拖拽桌位調整位置，點選桌位編輯詳細資訊' : '預覽模式 - 點擊右上角編輯按鈕開始編輯')}          </p>
         </div>
         
         <div className="flex flex-wrap gap-2">
@@ -287,56 +272,54 @@ const TableLayoutEditor = () => {
             </div>
           )}
           
-          <button
-            onClick={handleEditToggle}
-            className={`btn ${isEditing ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
-          >
-            {isEditing ? '完成編輯' : '編輯佈局'}
-          </button>
-          
-          {isEditing && (
-            <>
-              <button
-                onClick={handleShowAddModal}
-                className="btn bg-green-500 hover:bg-green-600 text-white"
-              >
-                新增桌位
-              </button>
-              
-              {selectedTable && (
-                <button
-                  onClick={handleDeleteTable}
-                  className="btn bg-red-500 hover:bg-red-600 text-white"
-                >
-                  刪除桌位
-                </button>
-              )}
-            </>
-          )}
-        </div>
+           {!readOnly && (
+             <button
+               onClick={handleEditToggle}
+               className={`btn ${isEditing ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+             >
+               {isEditing ? '完成編輯' : '編輯佈局'}
+             </button>
+           )}          
+           {!readOnly && isEditing && (
+             <>
+               <button
+                 onClick={handleShowAddModal}
+                 className="btn bg-green-500 hover:bg-green-600 text-white"
+               >
+                 新增桌位
+               </button>
+               {selectedTable && (
+                 <button
+                   onClick={handleDeleteTable}
+                   className="btn bg-red-500 hover:bg-red-600 text-white"
+                 >
+                   刪除桌位
+                 </button>
+               )}
+             </>
+           )}        </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6">
         {/* 主要編輯區域 */}
         <div className="flex-1 min-w-0">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 h-full">
-            <div
-              ref={canvasRef}
-              className="relative bg-gray-50 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden"
-              style={{
-                width: `${layoutConfig.canvasWidth}px`,
-                height: `${layoutConfig.canvasHeight}px`,
-                maxWidth: '100%',
-                aspectRatio: `${layoutConfig.canvasWidth} / ${layoutConfig.canvasHeight}`
-              }}
-              onClick={(e) => {
-                // 只有在點擊畫布背景（不是桌位）且不在拖拽狀態時才清除選擇
-                if (isEditing && e.target === e.currentTarget) {
-                  setSelectedTable(null);
-                }
-              }}
-            >
-              {/* 網格背景 */}
+             <div
+               ref={canvasRef}
+               className="relative bg-gray-50 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden"
+               style={{
+                 width: `${layoutConfig.canvasWidth}px`,
+                 height: `${layoutConfig.canvasHeight}px`,
+                 maxWidth: '100%',
+                 aspectRatio: `${layoutConfig.canvasWidth} / ${layoutConfig.canvasHeight}`
+               }}
+               onClick={(e) => {
+                 if (readOnly) return;
+                 if (isEditing && e.target === e.currentTarget) {
+                   setSelectedTable(null);
+                 }
+               }}
+             >              {/* 網格背景 */}
               {layoutConfig.showGrid && (
                 <div
                   className="absolute inset-0 opacity-20"
@@ -355,9 +338,8 @@ const TableLayoutEditor = () => {
                 <div
                   key={table.id}
                   style={getTableStyle(table)}
-                  onMouseDown={(e) => handleMouseDown(e, table)}
-                  className="flex flex-col items-center justify-center text-center"
-                >
+                    onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }} className="flex flex-col items-center justify-center text-center"
+                   onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}                >
                   <div className="font-bold text-xs truncate max-w-full">
                     {table.name}
                   </div>
@@ -373,9 +355,8 @@ const TableLayoutEditor = () => {
         </div>
 
         {/* 側邊欄設定 */}
-        {isEditing && (
-          <div className="w-full lg:w-80 lg:flex-shrink-0">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 max-h-screen lg:max-h-full overflow-y-auto">
+         {isEditing && !readOnly && (
+           <div className="w-full lg:w-80 lg:flex-shrink-0">            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 max-h-screen lg:max-h-full overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">編輯設定</h3>
               
               {selectedTable ? (
@@ -413,7 +394,7 @@ const TableLayoutEditor = () => {
                     <input
                       type="number"
                       value={selectedTable.number}
-                      onChange={(e) => updateSelectedTable({ number: parseInt(e.target.value) })}
+                      onChange={(e) => updateSelectedTable({ number: parseInt(e.target.value) || 0 })}
                       className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
@@ -425,7 +406,7 @@ const TableLayoutEditor = () => {
                     </label>
                     <select
                       value={selectedTable.type}
-                      onChange={(e) => updateSelectedTable({ type: e.target.value })}
+                      onChange={(e) => updateSelectedTable({ type: e.target.value as TableType })}
                       className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       {Object.entries(tableTypes).map(([value, label]) => (
@@ -441,7 +422,7 @@ const TableLayoutEditor = () => {
                     </label>
                     <select
                       value={selectedTable.shape}
-                      onChange={(e) => updateSelectedTable({ shape: e.target.value })}
+                      onChange={(e) => updateSelectedTable({ shape: e.target.value as TableShape })}
                       className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       {Object.entries(tableShapes).map(([value, label]) => (
@@ -457,7 +438,7 @@ const TableLayoutEditor = () => {
                     </label>
                     <select
                       value={selectedTable.size}
-                      onChange={(e) => updateSelectedTable({ size: e.target.value })}
+                      onChange={(e) => updateSelectedTable({ size: e.target.value as TableSize })}
                       className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       {Object.entries(tableSizes).map(([value, data]) => (
@@ -476,7 +457,7 @@ const TableLayoutEditor = () => {
                       min="1"
                       max="20"
                       value={selectedTable.capacity}
-                      onChange={(e) => updateSelectedTable({ capacity: parseInt(e.target.value) })}
+                      onChange={(e) => updateSelectedTable({ capacity: parseInt(e.target.value) || 0 })}
                       className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
@@ -542,8 +523,17 @@ const TableLayoutEditor = () => {
 };
 
 // 新增桌位模態框組件
+type NewTable = {
+  name: string;
+  number: number;
+  type: TableType;
+  shape: TableShape;
+  size: TableSize;
+  capacity: number;
+  maxCapacity?: number;
+};
 interface AddTableModalProps {
-  onAdd: (tableData: any) => void;
+  onAdd: (tableData: NewTable) => void;
   onClose: () => void;
   tableShapes: Record<string, string>;
   tableSizes: Record<string, { width: number; height: number; label: string }>;
@@ -559,19 +549,28 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
   tableTypes, 
   existingTables 
 }) => {
-  const [formData, setFormData] = useState({
+  type NewTable = {
+    name: string;
+    number: number;
+    type: TableType;
+    shape: TableShape;
+    size: TableSize;
+    capacity: number;
+    maxCapacity?: number;
+  };
+  const [formData, setFormData] = useState<NewTable>(() => ({
     name: '',
-    number: Math.max(...existingTables.map(t => t.number), 0) + 1,
+    number: Math.max(0, ...existingTables.map(t => t.number), 0) + 1,
     type: 'regular',
     shape: 'round',
     size: 'medium',
     capacity: 4
-  });
+  }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     onAdd(formData);
-  };
+  }, [onAdd, formData]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -599,7 +598,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <input
               type="number"
               value={formData.number}
-              onChange={(e) => setFormData({ ...formData, number: parseInt(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, number: parseInt(e.target.value) || 0 })}
               className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -610,7 +609,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as TableType })}
               className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {Object.entries(tableTypes).map(([value, label]) => (
@@ -625,7 +624,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.shape}
-              onChange={(e) => setFormData({ ...formData, shape: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, shape: e.target.value as TableShape })}
               className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {Object.entries(tableShapes).map(([value, label]) => (
@@ -640,7 +639,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.size}
-              onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, size: e.target.value as TableSize })}
               className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               {Object.entries(tableSizes).map(([value, data]) => (
@@ -658,7 +657,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
               min="1"
               max="20"
               value={formData.capacity}
-              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
               className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>

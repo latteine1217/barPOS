@@ -16,24 +16,27 @@
     "allowJs": true,
 
     /* Linting */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
 
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@/components/*": ["src/components/*"],
-      "@/contexts/*": ["src/contexts/*"],
+      
       "@/hooks/*": ["src/hooks/*"],
       "@/services/*": ["src/services/*"],
       "@/types/*": ["src/types/*"]
     }
   },
-  "include": ["src", "src/**/*"],
+  "include": ["src", "src/**/*", "clear_storage.ts", "test-agent-logs.ts"],
   "exclude": ["node_modules", "dist", "dist-electron"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -89,13 +89,18 @@ const AriaAnnouncement: React.FC<AriaAnnouncementProps> = ({
   React.useEffect(() => {
     setCurrentMessage(message);
 
+    let timer: NodeJS.Timeout;
     if (clearAfter > 0) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setCurrentMessage('');
       }, clearAfter);
-
-      return () => clearTimeout(timer);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [message, clearAfter]);
 
   return (

@@ -4,8 +4,12 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
-  readonly VITE_NOTION_API_VERSION: string;
+  
   readonly VITE_APP_VERSION: string;
+  readonly NODE_ENV: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly MODE: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -36,6 +40,8 @@ declare global {
       platform: string;
       isNativePlatform: () => boolean;
     };
+
+    __console_interceptor__?: Record<string, unknown>;
   }
 }
 

@@ -39,6 +39,13 @@ export {
   useMenuStats
 } from './menuStore';
 
+export { 
+  useSettingsStore,
+  useSettings,
+  useStatsStore,
+  useStats
+} from './settingsStore';
+
 // 組合 store
 export { 
   useAppStore,
@@ -51,6 +58,8 @@ export type { OrderStore } from './orderStore';
 export type { TableStore } from './tableStore';
 export type { MenuStore } from './menuStore';
 export type { AppStore } from './appStore';
+export type { SettingsStore } from './settingsStore';
+export type { StatsStore } from './settingsStore';
 
 // 導入 stores 用於便利函數
 import { useAppStore } from './appStore';

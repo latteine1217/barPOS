@@ -11,7 +11,7 @@ export { Button } from './components/ui/Button';
 export { Modal, ModalHeader, ModalBody, ModalFooter } from './components/ui/Modal';
 
 // === Context (僅保留 ErrorContext) ===
-export { useError, ErrorProvider, Toast } from './contexts/ErrorContext';
+
 
 // === 組件 ===
 export { default as App } from './App';

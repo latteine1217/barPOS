@@ -79,7 +79,7 @@ src/services/
 ├── supabaseService.ts     # 主要資料庫服務
 ├── analyticsService.ts    # 分析服務
 ├── storageService.ts      # 跨平台儲存
-├── notionService.ts       # Notion 整合 (向後相容)
+
 └── serviceWorkerManager.ts # PWA 支援
 ```
 

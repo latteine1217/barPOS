@@ -74,6 +74,52 @@ export interface TableLayoutSettings {
   backgroundImage?: string;
 }
 
+// ===== 桌位擴展類型 =====
+export interface TableWithOrder extends Table {
+  currentOrder?: Order;
+}
+
+export interface NewTableData {
+  number: number;
+  name: string;
+  type: TableType;
+  shape: TableShape;
+  size: TableSize;
+  maxCapacity: number;
+  position: Position;
+}
+
+export interface TableState {
+  tables: Table[];
+  isLoaded: boolean;
+}
+
+export interface TableStoreActions {
+  updateTable: (id: number, updates: Partial<Table>) => void;
+  setTables: (tables: Table[]) => void;
+  addTable: (tableData: Partial<Table> & { id?: number }) => void;
+  deleteTable: (id: number) => void;
+  releaseTable: (orderId: ID) => void;
+  updateTableLayout: (id: number, layoutData: Partial<Table>) => void;
+  setLoaded: (loaded: boolean) => void;
+  initialize: () => Promise<void>;
+  getTableById: (id: number) => Table | undefined;
+  getTableByNumber: (number: number) => Table | undefined;
+  getTablesByStatus: (status: TableStatus) => Table[];
+  getAvailableTables: () => Table[];
+  getOccupiedTables: () => Table[];
+  resetAllTables: () => void;
+}
+
+export interface TableStats {
+  totalTables: number;
+  availableTables: number;
+  occupiedTables: number;
+  reservedTables: number;
+  cleaningTables: number;
+  utilizationRate: number;
+}
+
 // ===== 菜單相關類型 =====
 export type MenuCategory = 
   | 'cocktails' 
@@ -118,22 +164,19 @@ export interface MenuSettings {
 }
 
 // ===== 設定相關類型 =====
-export type BackendType = 'supabase' | 'notion';
+export type BackendType = 'supabase';
 
 export interface SupabaseConfig {
   url: string;
   key: string;
 }
 
-export interface NotionConfig {
-  token: string;
-  databaseId: string;
-}
+
 
 export interface AppSettings {
   backendType: BackendType;
   supabaseConfig: SupabaseConfig;
-  notionConfig: NotionConfig;
+  
   currency: string;
   taxRate: number;
   businessName: string;

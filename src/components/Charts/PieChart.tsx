@@ -20,13 +20,13 @@ interface CustomPieChartProps {
   height?: number;
   showLegend?: boolean;
   valueKey?: string;
-  tooltipFormatter?: (value: string | number) => string;
+  tooltipFormatter?: (value: string | number | undefined) => string;
   colors?: string[];
   className?: string;
   innerRadius?: number;
   outerRadius?: number;
   showLabels?: boolean;
-  labelFormatter?: (value: number) => string;
+  labelFormatter?: (value: number | undefined) => string;
 }
 
 interface LabelProps {
@@ -51,10 +51,20 @@ const CustomPieChart: React.FC<CustomPieChartProps> = ({
   showLabels = false,
   labelFormatter = formatters.percentage
 }) => {
+  // 創建統一的 labelFormatter 函數來處理類型安全
+  const createLabelFormatter = (formatter?: (value: number | undefined) => string) => {
+    if (!formatter) return (value: number | undefined) => `${(value || 0).toFixed(1)}%`;
+    return (value: any): string => {
+      return formatter(value);
+    };
+  };
+
+  const safeLabelFormatter = createLabelFormatter(labelFormatter);
+
   const customTooltip = (
     <CustomTooltip 
-      labelFormatter={undefined}
-      valueFormatter={tooltipFormatter}
+      labelFormatter={null}
+      valueFormatter={tooltipFormatter ? (value) => tooltipFormatter(value) : null}
     />
   );
 
@@ -80,7 +90,7 @@ const CustomPieChart: React.FC<CustomPieChartProps> = ({
         fontSize={12}
         fontWeight="medium"
       >
-        {labelFormatter(percent * 100)}
+        {safeLabelFormatter(percent * 100)}
       </text>
     );
   };

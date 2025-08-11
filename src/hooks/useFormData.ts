@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 // 定義表單值的類型
 type FormFieldValue = string | number | boolean | null | undefined | string[] | number[];
@@ -22,12 +22,14 @@ export const useFormData = <T extends Record<string, FormFieldValue>>(
   const [data, setData] = useState<T>(initialData);
   const [originalData] = useState<T>(initialData);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isDirty, setIsDirty] = useState<boolean>(false);
 
-  // 檢查是否有修改
-  useEffect(() => {
-    const hasChanges = JSON.stringify(data) !== JSON.stringify(originalData);
-    setIsDirty(hasChanges);
+  // ✅ 修復：使用 useMemo 計算 isDirty 狀態，避免無限循環
+  const isDirty = useMemo(() => {
+    return Object.keys(data).some(key => 
+      data[key] !== originalData[key]
+    ) || Object.keys(originalData).some(key =>
+      !(key in data)
+    );
   }, [data, originalData]);
 
   const updateField = useCallback((field: keyof T, value: FormFieldValue): void => {
@@ -37,14 +39,15 @@ export const useFormData = <T extends Record<string, FormFieldValue>>(
     }));
 
     // 清除該欄位的錯誤
-    if (errors[field as string]) {
-      setErrors(prev => {
+    setErrors(prev => {
+      if (prev[field as string]) {
         const newErrors = { ...prev };
         delete newErrors[field as string];
         return newErrors;
-      });
-    }
-  }, [errors]);
+      }
+      return prev;
+    });
+  }, []);
 
   const updateData = useCallback((updates: Partial<T>): void => {
     setData(prev => ({
@@ -56,7 +59,6 @@ export const useFormData = <T extends Record<string, FormFieldValue>>(
   const resetData = useCallback((): void => {
     setData(initialData);
     setErrors({});
-    setIsDirty(false);
   }, [initialData]);
 
   const setError = useCallback((field: keyof T, error: string): void => {

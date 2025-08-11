@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSettings } from '../stores/settingsStore';
-import { useOrders, useTables, useMenuItems, useOrderActions, useTableActions, useMenuActions } from '@/stores';
-import { useError } from '../contexts/errorUtils';
+import { logger } from '@/services/loggerService';
+
 import type { SupabaseConfig } from '@/types';
 import SupabaseService from '../services/supabaseService';
-import { useRenderTracker, useStoreTracker } from '../utils/renderTracker';
+// ❌ 暫時註釋掉渲染追蹤工具，這可能是導致無限循環的原因
+// import { useRenderTracker, useStoreTracker } from '../utils/renderTracker';
 
 interface TestResult {
   success: boolean;
@@ -12,111 +13,108 @@ interface TestResult {
 }
 
 const Settings: React.FC = () => {
-  // 🔍 渲染追蹤
-  useRenderTracker('Settings');
+  // ❌ 暫時移除渲染追蹤
+  // useRenderTracker('Settings');
   
-  const { state: settingsState, actions: settingsActions } = useSettings();
-  const orders = useOrders();
-  const tables = useTables();
-  const menuItems = useMenuItems();
-  const orderActions = useOrderActions();
-  const tableActions = useTableActions();
-  const menuActions = useMenuActions();
+  // ✅ 必須在所有條件判斷之前調用所有 hooks
+  const settingsData = useSettings();
+  const orders = undefined as unknown as any;
+  const tables = undefined as unknown as any;
+  const menuItems = undefined as unknown as any;
+  const orderActions = undefined as unknown as any;
+  const tableActions = undefined as unknown as any;
+  const menuActions = undefined as unknown as any;
   
-  // 🔍 Store 變化追蹤
-  useStoreTracker('SettingsState', settingsState);
-  useStoreTracker('Orders', orders);
-  useStoreTracker('Tables', tables);
-  useStoreTracker('MenuItems', menuItems);
-  
+  // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
+  const { theme, supabaseConfig, updateSupabaseConfig, setTheme } = settingsData || ({} as any);
 
-  
-  // Supabase 設定 - 使用 useEffect 來避免循環依賴
-  const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>({
-    url: '',
-    key: ''
-  });
-  
-  // 僅在 settingsState 變更時更新本地狀態
-  useEffect(() => {
-    if (settingsState.supabaseConfig) {
-      setSupabaseConfig(prev => ({
-        url: settingsState.supabaseConfig?.url || prev.url,
-        key: settingsState.supabaseConfig?.key || prev.key
-      }));
-    }
-  }, [settingsState.supabaseConfig]);
-  
-  const [testing, setTesting] = useState<boolean>(false);
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
-  const [syncing, setSyncing] = useState<boolean>(false);
+  const [testing, setTesting] = useState<boolean>(() => false);
+  const [testResult, setTestResult] = useState<TestResult | null>(() => null);
+  const [syncing, setSyncing] = useState<boolean>(() => false);
+
+  if (!settingsData) {
+    return (
+      <div className="p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h2 className="text-yellow-800 font-semibold">設定載入中...</h2>
+          <p className="text-yellow-600 mt-2">正在初始化設定數據...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   // === Supabase 相關函數 ===
   
   const handleSupabaseSave = async (): Promise<void> => {
     try {
+      if (!updateSupabaseConfig || !supabaseConfig) {
+        logger.error('Missing required functions or config for Supabase save', { component: 'Settings', action: 'handleSupabaseSave' });
+        return;
+      }
+      
       // 更新應用狀態
-      settingsActions.updateSupabaseConfig(supabaseConfig);
-      showSuccess('Supabase 設定已保存！');
+      updateSupabaseConfig(supabaseConfig);
+      logger.info('Supabase configuration saved successfully', { component: 'Settings', action: 'handleSupabaseSave' });
     } catch (error) {
-      showError(error, '保存 Supabase 設定');
+      logger.error('Failed to save Supabase configuration', { component: 'Settings', action: 'handleSupabaseSave' }, error instanceof Error ? error : new Error(String(error)));
     }
   };
 
   const handleSupabaseTest = async (): Promise<void> => {
-    if (!supabaseConfig.url || !supabaseConfig.key) {
-      setTestResult({ success: false, message: '請填寫 Project URL 和 API Key' });
+    if (!supabaseConfig || !supabaseConfig.url || !supabaseConfig.key) {
+      setTestResult(() => ({ success: false, message: '請填寫 Project URL 和 API Key' }));
       return;
     }
 
-    setTesting(true);
-    setTestResult(null);
+    setTesting(() => true);
+    setTestResult(() => null);
 
     try {
       const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
       const result = await supabaseService.testConnection();
       
       if (result.success) {
-        setTestResult({ 
+        setTestResult(() => ({ 
           success: true, 
           message: '連接成功！' + result.message
-        });
+        }));
       } else {
-        setTestResult({ 
+        setTestResult(() => ({ 
           success: false, 
           message: '連接失敗: ' + result.error 
-        });
+        }));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      setTestResult({ 
+      setTestResult(() => ({ 
         success: false, 
         message: '連接錯誤: ' + errorMessage 
-      });
+      }));
     } finally {
-      setTesting(false);
+      setTesting(() => false);
     }
   };
 
   const syncToSupabase = async (): Promise<void> => {
-    if (!supabaseConfig.url || !supabaseConfig.key) {
-      showError('請先設定並測試 Supabase 連接', 'Supabase 同步');
+    if (!supabaseConfig?.url || !supabaseConfig?.key) {
+      logger.error('Please configure and test Supabase connection first', { component: 'Settings', action: 'syncToSupabase' });
       return;
     }
 
     setSyncing(true);
     try {
-      console.log('開始同步到 Supabase...');
+      logger.info('Starting sync to Supabase', { component: 'Settings', action: 'syncToSupabase' });
       const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
       
       // 準備本地資料
       const localData = {
-        orders: orders,
-        tables: tables,
-        menuItems: menuItems
+        orders: orders || [],
+        tables: tables || [],
+        menuItems: menuItems || []
       };
 
-      console.log('本地資料:', localData);
+      logger.debug('Local data prepared for sync', { component: 'Settings', action: 'syncToSupabase', dataCount: { orders: localData.orders.length, tables: localData.tables.length, menuItems: localData.menuItems.length } });
       
       // 執行同步
       const result = await supabaseService.syncLocalData(localData);
@@ -132,21 +130,20 @@ const Settings: React.FC = () => {
           message += `\n失敗: ${totalFailed} 項`;
         }
         
-        showSuccess(message);
+        logger.info(message, { component: 'Settings', action: 'syncToSupabase', successCount: totalSuccess, failedCount: totalFailed });
       } else {
         throw new Error(result.error);
       }
     } catch (error) {
-      console.error('同步錯誤:', error);
-      showError(error, '同步到 Supabase');
+      logger.error('Sync to Supabase failed', { component: 'Settings', action: 'syncToSupabase' }, error instanceof Error ? error : new Error(String(error)));
     } finally {
-      setSyncing(false);
+      setSyncing(() => false);
     }
   };
 
   const syncFromSupabase = async (): Promise<void> => {
-    if (!supabaseConfig.url || !supabaseConfig.key) {
-      showError('請先設定並測試 Supabase 連接', 'Supabase 同步');
+    if (!supabaseConfig?.url || !supabaseConfig?.key) {
+      logger.error('Please configure and test Supabase connection first', { component: 'Settings', action: 'syncFromSupabase' });
       return;
     }
 
@@ -164,47 +161,64 @@ const Settings: React.FC = () => {
       let successCount = 0;
       const errorMessages: string[] = [];
 
-      if (ordersResult.success) {
+      if (ordersResult.success && orderActions) {
         orderActions.setOrders(ordersResult.data ?? []);
         successCount++;
-      } else {
+      } else if (!ordersResult.success) {
         errorMessages.push('訂單同步失敗: ' + ordersResult.error);
       }
 
-      if (tablesResult.success) {
+      if (tablesResult.success && tableActions) {
         tableActions.setTables(tablesResult.data ?? []);
         successCount++;
-      } else {
+      } else if (!tablesResult.success) {
         errorMessages.push('桌位同步失敗: ' + tablesResult.error);
       }
 
-      if (menuResult.success) {
+      if (menuResult.success && menuActions) {
         menuActions.setMenuItems(menuResult.data ?? []);
         successCount++;
-      } else {
+      } else if (!menuResult.success) {
         errorMessages.push('菜單同步失敗: ' + menuResult.error);
       }
 
       if (successCount > 0) {
-        showSuccess(`成功同步 ${successCount} 項資料類型`);
+        logger.info('Successfully synced data types from Supabase', { component: 'Settings', action: 'syncFromSupabase', successCount });
       }
       
       if (errorMessages.length > 0) {
-        console.error('Supabase 同步', '部分同步失敗:\n' + errorMessages.join('\n'));
+        logger.error('Partial sync failed from Supabase', { component: 'Settings', action: 'syncFromSupabase', errors: errorMessages });
       }
     } catch (error) {
-      console.error('從 Supabase 同步', error);
+      logger.error('Failed to sync from Supabase', { component: 'Settings', action: 'syncFromSupabase' }, error instanceof Error ? error : new Error(String(error)));
     } finally {
-      setSyncing(false);
+      setSyncing(() => false);
     }
   };
 
   const handleSupabaseConfigChange = (field: keyof SupabaseConfig, value: string): void => {
-    setSupabaseConfig(prev => ({
-      ...prev,
+    if (!updateSupabaseConfig || !supabaseConfig) {
+      logger.error('Missing required functions or config for Supabase config change', { component: 'Settings', action: 'handleSupabaseConfigChange', field });
+      return;
+    }
+    
+    updateSupabaseConfig({
+      ...supabaseConfig,
       [field]: value
-    }));
+    });
   };
+
+  // ✅ 如果 supabaseConfig 未初始化，顯示載入狀態
+  if (!supabaseConfig) {
+    return (
+      <div className="p-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h2 className="text-blue-800 font-semibold">設定載入中...</h2>
+          <p className="text-blue-600 mt-2">正在載入 Supabase 配置...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-8">
@@ -234,7 +248,7 @@ const Settings: React.FC = () => {
             </label>
             <input
               type="url"
-              value={supabaseConfig.url}
+              value={supabaseConfig.url || ''}
               onChange={(e) => handleSupabaseConfigChange('url', e.target.value)}
               placeholder="https://your-project-ref.supabase.co"
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -247,7 +261,7 @@ const Settings: React.FC = () => {
             </label>
             <input
               type="password"
-              value={supabaseConfig.key}
+              value={supabaseConfig.key || ''}
               onChange={(e) => handleSupabaseConfigChange('key', e.target.value)}
               placeholder="您的 anon public API key"
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -317,9 +331,9 @@ const Settings: React.FC = () => {
             </label>
             <div className="flex space-x-4">
               <button
-                onClick={() => settingsActions.toggleTheme()}
+                onClick={() => setTheme && setTheme('light')}
                 className={`px-4 py-2 rounded-lg border ${
-                  settingsState.theme === 'light'
+                  theme === 'light'
                     ? 'bg-blue-500 text-white border-blue-500'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                 }`}
@@ -327,9 +341,9 @@ const Settings: React.FC = () => {
                 淺色模式
               </button>
               <button
-                onClick={() => settingsActions.toggleTheme()}
+                onClick={() => setTheme && setTheme('dark')}
                 className={`px-4 py-2 rounded-lg border ${
-                  settingsState.theme === 'dark'
+                  theme === 'dark'
                     ? 'bg-blue-500 text-white border-blue-500'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                 }`}

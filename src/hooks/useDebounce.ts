@@ -1,25 +1,5 @@
 import { useCallback, useRef } from 'react';
-
-// 防抖函數類型 - 使用泛型約束來避免any
-type DebouncedFunction<T extends (...args: unknown[]) => unknown> = (...args: Parameters<T>) => void;
-
-// 創建防抖函數
-export function debounce<T extends (...args: unknown[]) => unknown>(
-  func: T, 
-  delay: number
-): DebouncedFunction<T> {
-  let timeoutId: NodeJS.Timeout | null = null;
-  
-  return (...args: Parameters<T>) => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-}
+import type { DebouncedFunction } from '../utils/debounce';
 
 // 防抖 Hook - 完全內聯實作避免依賴問題
 export function useDebounce<T extends (...args: unknown[]) => unknown>(

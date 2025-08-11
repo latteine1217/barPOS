@@ -60,9 +60,9 @@ export default [
       'no-case-declarations': 'off' // 關閉 case 語句中的變數宣告警告
     }
   },
-  // TypeScript/TSX 檔案配置
+  // TypeScript/TSX 檔案配置 - src 目錄
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 2020,
@@ -103,6 +103,35 @@ export default [
       // 關閉 JavaScript 規則，使用 TypeScript 版本
       'no-unused-vars': 'off',
       'no-undef': 'off' // TypeScript 會處理這個
+    }
+  },
+  // TypeScript 工具檔案配置 - 根目錄 (不需要嚴格類型檢查)
+  {
+    files: ['*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.es2020,
+        ...globals.node
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module'
+        // 不指定 project，避免 TSConfig 衝突
+      }
+    },
+    plugins: {
+      '@typescript-eslint': tseslint
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      // 簡化的 TypeScript 規則
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-unused-vars': 'off',
+      'no-undef': 'off'
     }
   },
   // 測試檔案配置

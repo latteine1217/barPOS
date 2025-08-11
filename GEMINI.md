@@ -964,6 +964,23 @@ const technicalDebts: TechnicalDebt[] = [
 - **🔄 懶惰載入**: 按需載入參考資料，避免預先載入所有檔案
 - **💬 回應方式**: 優先提供計畫和建議，除非用戶明確要求立即實作
 
+### 🚨 常見啟動問題與解決方案
+在專案啟動或載入資料階段，可能會遇到應用程式卡住或行為異常的問題。以下是常見原因及排查方法：
+
+1.  **應用程式卡在載入畫面 (無限載入)**
+    *   **原因一：服務層初始化死鎖 (Service Layer Initialization Deadlock)**：`storageService.ts` 等服務層模組的初始化邏輯可能存在循環依賴或非同步阻塞，導致 `Promise` 無法解析。
+        *   **排查與解決**：檢查 `StorageService.getInstance()` 等單例模式的初始化邏輯，確保其非阻塞且不會形成循環依賴。將非同步初始化移至背景，不阻塞 `getInstance` 的同步回傳。
+    *   **原因二：模組依賴混亂 (Module Dependency Confusion)**：服務層不應依賴 UI 層或 Hook 層的模組（例如 `storageService.ts` 導入 `useDebounce.ts`）。這種反向依賴可能導致模組加載順序問題，尤其在熱重載環境下。
+        *   **排查與解決**：將通用工具函數（如 `debounce`）從 `hooks` 目錄移至 `utils` 目錄，並確保服務層只導入底層工具或服務，避免跨層次的反向依賴。
+
+2.  **控制台出現 `Uncaught InternalError: too much recursion`**
+    *   **原因：日誌攔截器無限遞迴 (Logger Interceptor Infinite Recursion)**：`consoleInterceptorService.ts` 等日誌攔截服務在攔截 `console` 方法後，其內部又呼叫了被攔截後的 `console` 方法，形成無限循環。
+        *   **排查與解決**：確保日誌攔截器在內部輸出日誌時，使用備份的原始 `console` 方法（例如 `this.originalConsole.log`），而非被替換後的 `console` 方法。
+
+3.  **應用程式行為異常或資料顯示錯誤 (清除 `localStorage` 後正常)**
+    *   **原因：本地儲存資料損壞 (Corrupted Local Storage Data)**：`localStorage` 中儲存的資料可能已損壞、格式不正確或與應用程式當前版本不兼容，導致解析失敗或資料結構不符預期。
+        *   **排查與解決**：在瀏覽器開發者工具的控制台中執行 `localStorage.clear()`，或運行專案根目錄下的 `clear_storage.ts` 腳本。如果清除後應用程式正常，則需考慮在應用程式中加入更健壯的資料遷移、版本控制或錯誤處理機制，以應對未來資料格式變更。
+
 ---
 
 ## 🌟 核心價值

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 interface Bubble {
   id: number;
@@ -7,6 +7,7 @@ interface Bubble {
   y: number;
   opacity: number;
   duration: number;
+  animationDelay: number; // ✅ 預計算 delay，避免每次 Math.random()
 }
 
 const BubbleBackground = () => {
@@ -23,7 +24,8 @@ const BubbleBackground = () => {
           x: Math.random() * 100, // 0-100%
           y: Math.random() * 100, // 0-100%
           opacity: Math.random() * 0.4 + 0.2, // 0.2-0.6
-          duration: Math.random() * 25 + 15 // 15-40s
+          duration: Math.random() * 25 + 15, // 15-40s
+          animationDelay: Math.random() * -20 // ✅ 預計算避免每次 render
         });
       }
       setBubbles(bubbleArray);
@@ -31,6 +33,21 @@ const BubbleBackground = () => {
 
     createBubbles();
   }, []);
+
+  // ✅ 使用 useMemo 穩定化泡泡樣式，避免每次 render 創建新物件
+  const bubbleStyles = useMemo(() => {
+    return bubbles.map(bubble => ({
+      width: `${bubble.size}px`,
+      height: `${bubble.size}px`,
+      left: `${bubble.x}%`,
+      top: `${bubble.y}%`,
+      opacity: bubble.opacity,
+      animationDuration: `${bubble.duration}s`,
+      animationDelay: `${bubble.animationDelay}s`,
+      background: `radial-gradient(circle, rgba(255, 255, 255, ${bubble.opacity * 0.8}) 0%, rgba(255, 255, 255, ${bubble.opacity * 0.3}) 60%, transparent 100%)`,
+      filter: 'blur(1.5px)'
+    }));
+  }, [bubbles]);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
@@ -46,21 +63,11 @@ const BubbleBackground = () => {
       </div>
       
       {/* 小型浮動泡泡 - 增強可見度 */}
-      {bubbles.map(bubble => (
+      {bubbles.map((bubble, index) => (
         <div
           key={bubble.id}
           className="floating-bubble animate-float"
-          style={{
-            width: `${bubble.size}px`,
-            height: `${bubble.size}px`,
-            left: `${bubble.x}%`,
-            top: `${bubble.y}%`,
-            opacity: bubble.opacity,
-            animationDuration: `${bubble.duration}s`,
-            animationDelay: `${Math.random() * -20}s`,
-            background: `radial-gradient(circle, rgba(255, 255, 255, ${bubble.opacity * 0.8}) 0%, rgba(255, 255, 255, ${bubble.opacity * 0.3}) 60%, transparent 100%)`,
-            filter: 'blur(1.5px)'
-          }}
+          style={bubbleStyles[index]} // ✅ 使用預計算的穩定樣式物件
         />
       ))}
       

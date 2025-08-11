@@ -1,42 +1,42 @@
-import { memo, useMemo, useCallback } from 'react';
-import { useOrders, useOrderStats } from '@/stores';
-import type { Order, OrderStatus } from '@/types';
+import { memo, useCallback } from 'react';
+import { useDashboard } from '@/hooks/business/useDashboard';
+import type { OrderStatus, Order } from '@/types';
 
 const Dashboard = memo(() => {
-  const orders = useOrders();
-  const orderStats = useOrderStats();
+  // ✅ 使用新的 useDashboard hook
+  const {
+    currentTime,
+    currentDate,
+    todayOrderCount,
+    todayRevenue,
+    pendingCount,
+    completedCount,
+    recentOrders
+  } = useDashboard();
 
-  // 使用 useMemo 優化最近訂單計算
-  const recentOrders = useMemo(() => {
-    return orders
-      ?.slice()
-      .sort((a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5) || [];
-  }, [orders]);
-
-  // 使用 useCallback 優化狀態顏色函數
+  // ✅ 穩定的回調函數
   const getStatusColor = useCallback((status: OrderStatus): string => {
-    switch (status) {
-      case 'pending': return 'status-badge status-pending';
-      case 'preparing': return 'status-badge status-preparing';
-      case 'completed': return 'status-badge status-completed';
-      case 'paid': return 'status-badge status-paid';
-      default: return 'status-badge status-pending';
-    }
+    const statusColors: Record<OrderStatus, string> = {
+      pending: 'status-badge status-pending',
+      preparing: 'status-badge status-preparing',
+      completed: 'status-badge status-completed',
+      paid: 'status-badge status-paid',
+      cancelled: 'status-badge status-cancelled',
+    };
+    return statusColors[status] || 'status-badge status-pending';
   }, []);
 
-  // 使用 useCallback 優化狀態文字函數
   const getStatusText = useCallback((status: OrderStatus): string => {
-    switch (status) {
-      case 'pending': return '待處理';
-      case 'preparing': return '調製中';
-      case 'completed': return '已完成';
-      case 'paid': return '已結帳';
-      default: return status;
-    }
+    const statusTexts: Record<OrderStatus, string> = {
+      pending: '待處理',
+      preparing: '調製中',
+      completed: '已完成',
+      paid: '已結帳',
+      cancelled: '已取消',
+    };
+    return statusTexts[status] || status;
   }, []);
 
-  // 使用 useCallback 優化貨幣格式化函數
   const formatCurrency = useCallback((amount: number): string => {
     return amount.toLocaleString();
   }, []);
@@ -50,17 +50,12 @@ const Dashboard = memo(() => {
             歡迎回來 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            今天是 {new Date().toLocaleDateString('zh-TW', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'long'
-            })}
+            今天是 {currentDate}
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            上次更新: {new Date().toLocaleTimeString('zh-TW')}
+            上次更新: {currentTime}
           </div>
         </div>
       </div>
@@ -72,7 +67,7 @@ const Dashboard = memo(() => {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">今日營收</p>
               <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                ${formatCurrency(0)} {/* TODO: 實現今日營收計算 */}
+                ${formatCurrency(todayRevenue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 +12% 較昨日
@@ -89,7 +84,7 @@ const Dashboard = memo(() => {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">今日訂單</p>
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {orderStats.todayOrders}
+                {todayOrderCount}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 +8% 較昨日
@@ -104,16 +99,16 @@ const Dashboard = memo(() => {
         <div className="card p-6 group">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">當前客人</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">待處理</p>
               <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                {0} {/* TODO: 從桌位狀態計算活躍客人數 */}
+                {pendingCount}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                正在用餐
+                需要處理
               </p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
-              👥
+              ⏳
             </div>
           </div>
         </div>
@@ -121,16 +116,16 @@ const Dashboard = memo(() => {
         <div className="card p-6 group">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">平均消費</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">已完成</p>
               <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                ${formatCurrency(0)} {/* TODO: 實現平均訂單價值計算 */}
+                {completedCount}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                每筆訂單
+                今日完成
               </p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
-              📊
+              ✅
             </div>
           </div>
         </div>
@@ -243,5 +238,7 @@ const Dashboard = memo(() => {
     </div>
   );
 });
+
+Dashboard.displayName = 'Dashboard';
 
 export default Dashboard;

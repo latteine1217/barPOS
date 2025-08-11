@@ -1,5 +1,5 @@
 import { format, startOfWeek, startOfMonth, subDays, subWeeks, subMonths } from 'date-fns';
-import type { ChartConfig } from '../types';
+import type { ChartConfig } from '@/types';
 
 // 圖表顏色主題
 export const chartColors = {
@@ -36,14 +36,27 @@ export const chartTheme = {
 
 // 格式化數值顯示
 export const formatters = {
-  currency: (value?: number): string => `$${value?.toLocaleString() || 0}`,
-  percentage: (value?: number): string => `${(value || 0).toFixed(1)}%`,
-  number: (value?: number): string => value?.toLocaleString() || '0',
-  compact: (value?: number): string => {
-    if (!value) return '0';
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-    return value.toString();
+  currency: (value?: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === undefined || numValue === null) return '0';
+    return `${numValue.toLocaleString()}`;
+  },
+  percentage: (value?: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === undefined || numValue === null) return '0.0%';
+    return `${numValue.toFixed(1)}%`;
+  },
+  number: (value?: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === undefined || numValue === null) return '0';
+    return numValue.toLocaleString();
+  },
+  compact: (value?: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === undefined || numValue === null) return '0';
+    if (numValue >= 1000000) return `${(numValue / 1000000).toFixed(1)}M`;
+    if (numValue >= 1000) return `${(numValue / 1000).toFixed(1)}K`;
+    return numValue.toString();
   }
 };
 
@@ -235,10 +248,10 @@ export const createCustomTooltip = (
     
     return {
       active,
-      label: labelFormatter ? labelFormatter(label) : label,
+      label: labelFormatter ? labelFormatter(label ?? '') : (label ?? ''),
       data: payload.map(entry => ({
         name: entry.name,
-        value: valueFormatter ? valueFormatter(entry.value) : entry.value,
+        value: valueFormatter ? valueFormatter(entry.value ?? '') : (entry.value ?? ''),
         color: entry.color
       }))
     };

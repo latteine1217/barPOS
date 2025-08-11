@@ -220,15 +220,15 @@ export class AnalyticsService {
       if (!hourlyData[hour]) {
         hourlyData[hour] = { hour, orderCount: 0, revenue: 0 };
       }
-      hourlyData[hour].orderCount++;
-      hourlyData[hour].revenue += order.total;
+      hourlyData[hour]!.orderCount++;
+      hourlyData[hour]!.revenue += order.total;
       
       // 按星期統計
       if (!dailyData[dayOfWeek]) {
         dailyData[dayOfWeek] = { day: dayOfWeek, orderCount: 0, revenue: 0 };
       }
-      dailyData[dayOfWeek].orderCount++;
-      dailyData[dayOfWeek].revenue += order.total;
+      dailyData[dayOfWeek]!.orderCount++;
+      dailyData[dayOfWeek]!.revenue += order.total;
     });
 
     return {
@@ -313,13 +313,13 @@ export class AnalyticsService {
 
       Object.keys(categories).forEach(category => {
         if (name.includes(category.toLowerCase())) {
-          categories[category].push(product);
+          categories[category]!.push(product);
           categoryFound = true;
         }
       });
 
       if (!categoryFound) {
-        categories['Others'].push(product);
+        categories['Others']!.push(product);
       }
     });
 
@@ -362,15 +362,22 @@ export class AnalyticsService {
         };
       }
       
-      segments[customer.segment].count++;
-      segments[customer.segment].totalValue += customer.monetary;
+      segments[customer.segment]!.count++;
+      segments[customer.segment]!.totalValue += customer.monetary;
     });
 
     Object.values(segments).forEach(segment => {
-      segment.averageValue = segment.count > 0 ? segment.totalValue / segment.count : 0;
+      if (segment) {
+        segment.averageValue = segment.count > 0 ? segment.totalValue / segment.count : 0;
+      }
     });
 
-    return Object.values(segments);
+    return Object.values(segments).filter(Boolean) as Array<{
+      name: CustomerSegment;
+      count: number;
+      totalValue: number;
+      averageValue: number;
+    }>;
   }
 
   private calculateAverageCLV(): number {
@@ -382,7 +389,7 @@ export class AnalyticsService {
         if (!customerGroups[order.customerId]) {
           customerGroups[order.customerId] = [];
         }
-        customerGroups[order.customerId].push(order);
+        customerGroups[order.customerId]!.push(order);
       }
     });
 
@@ -413,7 +420,7 @@ export class AnalyticsService {
           .filter(o => o.customerId === order.customerId)
           .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
         
-        if (new Date(earliestOrder.createdAt) >= thirtyDaysAgo) {
+        if (earliestOrder && new Date(earliestOrder.createdAt) >= thirtyDaysAgo) {
           newCustomerIds.add(order.customerId);
         }
       }
@@ -431,11 +438,13 @@ export class AnalyticsService {
       if (order.customerId) {
         const orderDate = new Date(order.createdAt);
         
-        if (!customerFirstOrders[order.customerId] || orderDate < new Date(customerFirstOrders[order.customerId])) {
+        const firstOrderDate = customerFirstOrders[order.customerId];
+        if (!firstOrderDate || orderDate < new Date(firstOrderDate)) {
           customerFirstOrders[order.customerId] = order.createdAt;
         }
         
-        if (!customerLastOrders[order.customerId] || orderDate > new Date(customerLastOrders[order.customerId])) {
+        const lastOrderDate = customerLastOrders[order.customerId];
+        if (!lastOrderDate || orderDate > new Date(lastOrderDate)) {
           customerLastOrders[order.customerId] = order.createdAt;
         }
       }
@@ -444,9 +453,10 @@ export class AnalyticsService {
     const totalCustomers = Object.keys(customerFirstOrders).length;
     const thirtyDaysAgo = subDays(new Date(), 30);
     
-    const retainedCustomers = Object.keys(customerLastOrders).filter(customerId => 
-      new Date(customerLastOrders[customerId]) >= thirtyDaysAgo
-    ).length;
+    const retainedCustomers = Object.keys(customerLastOrders).filter(customerId => {
+      const lastOrderDate = customerLastOrders[customerId];
+      return lastOrderDate ? new Date(lastOrderDate) >= thirtyDaysAgo : false;
+    }).length;
 
     return totalCustomers > 0 ? (retainedCustomers / totalCustomers) * 100 : 0;
   }

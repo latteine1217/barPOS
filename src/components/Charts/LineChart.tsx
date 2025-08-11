@@ -33,9 +33,9 @@ interface CustomLineChartProps {
   showGrid?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  xAxisFormatter?: (value: string | number) => string;
-  yAxisFormatter?: (value: string | number) => string;
-  tooltipFormatter?: (value: string | number) => string;
+  xAxisFormatter?: (value: string | number | undefined) => string;
+  yAxisFormatter?: (value: string | number | undefined) => string;
+  tooltipFormatter?: (value: string | number | undefined) => string;
   className?: string;
 }
 
@@ -51,6 +51,17 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
   tooltipFormatter = formatters.number,
   className = ''
 }) => {
+  // 創建統一的 tickFormatter 函數來處理類型安全
+  const createTickFormatter = (formatter?: (value: string | number | undefined) => string) => {
+    if (!formatter) return undefined;
+    return (value: any): string => {
+      return formatter(value);
+    };
+  };
+
+  const xAxisTickFormatter = createTickFormatter(xAxisFormatter);
+  const yAxisTickFormatter = createTickFormatter(yAxisFormatter);
+
   return (
     <div className={`w-full ${className}`} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -67,21 +78,21 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
             tick={chartTheme.axis.tick}
             axisLine={chartTheme.axis.axisLine}
             tickLine={chartTheme.axis.tickLine}
-            tickFormatter={xAxisFormatter}
+            {...(xAxisTickFormatter && { tickFormatter: xAxisTickFormatter })}
           />
           
           <YAxis 
             tick={chartTheme.axis.tick}
             axisLine={chartTheme.axis.axisLine}
             tickLine={chartTheme.axis.tickLine}
-            tickFormatter={yAxisFormatter}
+            {...(yAxisTickFormatter && { tickFormatter: yAxisTickFormatter })}
           />
           
           <Tooltip 
             content={
               <CustomTooltip 
-                labelFormatter={xAxisFormatter}
-                valueFormatter={tooltipFormatter}
+                labelFormatter={xAxisFormatter ? (value) => xAxisFormatter(value) : null}
+                valueFormatter={tooltipFormatter ? (value) => tooltipFormatter(value) : null}
               />
             }
           />
@@ -97,7 +108,11 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
               dataKey={line.dataKey}
               stroke={line.color || chartColors.palette[index % chartColors.palette.length]}
               strokeWidth={line.strokeWidth || 2}
-              dot={line.showDots !== false ? { fill: line.color || chartColors.palette[index], strokeWidth: 2, r: 4 } : false}
+              dot={line.showDots !== false ? { 
+                fill: line.color || chartColors.palette[index % chartColors.palette.length] || chartColors.primary, 
+                strokeWidth: 2, 
+                r: 4 
+              } : false}
               activeDot={{ r: 6, strokeWidth: 2 }}
               name={line.name || line.dataKey}
               connectNulls={false}

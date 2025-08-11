@@ -1,4 +1,5 @@
 import { Component, ReactNode, ErrorInfo } from 'react';
+import { logger } from '@/services/loggerService';
 
 interface State {
   hasError: boolean;
@@ -23,8 +24,13 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // 你也可以將錯誤 log 到錯誤回報服務
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error to error reporting service
+    logger.error('ErrorBoundary caught an error', { 
+      component: 'ErrorBoundary',
+      action: 'componentDidCatch',
+      stack: errorInfo.componentStack 
+    }, error);
+    
     this.setState({
       error,
       errorInfo

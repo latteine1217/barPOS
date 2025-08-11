@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 export interface UseLocalStorageReturn<T> {
   value: T;
   setValue: (value: T | ((prev: T) => T)) => void;
   removeValue: () => void;
   clearValue: () => void;
+  isDirty?: boolean;
 }
 
 export const useLocalStorage = <T>(
@@ -27,6 +28,11 @@ export const useLocalStorage = <T>(
   }, [defaultValue, key]);
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
+
+  // 使用 useMemo 優化深度比較性能
+  const isDirtyMemo = useMemo(() => {
+    return JSON.stringify(storedValue) !== JSON.stringify(defaultValue);
+  }, [storedValue, defaultValue]);
 
   // 返回一個包裝版本的設定函數，該函數將新值持久化到 localStorage
   const setValue = useCallback(
@@ -78,12 +84,20 @@ export const useLocalStorage = <T>(
 
   // 監聽其他實例的變化
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent | CustomEvent) => {
-      if ((e as StorageEvent).key && (e as StorageEvent).key !== key) {
-        return;
+    const handleStorageChange = (e: Event) => {
+      if (e instanceof StorageEvent) {
+        // 當 'storage' 事件發生, 如果 key 匹配或整個 storage 被清除，則更新狀態
+        if (e.key === key || e.key === null) {
+          setStoredValue(readValue());
+        }
+      } else if (
+        e instanceof CustomEvent &&
+        e.type === 'local-storage' &&
+        e.detail.key === key
+      ) {
+        // 當自定義的 'local-storage' 事件發生且 key 匹配時，更新狀態
+        setStoredValue(readValue());
       }
-
-      setStoredValue(readValue());
     };
 
     // 監聽原生存儲事件和自定義事件
@@ -101,5 +115,6 @@ export const useLocalStorage = <T>(
     setValue,
     removeValue,
     clearValue,
+    isDirty: isDirtyMemo,
   };
 };

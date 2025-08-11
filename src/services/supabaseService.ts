@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/services/loggerService';
 import type { Order, Table, MenuItem, ApiResponse } from '@/types';
 
 interface SyncResult {
@@ -22,13 +23,13 @@ interface LocalData {
 interface ConnectionTestResult {
   success: boolean;
   message?: string;
-  data?: { connected: boolean; tablesCount: number };
+  data?: { tablesCount: number };
   error?: string;
 }
 
 class SupabaseService {
   private supabase: SupabaseClient;
-  private isConnected: boolean = false;
+  
 
   constructor(supabaseUrl: string, supabaseKey: string) {
     if (!supabaseUrl || !supabaseKey) {
@@ -36,7 +37,6 @@ class SupabaseService {
     }
     
     this.supabase = createClient(supabaseUrl, supabaseKey);
-    this.isConnected = false;
   }
 
   // 測試連接
@@ -45,7 +45,7 @@ class SupabaseService {
     
     for (let i = 0; i < retries; i++) {
       try {
-        console.log(`Supabase 連線測試 (嘗試 ${i + 1}/${retries})...`);
+        logger.debug('Testing Supabase connection', { component: 'SupabaseService', action: 'testConnection', attempt: i + 1, retries });
         
         // 使用簡單的查詢來測試連接
         const { data, error } = await this.supabase
@@ -57,16 +57,15 @@ class SupabaseService {
           throw error;
         }
         
-        this.isConnected = true;
-        console.log('Supabase 連線成功！');
+        logger.info('Supabase connection successful', { component: 'SupabaseService', action: 'testConnection', tablesCount: data?.length || 0 });
         return { 
           success: true, 
           message: 'Successfully connected to Supabase',
-          data: { connected: true, tablesCount: data?.length || 0 }
+          data: { tablesCount: data?.length || 0 }
         };
       } catch (error) {
         lastError = error as Error;
-        console.error(`連線嘗試 ${i + 1} 失敗:`, lastError.message);
+        logger.warn('Connection attempt failed', { component: 'SupabaseService', action: 'testConnection', attempt: i + 1, retries, error: lastError.message });
         
         if (i < retries - 1) {
           // 等待一秒後重試
@@ -75,7 +74,6 @@ class SupabaseService {
       }
     }
     
-    this.isConnected = false;
     return { 
       success: false, 
       error: lastError?.message || 'Failed to connect to Supabase after multiple attempts'
@@ -94,7 +92,7 @@ class SupabaseService {
     };
     
     const mappedStatus = statusMapping[appStatus] || 'pending';
-    console.log(`訂單狀態映射: ${appStatus} → ${mappedStatus}`);
+    logger.debug('Order status mapping', { component: 'SupabaseService', action: 'mapStatusToDatabase', appStatus, mappedStatus });
     return mappedStatus;
   }
 
@@ -107,7 +105,7 @@ class SupabaseService {
     };
     
     const mappedStatus = statusMapping[appStatus] || 'available';
-    console.log(`桌位狀態映射: ${appStatus} → ${mappedStatus}`);
+    logger.debug('Table status mapping', { component: 'SupabaseService', action: 'mapTableStatusToDatabase', appStatus, mappedStatus });
     return mappedStatus;
   }
 
@@ -148,7 +146,7 @@ class SupabaseService {
         message: 'Order created successfully'
       };
     } catch (error) {
-      console.error('創建訂單錯誤:', error);
+      logger.error('Failed to create order', { component: 'SupabaseService', action: 'createOrder', orderId: order.id }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : '創建訂單失敗'
@@ -175,7 +173,7 @@ class SupabaseService {
         message: `Successfully fetched ${orders.length} orders`
       };
     } catch (error) {
-      console.error('獲取訂單錯誤:', error);
+      logger.error('Failed to fetch orders', { component: 'SupabaseService', action: 'fetchOrders' }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : '獲取訂單失敗'

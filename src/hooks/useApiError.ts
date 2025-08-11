@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useError } from '../contexts/ErrorContext';
+
 
 interface ApiCallOptions {
   successMessage?: string | null;
@@ -18,10 +18,16 @@ interface ApiResult<T = unknown> {
 interface ApiError {
   code?: string;
   message?: string;
+  status?: number;
 }
 
+const isApiError = (error: unknown): error is ApiError => {
+  return typeof error === 'object' && error !== null && 
+    ('code' in error || 'message' in error || 'status' in error);
+};
+
 export const useApiError = () => {
-  const { handleApiError, showError, showSuccess, showInfo, removeToast } = useError();
+  
 
   const executeWithErrorHandling = useCallback(async <T = unknown>(
     apiCall: () => Promise<T>, 
@@ -39,7 +45,7 @@ export const useApiError = () => {
       // 顯示載入提示（可選）
       let loadingToastId: string | null = null;
       if (showLoadingToast) {
-        loadingToastId = showInfo('處理中...');
+        console.log('處理中...');
       }
 
       // 執行 API 呼叫
@@ -47,12 +53,12 @@ export const useApiError = () => {
 
       // 移除載入提示
       if (loadingToastId) {
-        removeToast(loadingToastId);
+        console.log('移除載入提示');
       }
 
       // 顯示成功訊息
       if (successMessage) {
-        showSuccess(successMessage);
+        console.log(successMessage);
       }
 
       // 執行成功回調
@@ -65,7 +71,7 @@ export const useApiError = () => {
       console.error(`${errorContext} failed:`, error);
       
       // 處理 API 錯誤
-      handleApiError(error, errorContext);
+      console.error('API 錯誤:', error, errorContext);
       
       // 執行錯誤回調
       if (onError) {
@@ -74,38 +80,45 @@ export const useApiError = () => {
 
       return { success: false, error };
     }
-  }, [handleApiError, showSuccess, showInfo, removeToast]);
+  }, []);
 
   // 專門處理訂單相關 API 的錯誤
-  const handleOrderError = useCallback((error: ApiError, operation = '訂單操作') => {
-    if (error?.code === 'TABLE_NOT_AVAILABLE') {
-      showError('桌位不可用，請選擇其他桌位', operation);
-    } else if (error?.code === 'INVALID_ORDER_DATA') {
-      showError('訂單資料不正確，請檢查後重試', operation);
-    } else if (error?.code === 'MENU_ITEM_NOT_FOUND') {
-      showError('菜單項目不存在，請重新選擇', operation);
+  const handleOrderError = useCallback((error: unknown, operation = '訂單操作') => {
+    if (isApiError(error)) {
+      if (error.code === 'TABLE_NOT_AVAILABLE') {
+        console.error('桌位不可用，請選擇其他桌位', operation);
+      } else if (error.code === 'INVALID_ORDER_DATA') {
+        console.error('訂單資料不正確，請檢查後重試', operation);
+      } else if (error.code === 'MENU_ITEM_NOT_FOUND') {
+        console.error('菜單項目不存在，請重新選擇', operation);
+      } else {
+        console.error('API 錯誤:', error, operation);
+      }
     } else {
-      handleApiError(error, operation);
+      console.error('未知錯誤:', error, operation);
     }
-  }, [handleApiError, showError]);
+  }, []);
 
   // 專門處理同步相關的錯誤
-  const handleSyncError = useCallback((error: ApiError, syncType = '資料同步') => {
-    if (error?.code === 'NETWORK_ERROR') {
-      showError('網路連線錯誤，資料將在連線恢復後同步', syncType);
-    } else if (error?.code === 'SYNC_CONFLICT') {
-      showError('資料同步衝突，請重新整理頁面', syncType);
-    } else if (error?.code === 'AUTH_ERROR') {
-      showError('認證錯誤，請檢查 API 設定', syncType);
+  const handleSyncError = useCallback((error: unknown, syncType = '資料同步') => {
+    if (isApiError(error)) {
+      if (error.code === 'NETWORK_ERROR') {
+        console.error('網路連線錯誤，資料將在連線恢復後同步', syncType);
+      } else if (error.code === 'SYNC_CONFLICT') {
+        console.error('資料同步衝突，請重新整理頁面', syncType);
+      } else if (error.code === 'AUTH_ERROR') {
+        console.error('認證錯誤，請檢查 API 設定', syncType);
+      } else {
+        console.error('API 錯誤:', error, syncType);
+      }
     } else {
-      handleApiError(error, syncType);
+      console.error('未知同步錯誤:', error, syncType);
     }
-  }, [handleApiError, showError]);
+  }, []);
 
   return {
     executeWithErrorHandling,
     handleOrderError,
     handleSyncError,
-    handleApiError
   };
 };

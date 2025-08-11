@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useOrders } from '@/stores';
-import { Order, OrderItem } from '../types';
+import type { Order, OrderItem } from '@/types';
 import OrderDetailsModal from './OrderDetailsModal';
 
 type TimePeriod = 'today' | 'week' | 'month' | 'all';

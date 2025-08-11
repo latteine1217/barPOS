@@ -6,14 +6,13 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error: Error | null;
   errorInfo: React.ErrorInfo | null;
   retryCount: number;
 }
 
 interface ErrorReport {
   message: string;
-  stack?: string;
+  stack?: string | undefined;
   componentStack: string;
   timestamp: string;
   userAgent: string;
@@ -25,14 +24,13 @@ class GlobalErrorBoundary extends Component<Props, State> {
     super(props);
     this.state = { 
       hasError: false, 
-      error: null, 
       errorInfo: null,
       retryCount: 0
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(_error: Error): Partial<State> {
     // 更新 state 來顯示錯誤 UI
     return { hasError: true };
   }
@@ -42,7 +40,6 @@ class GlobalErrorBoundary extends Component<Props, State> {
     console.error('Global Error Boundary caught an error:', error, errorInfo);
     
     this.setState({
-      error,
       errorInfo
     });
 
@@ -56,7 +53,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
       const errorReport: ErrorReport = {
         message: error.message,
         stack: error.stack,
-        componentStack: errorInfo.componentStack,
+        componentStack: errorInfo.componentStack || '',
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
         url: window.location.href
@@ -79,7 +76,6 @@ class GlobalErrorBoundary extends Component<Props, State> {
   handleRetry = (): void => {
     this.setState(prevState => ({
       hasError: false,
-      error: null,
       errorInfo: null,
       retryCount: prevState.retryCount + 1
     }));
@@ -124,19 +120,14 @@ class GlobalErrorBoundary extends Component<Props, State> {
             </p>
 
             {/* 開發環境下顯示錯誤詳情 */}
-            {isDevelopment && this.state.error && (
+            {isDevelopment && this.state.errorInfo && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-left">
                 <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
                   錯誤詳情 (開發模式):
                 </h3>
                 <pre className="text-xs text-red-700 dark:text-red-400 overflow-auto">
-                  {this.state.error.message}
+                  {this.state.errorInfo.componentStack}
                 </pre>
-                {this.state.error.stack && (
-                  <pre className="text-xs text-red-600 dark:text-red-500 mt-2 overflow-auto max-h-32">
-                    {this.state.error.stack}
-                  </pre>
-                )}
               </div>
             )}
 

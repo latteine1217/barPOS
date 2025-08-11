@@ -1,6 +1,6 @@
 # 🍸 調酒酒吧管理系統 - Cocktail Bar POS
 
-> **🚀 v3.1.1 穩定版本！** 完成無限循環修復與桌面管理功能優化，解決 "Maximum update depth exceeded" 問題，提供更穩定的企業級營運分析與 CRM 客戶分群功能，全面支援 TypeScript 嚴格模式！
+> **🚀 v3.2.0 全面重構完成！** 完成大規模 TypeScript 重構和現代化升級，移除 JSX 舊代碼，全面採用 TypeScript 嚴格模式，新增開發工具與日誌系統，提升專案品質與開發體驗！
 
 一個專為調酒酒吧設計的現代化銷售時點情報系統 (POS)，使用 **React 19 + TypeScript + Zustand + Tailwind CSS** 構建，採用 **Supabase 雲端資料庫** 提供即時同步功能，具備企業級的營運分析能力和現代化架構。
 
@@ -17,12 +17,20 @@
 - **🥃 基酒分類** - 六大基酒分類 (Gin/Whisky/Rum/Tequila/Vodka/Brandy)
 - **☁️ 雲端同步** - Supabase 即時多裝置同步
 
-### 📈 **v3.1 最新更新：現代化架構**
-- **🏗️ Zustand 狀態管理** - 從 Context API 遷移至現代化 Zustand + Immer
-- **🔧 循環更新修復** - 解決 "Maximum update depth exceeded" 問題
-- **⚡ 效能優化** - 優化組合選擇器，減少不必要的重新渲染
-- **🛡️ 類型安全增強** - 完整 TypeScript 嚴格模式支援
-- **📊 穩定性提升** - 改進 store subscribe 邏輯，避免無限循環
+### 📈 **v3.2 最新更新：完整重構與現代化**
+- **🔄 TypeScript 完整重構** - 移除所有 JSX 檔案，全面採用 TypeScript 嚴格模式
+- **🛠️ 現代化工具鏈** - 升級 Vite、Tailwind、PostCSS 配置至最新版本
+- **📊 開發工具套件** - 新增 DevTools 組件、性能監控、狀態檢查器
+- **📝 日誌系統** - 完整的日誌攔截、檔案記錄、代理日誌系統
+- **🧪 測試架構升級** - Vitest 配置優化，新增 TypeScript 測試支援
+- **📋 專案文檔整理** - 新增 Hook 重構指南、性能報告、類型系統最佳實踐
+
+### 📈 **v3.1 架構穩定化**
+- 🏗️ **Zustand 狀態管理** - 從 Context API 遷移至現代化 Zustand + Immer
+- 🔧 **循環更新修復** - 解決 "Maximum update depth exceeded" 問題
+- ⚡ **效能優化** - 優化組合選擇器，減少不必要的重新渲染
+- 🛡️ **類型安全增強** - 完整 TypeScript 嚴格模式支援
+- 📊 **穩定性提升** - 改進 store subscribe 邏輯，避免無限循環
 
 ### 📈 **v3.0 企業級營運分析**
 - **🎯 CRM 客戶分群** - RFM 模型分析 (頻率、近期性、消費金額)
@@ -40,12 +48,13 @@
 
 ### 🔧 技術架構
 - **前端**: React 19 + TypeScript + Vite + Tailwind CSS
-- **狀態管理**: Zustand + Immer (v3.1 現代化架構)
+- **狀態管理**: Zustand + Immer (v3.2 現代化架構)
 - **圖表系統**: Recharts + TypeScript 類型安全
 - **桌面應用**: Electron 37 (Windows/macOS/Linux)
 - **移動端**: Capacitor 7 (iOS/Android)
 - **後端**: Supabase PostgreSQL 雲端資料庫 + 即時同步
-- **開發工具**: ESLint + TypeScript + Vite HMR + Electron Builder
+- **開發工具**: TypeScript Strict Mode + Vitest + PostCSS + 開發者工具套件
+- **日誌系統**: 完整的日誌攔截、檔案記錄、代理日誌系統
 
 ## 🚀 快速開始
 
@@ -111,6 +120,14 @@ npm run dev
 npm run dev          # 啟動開發服務器
 npm run build        # 建置生產版本
 npm run preview      # 預覽生產版本
+npm run lint         # ESLint 程式碼檢查
+npm run type-check   # TypeScript 類型檢查
+
+# 🧪 測試系統
+npm run test         # 執行所有測試
+npm run test:watch   # 監視模式測試
+npm run test:ui      # Vitest UI 界面
+npm run test:coverage # 測試覆蓋率報告
 
 # 💻 桌面應用 (Electron)
 npm run electron-dev      # Electron 開發模式
@@ -124,6 +141,10 @@ npm run mobile:setup           # 初始設置 iOS/Android
 npm run mobile:dev:ios         # iOS 開發模式
 npm run mobile:dev:android     # Android 開發模式
 npm run cap:sync               # 同步更新到移動端
+
+# 🔧 開發工具
+npm run log-server    # 啟動日誌服務器
+node check-status.cjs # 檢查專案狀態
 ```
 
 ## 📁 專案結構
@@ -131,48 +152,77 @@ npm run cap:sync               # 同步更新到移動端
 ```
 /
 ├── src/
-│   ├── components/              # React 組件
+│   ├── components/              # React 組件 (全 TypeScript)
 │   │   ├── Dashboard.tsx        # 智能儀表板
-│   │   ├── Tables.jsx          # 桌位管理
-│   │   ├── TableLayoutEditor.jsx # 桌位佈局編輯器
-│   │   ├── VisualOrderingInterface.jsx # 視覺化點餐
-│   │   ├── EnhancedAnalytics.tsx # 營運分析主頁 (v3.0)
-│   │   ├── Charts/             # 圖表組件庫 (v3.0)
+│   │   ├── Tables.tsx          # 桌位管理
+│   │   ├── TableLayoutEditor.tsx # 桌位佈局編輯器
+│   │   ├── VisualOrderingInterface.tsx # 視覺化點餐
+│   │   ├── EnhancedAnalytics.tsx # 營運分析主頁
+│   │   ├── LogViewer.tsx       # 日誌檢視器 (v3.2)
+│   │   ├── VisualOrderingModal.tsx # 視覺化點餐彈窗 (v3.2)
+│   │   ├── DevTools/           # 開發者工具套件 (v3.2)
+│   │   │   ├── HookDebugger.tsx    # Hook 偵錯器
+│   │   │   ├── PerformanceMonitor.tsx # 性能監控
+│   │   │   └── StateInspector.tsx  # 狀態檢查器
+│   │   ├── Charts/             # 圖表組件庫
 │   │   │   ├── BarChart.tsx    # 柱狀圖
 │   │   │   ├── LineChart.tsx   # 折線圖
 │   │   │   ├── PieChart.tsx    # 圓餅圖
 │   │   │   └── MetricCard.tsx  # 指標卡片
 │   │   ├── ui/                 # UI 組件庫
-│   │   └── ...
-│   ├── stores/                 # Zustand 狀態管理 (v3.1)
+│   │   └── ErrorBoundary/      # 錯誤邊界系統
+│   ├── stores/                 # Zustand 狀態管理
 │   │   ├── appStore.ts         # 主應用狀態
 │   │   ├── orderStore.ts       # 訂單狀態管理
 │   │   ├── tableStore.ts       # 桌位狀態管理
 │   │   ├── menuStore.ts        # 菜單狀態管理
 │   │   └── index.ts           # Store 統一導出
-│   ├── contexts/              # Legacy Context API (漸進遷移)
-│   │   └── ErrorContext.tsx   # 錯誤處理 Context
-│   ├── services/
-│   │   ├── supabaseService.ts  # Supabase API 服務 (TypeScript)
-│   │   ├── analyticsService.ts # 營運分析服務 (v3.0)
-│   │   └── storageService.js   # 跨平台儲存服務
-│   ├── utils/                  # 工具函數 (v3.0)
-│   │   ├── dataAnalysis.ts     # 數據分析工具
-│   │   └── chartHelpers.ts     # 圖表輔助函數
-│   ├── types/                  # TypeScript 類型定義 (v3.0)
+│   ├── hooks/                  # 自定義 Hook 系統 (v3.2)
+│   │   ├── business/          # 業務邏輯 Hook
+│   │   ├── core/              # 核心功能 Hook
+│   │   ├── ui/                # UI 相關 Hook
+│   │   └── utils/             # 工具類 Hook
+│   ├── services/              # 服務層
+│   │   ├── supabaseService.ts  # Supabase API 服務
+│   │   ├── analyticsService.ts # 營運分析服務
+│   │   ├── storageService.ts   # 跨平台儲存服務
+│   │   ├── loggerService.ts    # 日誌服務 (v3.2)
+│   │   ├── agentLoggerService.ts # 代理日誌服務 (v3.2)
+│   │   └── consoleInterceptorService.ts # 控制台攔截器 (v3.2)
+│   ├── types/                  # TypeScript 類型定義
+│   │   ├── core/              # 核心類型定義 (v3.2)
 │   │   └── index.ts           # 全域類型定義
-│   └── ...
+│   ├── utils/                  # 工具函數
+│   │   ├── dataAnalysis.ts     # 數據分析工具
+│   │   ├── chartHelpers.ts     # 圖表輔助函數
+│   │   ├── cacheManager.ts     # 快取管理 (v3.2)
+│   │   └── performance.ts      # 性能工具 (v3.2)
+│   └── test/                   # 測試檔案 (TypeScript)
 ├── electron/                   # Electron 桌面應用檔案
 ├── android/                    # Android 原生專案
 ├── ios/                        # iOS 原生專案
-├── cocktail-bar-supabase-setup.sql # 調酒酒吧資料庫設定腳本 (推薦)
+├── .github/workflows/          # GitHub Actions CI/CD
+├── cocktail-bar-supabase-setup.sql # 調酒酒吧資料庫設定腳本
+├── HOOK_REFACTORING_GUIDE.md   # Hook 重構指南 (v3.2)
+├── PHASE3_PERFORMANCE_REPORT.md # 性能優化報告 (v3.2)
+├── TYPE_SYSTEM_BEST_PRACTICES.md # TypeScript 最佳實踐 (v3.2)
 └── ...
 ```
 
 ## 🎯 開發狀態
 
-### ✅ v3.1 已完成（當前版本）
-- 🏗️ **Zustand 現代化架構** - 完成從 Context API 到 Zustand + Immer 的遷移
+### ✅ v3.2 最新完成（當前版本）
+- 🔄 **完整 TypeScript 重構** - 移除所有 JSX 檔案，全面採用 TypeScript 嚴格模式
+- 🛠️ **現代化工具鏈升級** - Vite 5、Tailwind 3、PostCSS 8 最新版本配置
+- 📊 **開發者工具套件** - HookDebugger、PerformanceMonitor、StateInspector
+- 📝 **完整日誌系統** - 控制台攔截、檔案記錄、代理日誌、日誌檢視器
+- 🏗️ **Hook 架構重組** - 分類整理 business、core、ui、utils Hook
+- 🧪 **測試架構升級** - Vitest 配置優化，TypeScript 測試支援
+- 📋 **專案文檔完善** - Hook 重構指南、性能報告、類型系統最佳實踐
+- 🧹 **程式碼清理** - 移除過時檔案，優化專案結構
+
+### ✅ v3.1 架構穩定化
+- 🏗️ **Zustand 狀態管理** - 從 Context API 遷移至現代化 Zustand + Immer
 - 🔧 **循環更新修復** - 解決 "Maximum update depth exceeded" 無限循環問題
 - ⚡ **效能優化提升** - 優化組合選擇器和 store subscribe 邏輯
 - 🛡️ **類型安全增強** - 強化 TypeScript 嚴格模式和錯誤處理
@@ -194,17 +244,17 @@ npm run cap:sync               # 同步更新到移動端
 - 🎯 **視覺化點餐** - iChef 風格 POS 介面
 - 💾 **智能儲存** - 本地 + 雲端雙重備份
 
-### 🔄 近期規劃 (v3.2)
-- 🧪 **測試系統完善** - 增加單元測試和整合測試覆蓋率
-- 🛡️ **錯誤邊界改進** - 更完善的錯誤處理和用戶反饋
-- 📱 **PWA 功能** - 離線使用和推播通知支援
-- 🎨 **UI/UX 優化** - 提升使用者體驗和介面設計
+### 🔄 近期規劃 (v3.3)
+- 🎯 **業務 Hook 完善** - 持續優化 useOrderManagement、useTableOperations
+- 🛡️ **錯誤邊界擴展** - 更細緻的錯誤處理和用戶反饋系統
+- 📱 **PWA 功能實現** - 離線使用和推播通知支援
+- 🎨 **UI/UX 持續優化** - 響應式設計和使用者體驗改進
 
 ### 🔄 未來規劃 (v4.0+)
-- 🔒 **權限管理** - 員工角色和權限系統
-- 📧 **客戶通知** - 自動化行銷與客戶關係管理
-- 🤖 **AI 預測** - 銷售預測與庫存建議
-- 🌐 **多語言** - 國際化支援
+- 🔒 **權限管理系統** - 員工角色和權限管控
+- 📧 **自動化客戶關係** - 客戶通知與行銷自動化
+- 🤖 **AI 智能預測** - 銷售預測與庫存建議
+- 🌐 **多語言國際化** - 完整的 i18n 支援
 
 ## 🚀 部署指南
 
@@ -233,11 +283,16 @@ npm run cap:open:android
 ## 🛠️ 疑難排解
 
 ### 常見問題
-1. **連線失敗**: 檢查 Supabase API Key 和網路連線
-2. **資料同步問題**: 確認資料庫設定和權限
-3. **移動端問題**: 參考 `setup-ios.sh` 解決 Ruby/CocoaPods 問題
-4. **圖表顯示異常**: 檢查瀏覽器是否支援現代 JavaScript 功能
-5. **TypeScript 編譯錯誤**: 確認 TypeScript 版本和類型定義
+1. **應用程式啟動時卡住或無限載入**:
+   - **原因一：無限遞迴 (Infinite Recursion)**：`consoleInterceptorService.ts` 中的日誌攔截器可能錯誤地呼叫了被攔截後的 `console` 方法，導致無限循環。
+     - **解決方案**：確保 `consoleInterceptorService.ts` 在其內部日誌輸出時，使用備份的原始 `console` 方法（例如 `this.originalConsole.log`），而非被替換後的 `console` 方法。
+   - **原因二：本地儲存資料損壞 (Corrupted Local Storage Data)**：`localStorage` 中儲存的資料可能已損壞或格式不正確，導致應用程式在載入時解析失敗。
+     - **解決方案**：清除瀏覽器的 `localStorage`。您可以在瀏覽器開發者工具的控制台中執行 `localStorage.clear()`，或運行專案根目錄下的 `clear_storage.ts` 腳本。
+2. **連線失敗**: 檢查 Supabase API Key 和網路連線
+3. **資料同步問題**: 確認資料庫設定和權限
+4. **移動端問題**: 參考 `setup-ios.sh` 解決 Ruby/CocoaPods 問題
+5. **圖表顯示異常**: 檢查瀏覽器是否支援現代 JavaScript 功能
+6. **TypeScript 編譯錯誤**: 確認 TypeScript 版本和類型定義
 
 ### 開發除錯
 ```bash
@@ -259,17 +314,19 @@ npm run build -- --debug
 ### v3.1 已知問題與解決方案
 - **狀態管理**: 已從 Context API 遷移至 Zustand，解決了循環更新問題
 - **無限循環錯誤**: 已修復 "Maximum update depth exceeded" 問題
-- **TypeScript 錯誤**: 部分組件仍在漸進式遷移中，不影響核心功能運行
-- **開發測試**: 建議使用瀏覽器檢查實際運行狀況，而非僅依賴 `npm run dev` 輸出
+- **TypeScript 支援**: v3.2 已完成全面 TypeScript 重構，移除所有 JSX 檔案
+- **開發體驗**: 新增開發者工具套件和完整日誌系統，提升開發效率
 
 ## 📚 相關文件
 
 - [`SUPABASE_GUIDE.md`](./SUPABASE_GUIDE.md) - Supabase 詳細設定指南
 - [`AGENTS.md`](./AGENTS.md) - AI 開發代理指南 (opencode 專用)
 - [`cocktail-bar-supabase-setup.sql`](./cocktail-bar-supabase-setup.sql) - 調酒酒吧資料庫設定腳本
-- [`PHASE4_COMPLETION_REPORT.md`](./PHASE4_COMPLETION_REPORT.md) - v3.0 營運分析功能完成報告
-- [`DESIGN_SYSTEM_GUIDE.md`](./DESIGN_SYSTEM_GUIDE.md) - 設計系統與 UI 組件指南
 - [`TESTING_GUIDE.md`](./TESTING_GUIDE.md) - 測試策略與品質保證
+- [`HOOK_REFACTORING_GUIDE.md`](./HOOK_REFACTORING_GUIDE.md) - Hook 重構指南 (v3.2)
+- [`PHASE3_PERFORMANCE_REPORT.md`](./PHASE3_PERFORMANCE_REPORT.md) - 性能優化報告 (v3.2)
+- [`TYPE_SYSTEM_BEST_PRACTICES.md`](./TYPE_SYSTEM_BEST_PRACTICES.md) - TypeScript 最佳實踐 (v3.2)
+- [`CONSOLE_LOG_GUIDE.md`](./CONSOLE_LOG_GUIDE.md) - 控制台日誌指南 (v3.2)
 
 ## 🤝 貢獻
 
@@ -288,11 +345,19 @@ MIT License
 
 ---
 
-**🎉 立即體驗最先進的調酒酒吧管理系統！v3.1 帶來穩定的現代化架構，v3.0 提供企業級營運分析，讓您的酒吧經營更智能、更高效！**
+**🎉 立即體驗最先進的調酒酒吧管理系統！v3.2 帶來完整的 TypeScript 重構與現代化工具鏈，v3.1 提供穩定的狀態管理架構，v3.0 提供企業級營運分析，讓您的酒吧經營更智能、更高效！**
 
 ---
 
 ### 📝 版本更新日誌
+
+**v3.2.0** (2025-01-25)
+- 🔄 **完整 TypeScript 重構** - 移除所有 JSX 檔案，全面採用 TypeScript 嚴格模式
+- 🛠️ **現代化工具鏈升級** - Vite 5、Tailwind 3、PostCSS 8 最新版本配置  
+- 📊 **開發者工具套件** - 新增 HookDebugger、PerformanceMonitor、StateInspector
+- 📝 **完整日誌系統** - 控制台攔截、檔案記錄、代理日誌、日誌檢視器
+- 🏗️ **Hook 架構重組** - 業務邏輯、核心功能、UI、工具類 Hook 分類整理
+- 📋 **專案文檔完善** - Hook 重構指南、性能報告、TypeScript 最佳實踐
 
 **v3.1.1** (2025-01-25)
 - 🔧 **修復無限循環錯誤** - 徹底解決 "Maximum update depth exceeded" 問題

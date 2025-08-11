@@ -237,7 +237,11 @@ function createMenu() {
               type: 'info',
               title: '關於餐廳管理系統',
               message: '餐廳管理系統 v2.0.0',
-              detail: '功能類似 iChef 的現代化餐廳 POS 系統\n\n使用 React 19 + Electron 構建\n整合 Notion API 作為後端資料庫\n\n開發工具: opencode + GitHub Copilot',
+              detail: `功能類似 iChef 的現代化餐廳 POS 系統
+
+使用 React 19 + Electron 構建
+
+開發工具: opencode + GitHub Copilot`,
               buttons: ['確定']
             });
           }
@@ -266,7 +270,11 @@ function createMenu() {
               type: 'info',
               title: '關於餐廳管理系統',
               message: '餐廳管理系統 v2.0.0',
-              detail: '功能類似 iChef 的現代化餐廳 POS 系統\n\n使用 React 19 + Electron 構建\n整合 Notion API 作為後端資料庫\n\n開發工具: opencode + GitHub Copilot',
+              detail: `功能類似 iChef 的現代化餐廳 POS 系統
+
+使用 React 19 + Electron 構建
+
+開發工具: opencode + GitHub Copilot`,
               buttons: ['確定']
             });
           }

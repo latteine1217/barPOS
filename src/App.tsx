@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAppStore, useOrderStore, useTableStore, useMenuStore } from './stores';
-import { ErrorProvider } from './contexts/ErrorContext';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAppStore, useOrderStore, useTableStore, useMenuStore, useSettingsStore } from './stores';
+import { logger } from '@/services/loggerService';
+
 import ErrorBoundary from './components/ErrorBoundary';
 import GlobalErrorBoundary from './components/ErrorBoundary/GlobalErrorBoundary';
 import Sidebar from './components/Sidebar';
@@ -13,6 +14,7 @@ import Settings from './components/Settings';
 import TableLayoutEditor from './components/TableLayoutEditor';
 import BubbleBackground from './components/BubbleBackground';
 import LogViewer from './components/LogViewer';
+import VisualOrderingModal from './components/VisualOrderingModal';
 import './index.css';
 
 type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
@@ -25,14 +27,13 @@ function AppContent() {
   const menuLoaded = useMenuStore((state) => state.isLoaded);
   
   // 暫時移除 settingsStore 依賴以快速恢復功能
-  // const settingsLoaded = useSettingsStore((state) => state.isLoaded);
+  const settingsLoaded = useSettingsStore((state: any) => state.isLoaded);
   
   // 計算載入狀態 - 簡化條件
-  const isLoaded = orderLoaded && tableLoaded && menuLoaded;
+  const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
   
-  const [activeTab, setActiveTab] = useState<TabType>('tables');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [initAttempted, setInitAttempted] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>(() => 'tables');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => false);
 
   // ✅ 使用 useCallback 穩定狀態更新函數引用
   const handleSetActiveTab = useCallback((tab: TabType) => {
@@ -44,35 +45,15 @@ function AppContent() {
   }, []);
 
   // 初始化所有 stores - 僅執行一次
+  const initStartedRef = useRef(false);
   useEffect(() => {
-    if (!isInitialized && !initAttempted) {
-      setInitAttempted(true);
-      
-      const initializeStores = async () => {
-        try {
-          console.log('Starting store initialization...');
-          
-          // 直接初始化個別 stores，避免循環依賴
-          await Promise.all([
-            useOrderStore.getState().initialize(),
-            useTableStore.getState().initialize(),
-            useMenuStore.getState().initialize(),
-          ]);
-          
-          // 設置 app store 為已初始化
-          useAppStore.getState().setInitialized(true);
-          
-          console.log('Store initialization completed');
-        } catch (error) {
-          console.error('Failed to initialize stores:', error);
-          // 即使失敗也設為已初始化，避免無限載入
-          useAppStore.getState().setInitialized(true);
-        }
-      };
-      
-      initializeStores();
+    if (!isInitialized && !initStartedRef.current) {
+      initStartedRef.current = true;
+      logger.info('Starting app store initialization', { component: 'App' });
+      useAppStore.getState().initialize();
+      logger.info('App store initialization triggered', { component: 'App' });
     }
-  }, [isInitialized, initAttempted]);
+  }, [isInitialized]);
 
 const renderActiveTab = () => {
     switch (activeTab) {
@@ -96,7 +77,7 @@ const renderActiveTab = () => {
   };
 
   // 載入畫面
-  if (!isLoaded) {
+  if (!isInitialized || !isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
         <div className="text-center">
@@ -126,14 +107,12 @@ const renderActiveTab = () => {
         />
       )}
       
-      <ErrorBoundary>
-        <Sidebar 
+      <Sidebar 
           activeTab={activeTab} 
           setActiveTab={handleSetActiveTab}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={handleSetSidebarOpen}
         />
-      </ErrorBoundary>
       
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* 移動端頂部導航欄 - 玻璃風格 */}
@@ -151,17 +130,15 @@ const renderActiveTab = () => {
         </div>
 
         <main className="flex-1 overflow-auto">
-          <ErrorBoundary>
             {renderActiveTab()}
-          </ErrorBoundary>
-        </main>
-        
-        {/* 開發環境下顯示日誌查看器 */}
-        {import.meta.env.DEV && <LogViewer />}
-      </div>
-    </div>
-  );
-}
+         </main>
+          
+         {/* 開發環境下顯示日誌查看器 */}
+         {import.meta.env.DEV && <LogViewer />}
+       </div>
+       <VisualOrderingModal />
+     </div>
+   );}
 
 function App() {
   return (

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, memo } from 'react';
 import { useOrders } from '@/stores';
 import OrderDetailsModal from './OrderDetailsModal';
-import type { Order, OrderStatus } from '../types';
+import type { Order, OrderStatus } from '@/types';
 
 interface Filters {
   status: string;
@@ -35,7 +35,7 @@ const History = memo(() => {
     }
   }, []);
 
-  const getStatusText = useCallback((status) => {
+  const getStatusText = useCallback((status: OrderStatus) => {
     switch (status) {
       case 'pending': return '待處理';
       case 'preparing': return '製作中';
@@ -47,7 +47,7 @@ const History = memo(() => {
   }, []);
 
   // 使用 useCallback 優化日期範圍計算
-  const getDateRange = useCallback((range) => {
+  const getDateRange = useCallback((range: string) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
@@ -87,7 +87,7 @@ const History = memo(() => {
 
     // 桌號過濾
     if (filters.tableNumber !== 'all') {
-      filtered = filtered.filter(order => order.tableNumber === parseInt(filters.tableNumber));
+      filtered = filtered.filter(order => order.tableNumber === (parseInt(filters.tableNumber) || 0));
     }
 
     // 日期過濾
@@ -128,7 +128,7 @@ const History = memo(() => {
   }, [orders]);
 
   // 使用 useCallback 優化事件處理函數
-  const handleOrderClick = useCallback((order) => {
+  const handleOrderClick = useCallback((order: Order) => {
     setSelectedOrder(order);
     setShowDetailsModal(true);
   }, []);
