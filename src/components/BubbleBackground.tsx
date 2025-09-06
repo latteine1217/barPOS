@@ -51,8 +51,8 @@ const BubbleBackground = () => {
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
-      {/* 主要漸層背景 - 增強對比 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-gray-950"></div>
+      {/* 主要漸層背景 - 明亮的科技風格 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500"></div>
       
       {/* 大型漸層泡泡 */}
       <div className="gradient-background">
@@ -71,10 +71,10 @@ const BubbleBackground = () => {
         />
       ))}
       
-      {/* 額外的漸層重疊效果 - 增強深度 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-purple-900/15 to-transparent"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/15 via-transparent to-pink-900/15"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-slate-800/10 to-slate-900/20"></div>
+      {/* 額外的漸層重疊效果 - 明亮科技感 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 via-purple-400/10 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-transparent to-pink-500/15"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-indigo-400/10 to-purple-500/20"></div>
     </div>
   );
 };

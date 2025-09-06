@@ -17,11 +17,11 @@
 ### 現代化三層架構
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   UI Components │────│  Zustand Stores │────│  Service Layer  │
-│                 │    │                 │    │                 │
-│ • React 19      │    │ • State Mgmt    │    │ • API Client    │
-│ • TypeScript    │    │ • Actions       │    │ • Supabase      │
-│ • TailwindCSS   │    │ • Selectors     │    │ • Error Handler │
+│   UI Components            │───│  Zustand Stores          │───│  Service Layer              │
+│                            │    │                             │    │                            │
+│ • React 19                 │    │ • State Mgmt                │    │ • API Client               │
+│ • TypeScript               │    │ • Actions                   │    │ • Supabase                 │
+│ • TailwindCSS              │    │ • Selectors                 │    │ • Selectors                │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -42,7 +42,7 @@ User Action → Component → Store Action → Service → API → Store Update 
 export {
   // 訂單管理
   useOrderStore, useOrders, useOrderActions,
-  // 桌位管理  
+  // 桌位管理
   useTableStore, useTables, useTableActions,
   // 菜單管理
   useMenuStore, useMenuItems, useMenuActions,
@@ -113,9 +113,9 @@ class SupabaseService {
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
-        
+
       if (error) throw error;
-      
+
       return {
         success: true,
         data: data || [],
@@ -130,7 +130,7 @@ class SupabaseService {
   private handleError(error: unknown, context: string): ApiResponse {
     const errorMessage = error instanceof Error ? error.message : '未知錯誤';
     console.error(`[${context}] API 錯誤:`, error);
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -152,11 +152,11 @@ export const useOrderStore = create<OrderStore>()(
     // ✅ 異步 action 模式
     fetchOrders: async () => {
       set(state => { state.isLoading = true; });
-      
+
       try {
         const supabaseService = new SupabaseService();
         const result = await supabaseService.fetchOrders();
-        
+
         if (result.success) {
           set(state => {
             state.orders = result.data || [];
@@ -197,7 +197,7 @@ export const useOrderStore = create<OrderStore>()(
       try {
         const supabaseService = new SupabaseService();
         const result = await supabaseService.createOrder(orderData);
-        
+
         if (result.success && result.data) {
           // 替換臨時訂單
           set(state => {
@@ -246,7 +246,7 @@ class ApiErrorHandler {
           code: 'NETWORK_ERROR'
         };
       }
-      
+
       // 認證錯誤
       if (error.message.includes('unauthorized')) {
         return {
@@ -256,7 +256,7 @@ class ApiErrorHandler {
         };
       }
     }
-    
+
     // 通用錯誤
     return {
       success: false,
@@ -273,7 +273,7 @@ class ApiErrorHandler {
 const OrderList: React.FC = () => {
   const { orders, isLoading, error } = useOrders();
   const { fetchOrders } = useOrderActions();
-  
+
   // ✅ 錯誤重試機制
   const handleRetry = useCallback(async () => {
     try {
@@ -284,7 +284,7 @@ const OrderList: React.FC = () => {
   }, [fetchOrders]);
 
   if (isLoading) return <LoadingSpinner />;
-  
+
   if (error) {
     return (
       <ErrorFallback
@@ -311,11 +311,11 @@ class StorageService {
   static async setItem<T>(key: string, value: T): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem(key, serialized);
       }
-      
+
       // Capacitor 原生儲存
       if (window.Capacitor) {
         await Preferences.set({ key, value: serialized });
@@ -328,16 +328,16 @@ class StorageService {
   static async getItem<T>(key: string): Promise<T | null> {
     try {
       let value: string | null = null;
-      
+
       if (typeof window !== 'undefined') {
         value = localStorage.getItem(key);
       }
-      
+
       if (!value && window.Capacitor) {
         const result = await Preferences.get({ key });
         value = result.value;
       }
-      
+
       return value ? JSON.parse(value) : null;
     } catch (error) {
       console.error('讀取失敗:', error);
@@ -352,32 +352,32 @@ class StorageService {
 // src/hooks/useOnline.ts
 export const useOnline = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  
+
   return isOnline;
 };
 
 // Store 中的離線處理
 const syncPendingActions = async () => {
   const pendingActions = await StorageService.getItem<PendingAction[]>('pendingActions') || [];
-  
+
   for (const action of pendingActions) {
     try {
       await executeAction(action);
       // 移除已同步的動作
-      await StorageService.setItem('pendingActions', 
+      await StorageService.setItem('pendingActions',
         pendingActions.filter(a => a.id !== action.id)
       );
     } catch (error) {
@@ -456,29 +456,29 @@ interface OrderActions {
 describe('OrderService', () => {
   it('should fetch orders successfully', async () => {
     const mockOrders = [{ id: '1', name: 'Test Order' }];
-    
+
     // Mock Supabase 回應
     jest.spyOn(supabase, 'from').mockReturnValue({
       select: jest.fn().mockResolvedValue({ data: mockOrders, error: null })
     });
-    
+
     const service = new OrderService();
     const result = await service.fetchOrders();
-    
+
     expect(result.success).toBe(true);
     expect(result.data).toEqual(mockOrders);
   });
-  
+
   it('should handle errors gracefully', async () => {
     const mockError = new Error('Network error');
-    
+
     jest.spyOn(supabase, 'from').mockReturnValue({
       select: jest.fn().mockRejectedValue(mockError)
     });
-    
+
     const service = new OrderService();
     const result = await service.fetchOrders();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBe('Network error');
   });
@@ -497,7 +497,7 @@ describe('OrderService', () => {
 - [ ] 撰寫單元測試
 - [ ] 更新 API 文檔
 
-### Store 開發  
+### Store 開發
 - [ ] 使用 Immer 進行不可變更新
 - [ ] 實作樂觀更新（如適用）
 - [ ] 添加適當的選擇器 hooks

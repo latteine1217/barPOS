@@ -145,7 +145,7 @@ export interface TableBase {
   assignedStaffId?: ID;
 }
 
-export interface Table extends Entity<TableBase> {}
+export type Table = Entity<TableBase>;
 
 export interface CreateTableData extends Omit<TableBase, 'status' | 'currentCapacity'> {
   // 新增桌位時的預設值

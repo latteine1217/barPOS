@@ -1,8 +1,10 @@
+/* CSS 第三方導入 */
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+
 /* Tailwind CSS 基礎樣式 */
 @tailwind base;
 @tailwind components; 
 @tailwind utilities;
-@import "@fortawesome/fontawesome-free/css/all.min.css";
 
 /* CSS 變數定義 - 調酒酒吧主題色彩 */
 :root {

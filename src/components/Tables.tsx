@@ -141,22 +141,24 @@ const Tables: React.FC = memo(() => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">座位管理</h1>
-          <p className="text-gray-600 dark:text-gray-400">管理餐廳座位狀態和客人需求</p>
-        </div>
-        <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
-          <button
-            onClick={() => { setSelectedTable(null); setViewMode('grid'); }}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            格狀檢視
-          </button>
+      <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">座位管理</h1>
+            <p className="text-white/80 drop-shadow-md">管理餐廳座位狀態和客人需求</p>
+          </div>
+          <div className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+            <button
+              onClick={() => { setSelectedTable(null); setViewMode('grid'); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                viewMode === 'grid'
+                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              格狀檢視
+            </button>
+          </div>
         </div>
       </div>
 
@@ -173,21 +175,21 @@ const Tables: React.FC = memo(() => {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">總座位數</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{tableStats.total}</div>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
+          <div className="text-sm text-white/70 drop-shadow-sm">總座位數</div>
+          <div className="text-2xl font-bold text-white drop-shadow-md">{tableStats.total}</div>
         </div>
-        <div className="card p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">空位</div>
-          <div className="text-2xl font-bold text-emerald-600">{tableStats.available}</div>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
+          <div className="text-sm text-white/70 drop-shadow-sm">空位</div>
+          <div className="text-2xl font-bold text-emerald-400 drop-shadow-md">{tableStats.available}</div>
         </div>
-        <div className="card p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">使用中</div>
-          <div className="text-2xl font-bold text-red-600">{tableStats.occupied}</div>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
+          <div className="text-sm text-white/70 drop-shadow-sm">使用中</div>
+          <div className="text-2xl font-bold text-amber-400 drop-shadow-md">{tableStats.occupied}</div>
         </div>
-        <div className="card p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">使用率</div>
-          <div className="text-2xl font-bold text-blue-600">{tableStats.utilizationRate}%</div>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
+          <div className="text-sm text-white/70 drop-shadow-sm">使用率</div>
+          <div className="text-2xl font-bold text-blue-400 drop-shadow-md">{tableStats.utilizationRate}%</div>
         </div>
       </div>
     </div>
