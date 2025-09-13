@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { pickEmojiForItem, pickColorForCategory } from '@/config/menuVisualConfig';
 import { useTableStore } from '@/stores';
 import { useVisualOrdering } from '@/hooks/business/useVisualOrdering';
 import type { Order, Table, MenuItem, OrderStatus } from '@/types';
@@ -238,23 +239,14 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                 <div
                   key={menuItem.id}
                   onClick={() => addToOrder(menuItem)}
-                  className="rounded-2xl border p-4 cursor-pointer hover:shadow-lg transition-all bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)]"
+                  className="relative rounded-2xl border p-4 cursor-pointer hover:shadow-lg transition-all bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-center"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-white/70 dark:bg-white/10 ring-1 ring-[var(--glass-elevated-border)]">
-                      {menuItem.imageUrl ? (
-                        <img src={menuItem.imageUrl} alt={menuItem.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-lg">🍸</span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white whitespace-normal break-words leading-snug">
-                        {menuItem.name}
-                      </h3>
-                      <div className="text-sm font-semibold text-[var(--color-accent)] mt-0.5">${menuItem.price}</div>
-                    </div>
-                  </div>
+                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: pickColorForCategory(menuItem.category) }} />
+                  <div className="text-4xl mb-2 select-none">{pickEmojiForItem(menuItem)}</div>
+                  <h3 className="font-medium text-gray-900 dark:text-white whitespace-normal break-words leading-snug">
+                    {menuItem.name}
+                  </h3>
+                  <div className="text-sm font-semibold text-[var(--color-accent)] mt-1">${menuItem.price}</div>
                 </div>
               ))}
             </div>
