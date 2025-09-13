@@ -280,6 +280,7 @@
     border-color: rgba(255,255,255,0.2);
     box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2);
     transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    will-change: left, top, transform;
   }
   .table-node:hover { filter: brightness(1.05); }
   .table-node--available { border-color: rgba(16,185,129,.45); box-shadow: 0 8px 24px rgba(16,185,129,.25), inset 0 1px 0 rgba(255,255,255,.2); }
@@ -288,6 +289,10 @@
   .table-node--cleaning { border-color: rgba(59,130,246,.5); box-shadow: 0 8px 24px rgba(59,130,246,.25), inset 0 1px 0 rgba(255,255,255,.2); }
   .table-node--selected { outline: 2px solid transparent; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent), transparent 30%), 0 16px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25); }
   .table-node__dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 9999px; box-shadow: 0 0 0 2px rgba(255,255,255,.3), 0 0 10px currentColor; }
+  .table-node--dragging {
+    transition: none !important;
+    filter: none;
+  }
   /* 主背景容器 - 調酒酒吧風格漸變泡泡背景 */
   .app-background {
     @apply relative min-h-screen overflow-hidden;

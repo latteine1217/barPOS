@@ -78,9 +78,9 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
         radius = '14px';
         break;
       case 'bar':
-        width = Math.round(size.width * 2.4);
-        height = Math.max(40, Math.round(size.height * 0.7));
-        radius = '10px';
+        // 依需求：吧檯桌以圓形呈現
+        width = height = size.width;
+        radius = '9999px';
         break;
       default:
         radius = '16px';
@@ -124,6 +124,8 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
   }, [isEditing]);
 
   // 拖拽中
+  const rafPendingRef = useRef(false);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!selectedTable || !isEditing || !canvasRef.current) return;
     
@@ -147,8 +149,14 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
       const tentativeY = e.clientY - rect.top - dragState.dragOffset.y;
       const newX = Math.min(maxX, Math.max(0, tentativeX));
       const newY = Math.min(maxY, Math.max(0, tentativeY));
-      
-      setSelectedTable(prev => (prev ? { ...prev, position: { x: newX, y: newY } } : prev));
+
+      if (!rafPendingRef.current) {
+        rafPendingRef.current = true;
+        requestAnimationFrame(() => {
+          setSelectedTable(prev => (prev ? { ...prev, position: { x: newX, y: newY } } : prev));
+          rafPendingRef.current = false;
+        });
+      }
     }
   }, [dragState, selectedTable, layoutConfig, isEditing, getTableDims]);
 
@@ -336,14 +344,16 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   : table.status === 'occupied' ? 'table-node--occupied'
                   : table.status === 'reserved' ? 'table-node--reserved'
                   : 'table-node--cleaning';
-                const selectedClass = selectedTable?.id === table.id ? 'table-node--selected' : '';
+                const isSelected = selectedTable?.id === table.id;
+                const selectedClass = isSelected ? 'table-node--selected' : '';
+                const draggingClass = isSelected && dragState.isDragging ? 'table-node--dragging' : '';
                 return (
                 <div
                   key={table.id}
                   style={getTableStyle(table)}
                   onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }}
                   onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}
-                  className={`table-node ${statusClass} ${selectedClass}`}
+                  className={`table-node ${statusClass} ${selectedClass} ${draggingClass}`}
                 >
                   <div className="font-bold text-xs truncate max-w-full">
                     {table.name}
