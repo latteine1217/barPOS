@@ -93,13 +93,17 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
       }
 
       const tableNumber = initialTableNumber || orderDetails.tableNumber;
+      const subtotal = totalAmount;
+      const tip = tipEnabled ? Math.round(subtotal * (tipPercent / 100)) : 0;
+      const payable = subtotal + tip;
+
       const orderData: Order = {
         id: existingOrder?.id || `order-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
         tableNumber: Number(tableNumber),
         customers: orderDetails.customers,
         items: orderItems,
-        subtotal: totalAmount,
-        total: totalAmount,
+        subtotal,
+        total: payable,
         status: existingOrder?.status || 'pending',
         notes: orderDetails.notes,
         createdAt: existingOrder?.createdAt || new Date().toISOString(),
@@ -146,6 +150,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
   const displayItems = filteredMenuItems.filter(mi =>
     !query.trim() || mi.name.toLowerCase().includes(query.trim().toLowerCase())
   );
+
+  // Tip state
+  const [tipEnabled, setTipEnabled] = useState<boolean>(false);
+  const [tipPercent, setTipPercent] = useState<number>(10);
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
@@ -230,10 +238,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                 <div
                   key={menuItem.id}
                   onClick={() => addToOrder(menuItem)}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-lg transition-all"
+                  className="rounded-2xl border p-4 cursor-pointer hover:shadow-lg transition-all bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-white/70 dark:bg-white/10 ring-1 ring-[var(--glass-elevated-border)]">
                       {menuItem.imageUrl ? (
                         <img src={menuItem.imageUrl} alt={menuItem.name} className="w-full h-full object-cover" />
                       ) : (
@@ -241,10 +249,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                      <h3 className="font-medium text-gray-900 dark:text-white whitespace-normal break-words leading-snug">
                         {menuItem.name}
                       </h3>
-                      <div className="text-sm font-semibold text-[var(--color-accent)]">${menuItem.price}</div>
+                      <div className="text-sm font-semibold text-[var(--color-accent)] mt-0.5">${menuItem.price}</div>
                     </div>
                   </div>
                 </div>
@@ -397,13 +405,48 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             )}
           </div>
 
+          {/* Tip toggle */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">小費</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">開啟後可加入百分比小費</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={tipEnabled}
+                onClick={() => setTipEnabled((v) => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${tipEnabled ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${tipEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            {tipEnabled && (
+              <div className="mt-3 flex items-center gap-2">
+                <label className="text-xs text-gray-600 dark:text-gray-400">比例</label>
+                <select
+                  value={tipPercent}
+                  onChange={(e) => setTipPercent(parseInt(e.target.value) || 0)}
+                  className="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                >
+                  {[5,10,12,15,18,20].map((p) => (
+                    <option key={p} value={p}>{p}%</option>
+                  ))}
+                </select>
+                <span className="text-xs text-gray-600 dark:text-gray-400">小費金額：${Math.round(totalAmount * (tipPercent/100))}</span>
+              </div>
+            )}
+          </div>
+
           {/* Action Buttons */}
           <div className="p-4 mt-auto">
             {/* Totals */}
             <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
+              <div className="flex justify-between"><span>小費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round(totalAmount * (tipPercent/100)) : 0}</span></div>
               <div className="flex justify-between"><span>稅額</span><span>$0</span></div>
-              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${totalAmount}</span></div>
+              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${totalAmount + (tipEnabled ? Math.round(totalAmount * (tipPercent/100)) : 0)}</span></div>
             </div>
             <div className="flex flex-col space-y-2">
               <button
