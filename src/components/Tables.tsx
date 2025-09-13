@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { useTables, useOrders, useOrderStore, useTableStore } from '@/stores';
+import { useTables, useOrders, useOrderStore, useAppStore } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
-import type { Table, Order } from '@/types';
+import type { Table, Order, OrderStatus } from '@/types';
 import TableLayoutEditor from './TableLayoutEditor';
 import { useVisualOrderingModalOpen } from './visualOrderingModalStore';
 
@@ -12,10 +12,14 @@ interface TableWithOrder extends Table {
 }
 
 const StatusColor: Record<Table['status'], string> = {
-  available: 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-900 dark:border-emerald-600 dark:text-emerald-300',
-  occupied: 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-600 dark:text-red-300',
-  reserved: 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900 dark:border-amber-600 dark:text-amber-300',
-  cleaning: 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300',
+  available:
+    'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-900 dark:border-emerald-600 dark:text-emerald-300',
+  occupied:
+    'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-600 dark:text-red-300',
+  reserved:
+    'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900 dark:border-amber-600 dark:text-amber-300',
+  cleaning:
+    'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300',
 };
 
 const StatusText: Record<Table['status'], string> = {
@@ -25,15 +29,70 @@ const StatusText: Record<Table['status'], string> = {
   cleaning: '清潔中',
 };
 
-const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (t: Table) => void; }>= memo(({ table, selected, onClick }) => {
+const OrderStatusText: Record<OrderStatus, string> = {
+  pending: '待處理',
+  preparing: '調製中',
+  completed: '已完成',
+  paid: '已結帳',
+  cancelled: '已取消',
+};
+
+const getOccupiedColorByOrderStatus = (s?: OrderStatus): string => {
+  switch (s) {
+    case 'pending':
+    case 'preparing':
+      return 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900 dark:border-amber-600 dark:text-amber-300';
+    case 'completed':
+      return 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-900 dark:border-emerald-700 dark:text-emerald-300';
+    case 'paid':
+      return 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300';
+    case 'cancelled':
+      return 'bg-gray-100 border-gray-300 text-gray-800 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200';
+    default:
+      return StatusColor.occupied;
+  }
+};
+
+const getDotColor = (table: TableWithOrder): string => {
+  if (table.status !== 'occupied') {
+    return table.status === 'available'
+      ? 'bg-emerald-500'
+      : table.status === 'reserved'
+      ? 'bg-amber-500'
+      : table.status === 'cleaning'
+      ? 'bg-blue-500'
+      : 'bg-gray-400';
+  }
+  switch (table.currentOrder?.status) {
+    case 'pending':
+    case 'preparing':
+      return 'bg-amber-500';
+    case 'completed':
+      return 'bg-emerald-500';
+    case 'paid':
+      return 'bg-blue-500';
+    case 'cancelled':
+      return 'bg-gray-500';
+    default:
+      return 'bg-red-500';
+  }
+};
+
+const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (t: Table) => void; }> = memo(({ table, selected, onClick }) => {
   return (
     <div
       onClick={() => onClick(table)}
-      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${StatusColor[table.status]} ${selected ? 'ring-4 ring-blue-400' : ''}`}
+      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+        table.status === 'occupied' ? getOccupiedColorByOrderStatus(table.currentOrder?.status) : StatusColor[table.status]
+      } ${selected ? 'ring-4 ring-blue-400' : ''}`}
     >
       <div className="text-center">
         <div className="text-xl font-bold mb-2">位 {table.number}</div>
-        <div className="text-sm opacity-75 mb-2">{StatusText[table.status]}</div>
+        <div className="text-sm opacity-75 mb-2">
+          {table.status === 'occupied' && table.currentOrder
+            ? OrderStatusText[table.currentOrder.status]
+            : StatusText[table.status]}
+        </div>
         {table.status === 'occupied' && (
           <div className="text-xs">
             {table.customers} 人
@@ -43,12 +102,7 @@ const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (
           </div>
         )}
       </div>
-      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
-        table.status === 'available' ? 'bg-emerald-500' :
-        table.status === 'occupied' ? 'bg-red-500' :
-        table.status === 'reserved' ? 'bg-amber-500' :
-        'bg-blue-500'
-      }`} />
+      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} />
     </div>
   );
 });
@@ -58,9 +112,8 @@ const Tables: React.FC = memo(() => {
   const orders = useOrders();
   const menuItems = useMenuItems();
   // ✅ 分別訂閱，避免 getSnapshot 緩存問題
-  const addOrder = useOrderStore((state) => state.addOrder);
   const updateOrder = useOrderStore((state) => state.updateOrder);
-  const updateTable = useTableStore((state) => state.updateTable);
+  const addOrderWithTableUpdate = useAppStore((s) => s.addOrderWithTableUpdate);
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('custom');
@@ -92,7 +145,7 @@ const Tables: React.FC = memo(() => {
 
   const open = useVisualOrderingModalOpen();
 
-  const onComplete = useCallback((table: Table, currentOrder: Order | null) => (order: Order | null) => {
+  const onComplete = useCallback((_table: Table, currentOrder: Order | null) => (order: Order | null) => {
     if (!order) return;
     
     try {
@@ -107,17 +160,13 @@ const Tables: React.FC = memo(() => {
         };
         updateOrder(order.id, updates);
       } else {
-        addOrder(order);
-        updateTable(table.id, { 
-          status: 'occupied', 
-          orderId: order.id, 
-          customers: order.customers 
-        });
+        // 使用組合動作，確保新增訂單與桌位狀態一體化更新
+        addOrderWithTableUpdate(order);
       }
     } catch (error) {
       console.error('Error in onComplete callback:', error);
     }
-  }, [addOrder, updateOrder, updateTable]);
+  }, [addOrderWithTableUpdate, updateOrder]);
 
   const updateOrderStatusCb = useCallback((orderId: string, status: Order['status']) => {
     updateOrder(orderId, { status });
@@ -126,6 +175,22 @@ const Tables: React.FC = memo(() => {
   const handleTableClick = useCallback((table: Table) => {
     if (!table || !table.id) return;
     const currentOrder = table.orderId ? ordersById.get(table.orderId as any) || null : null;
+    // 若已結帳，詢問是否建立新訂單
+    if (currentOrder && currentOrder.status === 'paid') {
+      const confirmNew = window.confirm('此桌已結帳，是否建立新訂單？');
+      if (!confirmNew) return;
+      const initialCustomers = table.customers || 1;
+      open({
+        selectedTable: table,
+        initialCustomers,
+        existingOrder: null,
+        isAddOnMode: false,
+        menuItems,
+        onComplete: onComplete(table, null),
+        updateOrderStatus: updateOrderStatusCb,
+      });
+      return;
+    }
     const isAddOnMode = !!currentOrder && table.status === 'occupied' && currentOrder.status !== 'paid';
     const initialCustomers = table.customers || currentOrder?.customers || 1;
     open({
@@ -149,6 +214,20 @@ const Tables: React.FC = memo(() => {
           </div>
           <div className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
             <button
+              type="button"
+              aria-pressed={viewMode === 'custom'}
+              onClick={() => { setSelectedTable(null); setViewMode('custom'); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                viewMode === 'custom'
+                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              佈局模式
+            </button>
+            <button
+              type="button"
+              aria-pressed={viewMode === 'grid'}
               onClick={() => { setSelectedTable(null); setViewMode('grid'); }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 viewMode === 'grid'

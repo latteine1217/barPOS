@@ -4,8 +4,11 @@ import { persist } from 'zustand/middleware';
 import { logger } from '@/services/loggerService';
 
 // 設定狀態接口
+type Accent = 'blue' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan';
+
 interface SettingsState {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'auto';
+  accent: Accent;
   
   supabaseConfig: {
     url: string;
@@ -25,7 +28,8 @@ interface SettingsState {
 interface SettingsActions {
   // 主題
   toggleTheme: () => void;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: 'light' | 'dark' | 'auto') => void;
+  setAccent: (accent: Accent) => void;
   
   
   
@@ -46,6 +50,7 @@ export type SettingsStore = SettingsState & SettingsActions;
 // 初始狀態
 const initialState: SettingsState = {
   theme: 'light',
+  accent: 'blue',
   
   supabaseConfig: {
     url: '',
@@ -70,13 +75,35 @@ export const useSettingsStore = create<SettingsStore>()(
       // 主題操作
       toggleTheme: () => {
         set((state) => {
-          state.theme = state.theme === 'light' ? 'dark' : 'light';
+          // 在 auto 狀態時，根據系統偏好切換
+          if (state.theme === 'auto') {
+            const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            state.theme = prefersDark ? 'light' : 'dark';
+          } else {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+          }
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('settings-theme', state.theme);
+            }
+          } catch {}
         });
       },
 
-      setTheme: (theme: 'light' | 'dark') => {
+      setTheme: (theme: 'light' | 'dark' | 'auto') => {
         set((state) => {
           state.theme = theme;
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('settings-theme', theme);
+            }
+          } catch {}
+        });
+      },
+
+      setAccent: (accent: Accent) => {
+        set((state) => {
+          state.accent = accent;
         });
       },
 
@@ -103,9 +130,9 @@ export const useSettingsStore = create<SettingsStore>()(
           if (typeof window !== 'undefined') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const savedTheme = localStorage.getItem('settings-theme');
-            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            const theme = (savedTheme as SettingsState['theme']) || (prefersDark ? 'dark' : 'light');
             set((state) => {
-              state.theme = theme as 'light' | 'dark';
+              state.theme = theme;
             });
           }          
           set((state) => {
@@ -129,6 +156,7 @@ export const useSettingsStore = create<SettingsStore>()(
       name: 'restaurant-pos-settings',
       partialize: (state) => ({
         theme: state.theme,
+        accent: state.accent,
         
         supabaseConfig: state.supabaseConfig,
         layoutConfig: state.layoutConfig,

@@ -13,12 +13,13 @@ const Card: React.FC<CardProps> = ({
   variant = 'default',
   padding = 'md'
 }) => {
-  const baseStyles = 'rounded-lg border border-white/20';
+  // Use global "card" style from index.css to ensure theme-aware colors and contrast
+  const baseStyles = 'card';
   
   const variantStyles = {
-    default: 'bg-white/10 backdrop-blur-sm',
-    outlined: 'bg-transparent border-2',
-    elevated: 'bg-white/15 backdrop-blur-md shadow-lg'
+    default: '',
+    outlined: 'border-2',
+    elevated: 'shadow-lg'
   };
   
   const paddingStyles = {

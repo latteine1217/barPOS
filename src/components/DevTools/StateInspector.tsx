@@ -1,5 +1,5 @@
 // 狀態檢查器組件 - 檢查 Store 狀態變更
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Card from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { logger } from '@/services/loggerService';
@@ -44,8 +44,8 @@ export function StateInspector({
   const changesRef = useRef<StateChange[]>([]);
   const previousStatesRef = useRef<Record<string, any>>({});
 
-  // 追蹤 Store 狀態變更
-  const trackStore = (storeName: string, state: any) => {
+  // 追蹤 Store 狀態變更（使用 useCallback 穩定引用，避免重複綁定）
+  const trackStore = useCallback((storeName: string, state: any) => {
     const previousState = previousStatesRef.current[storeName];
     const hasChanged = !previousState || JSON.stringify(previousState) !== JSON.stringify(state);
     
@@ -81,7 +81,7 @@ export function StateInspector({
 
       previousStatesRef.current[storeName] = JSON.parse(JSON.stringify(state));
     }
-  };
+  }, [maxSnapshots]);
 
   // 比較兩個狀態的差異
   const getStateDiff = (state1: any, state2: any) => {
@@ -166,11 +166,18 @@ export function StateInspector({
     }
   };
 
-  // 暴露 trackStore 到全局（開發模式下）- 必須在 early return 之前
+  // 暴露 trackStore 到全局（開發模式下）- 僅在掛載時綁定一次
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       (window as any).__trackStore = trackStore;
     }
+    return () => {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        if ((window as any).__trackStore === trackStore) {
+          delete (window as any).__trackStore;
+        }
+      }
+    };
   }, [trackStore]);
 
   if (!show) return null;

@@ -146,6 +146,7 @@ export interface MenuItem {
   category: MenuCategory;
   baseSpirit?: BaseSpirit;
   price: number;
+  cost?: number; // 成本價（可選）
   description?: string;
   available: boolean;
   imageUrl?: string;

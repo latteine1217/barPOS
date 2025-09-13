@@ -112,6 +112,17 @@ export const useAppStore = create<AppStore>()(
         orderId: order.id,
         customers: order.customers || 0,
       });
+      // 防守：若找不到 table（資料型別偏差），嘗試以寬鬆比對再更新
+      if (!table) {
+        const fallback = useTableStore.getState().getTableByNumber(Number(order.tableNumber));
+        if (fallback) {
+          useTableStore.getState().updateTable(fallback.id, {
+            status: 'occupied',
+            orderId: order.id,
+            customers: order.customers || 0,
+          });
+        }
+      }
     },
 
     // 跨 store 操作 - 刪除訂單並釋放桌位

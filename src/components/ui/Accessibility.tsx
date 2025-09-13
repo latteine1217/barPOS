@@ -140,7 +140,7 @@ const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
     secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500'
+    ghost: 'text-slate-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 focus:ring-gray-500 dark:focus:ring-gray-400'
   };
 
   const sizeClasses = {

@@ -2,16 +2,30 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { Card, Select, Badge, Input, Button, Modal } from '@/components/ui';
 import { useMenuItems, useMenuStore } from '@/stores/menuStore';
 
-const ItemCard: React.FC<{ id?: string; name: string; price: number; category: string; baseSpirit?: string; available?: boolean; description?: string; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }>
-= ({ id, name, price, category, baseSpirit, available = true, description, onEdit, onDelete }) => (
+const ItemCard: React.FC<{ id?: string; name: string; price: number; cost?: number; category: string; baseSpirit?: string; available?: boolean; description?: string; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }>
+= ({ id, name, price, cost, category, baseSpirit, available = true, description, onEdit, onDelete }) => (
   <Card padding="lg" className={`card ${!available ? 'opacity-60' : ''} bg-white/10 dark:bg-white/5 hover:shadow-md transition-shadow`}>
     <div className="flex justify-between items-start mb-3">
       <h3 className="font-semibold text-white text-lg tracking-wide">{name}</h3>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-end gap-1">
         <span className="text-sm text-gray-700 dark:text-gray-100">${price}</span>
         <span className={`text-xs px-2 py-0.5 rounded-full border ${available ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'}`}>
           {available ? '可供應' : '暫停'}
         </span>
+        {typeof cost === 'number' && price > 0 && (() => {
+          const ratio = cost / price;
+          const percent = Math.round(ratio * 100);
+          const cls = ratio >= 0.8
+            ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700'
+            : ratio >= 0.6
+              ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700';
+          return (
+            <span className={`text-xs px-2 py-0.5 rounded-full border ${cls}`}>
+              成本 {percent}%
+            </span>
+          );
+        })()}
       </div>
     </div>
      <div className="text-sm text-gray-600 dark:text-gray-200 space-y-1">      <div>分類：{category}</div>
@@ -107,7 +121,7 @@ const Menu: React.FC = () => {
     { value: 'liqueur', label: 'Liqueur' },
   ] as const), []);
 
-   const [form, setForm] = useState<{ name: string; price: number; category: MenuCategoryT; baseSpirit: BaseSpiritT; description: string; available: boolean }>(() => ({ name: '', price: 0, category: 'cocktails', baseSpirit: 'none', description: '', available: true }));
+   const [form, setForm] = useState<{ name: string; price: number; cost?: number; category: MenuCategoryT; baseSpirit: BaseSpiritT; description: string; available: boolean }>(() => ({ name: '', price: 0, cost: undefined, category: 'cocktails', baseSpirit: 'none', description: '', available: true }));
    const [isFormOpen, setIsFormOpen] = useState(false);
    const openCreate = useCallback(() => { setEditId(() => null); setForm(() => ({ name: '', price: 0, category: 'cocktails', baseSpirit: 'none', description: '', available: true })); setIsFormOpen(() => true); }, []);
      const openEdit = useCallback((id: string) => {
@@ -117,6 +131,7 @@ const Menu: React.FC = () => {
       setForm(() => ({
         name: item.name ?? '',
         price: (typeof item.price === 'number' ? item.price : 0),
+        cost: (typeof (item as any).cost === 'number' ? (item as any).cost : undefined),
         category: (item.category ?? 'cocktails') as MenuCategoryT,
         baseSpirit: (item.baseSpirit ?? 'none') as BaseSpiritT,
         description: item.description ?? '',
@@ -146,12 +161,52 @@ const Menu: React.FC = () => {
       </div>
       <Modal isOpen={isFormOpen} onClose={resetForm} title={editId ? '編輯品項' : '新增品項'} size="lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-           <Input placeholder="名稱" value={form.name ?? ''} onChange={(e) => setForm(prev => ({ ...prev, name: ((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value) ?? '' }))} />                     <Input placeholder="價格" type="number" value={Number.isFinite(form.price) ? form.price : 0} onChange={(e) => setForm(prev => ({ ...prev, price: Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value) || 0 }))} />
-           <Select value={(form.category ?? 'cocktails') as MenuCategoryT} onChange={(e) => setForm(prev => ({ ...prev, category: (((e as React.ChangeEvent<HTMLSelectElement>).currentTarget.value || 'cocktails') as MenuCategoryT) }))} options={CATEGORY_OPTIONS as any} />                     <Select value={(form.baseSpirit ?? 'none') as BaseSpiritT} onChange={(e) => setForm(prev => ({ ...prev, baseSpirit: (((e as React.ChangeEvent<HTMLSelectElement>).currentTarget.value || 'none') as BaseSpiritT) }))} options={SPIRIT_OPTIONS as any} />
-           <Input className="md:col-span-2" placeholder="描述" value={form.description ?? ''} onChange={(e) => setForm(prev => ({ ...prev, description: ((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value) ?? '' }))} />          <label className="inline-flex items-center space-x-2">
-            <input type="checkbox" checked={form.available} onChange={(e) => setForm(prev => ({ ...prev, available: (e as React.ChangeEvent<HTMLInputElement>).currentTarget.checked }))} />
-            <span className="text-sm">可供應</span>
-          </label>
+           <Input label="名稱" info="顯示在菜單上的品項名稱" placeholder="例：Old Fashioned" value={form.name ?? ''} onChange={(e) => {
+             const v = (e.target as HTMLInputElement).value;
+             setForm(prev => ({ ...prev, name: v ?? '' }));
+           }} />
+           <Input label="售價" info="銷售價格（未稅）" helperText="顯示給客人的售價（未稅）" type="number" value={Number.isFinite(form.price) ? form.price : 0} onChange={(e) => {
+             const v = (e.target as HTMLInputElement).value;
+             setForm(prev => ({ ...prev, price: Number(v) || 0 }));
+           }} error={form.price <= 0 ? '售價需大於 0' : undefined} />
+           <Input label="成本 (可選)" info="製作此品項的平均成本" helperText="用於計算毛利與成本占比" type="number" value={form.cost ?? ''} onChange={(e) => {
+             const v = (e.target as HTMLInputElement).value;
+             setForm(prev => ({ ...prev, cost: v === '' ? undefined : Number(v) || 0 }));
+           }} error={typeof form.cost === 'number' && form.price > 0 && (form.cost > form.price) ? '成本不可高於售價' : undefined} />
+           <Select label="分類" info="用於篩選與報表分類" value={(form.category ?? 'cocktails') as MenuCategoryT} onChange={(e) => {
+             const v = (e.target as HTMLSelectElement).value as MenuCategoryT;
+             setForm(prev => ({ ...prev, category: (v || 'cocktails') as MenuCategoryT }));
+           }} options={CATEGORY_OPTIONS as any} />
+           <Select label="基酒" info="此品項主要使用的酒類（若無可選『無』）" value={(form.baseSpirit ?? 'none') as BaseSpiritT} onChange={(e) => {
+             const v = (e.target as HTMLSelectElement).value as BaseSpiritT;
+             setForm(prev => ({ ...prev, baseSpirit: (v || 'none') as BaseSpiritT }));
+           }} options={SPIRIT_OPTIONS as any} />
+           <Input className="md:col-span-2" label="描述" info="配方、風味或備註（可選）" placeholder="配方或備註（選填）" value={form.description ?? ''} onChange={(e) => {
+             const v = (e.target as HTMLInputElement).value;
+             setForm(prev => ({ ...prev, description: v ?? '' }));
+           }} />
+          <div className="md:col-span-2 flex items-center justify-between p-3 rounded-lg bg-[var(--glass-elevated)] border border-[var(--glass-elevated-border)]">
+            <div>
+              <div className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                可供應
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none" title="開啟後，此品項將出現在點單與菜單列表中。">
+                  i
+                </span>
+              </div>
+              <div className="text-xs text-[var(--text-muted)]">開啟後會顯示在前台菜單</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.available}
+              onClick={() => setForm(prev => ({ ...prev, available: !prev.available }))}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.available ? 'bg-[var(--color-accent)]' : 'bg-slate-400/50'}`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${form.available ? 'translate-x-5' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
           <div className="md:col-span-2 flex justify-end gap-2 mt-2">
             <Button variant="secondary" onClick={resetForm}>取消</Button>
             <Button onClick={handleSubmit}>{editId ? '更新' : '新增'}</Button>
@@ -188,8 +243,9 @@ const Menu: React.FC = () => {
       <Card padding="md" className="space-y-3">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
-             <Select size="sm" placeholder="全部分類" value={category ?? 'all'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategory((e.currentTarget.value || 'all') as CategoryFilter)} options={FILTER_CATEGORY_OPTIONS as any} />                         <Select size="sm" placeholder="全部基酒" value={spirit ?? 'all'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSpirit((e.currentTarget.value || 'all') as SpiritFilter)} options={FILTER_SPIRIT_OPTIONS as any} />
-            <Input className="col-span-2 md:col-span-1" placeholder="搜尋名稱 / 描述" value={q} onChange={(e) => setQ(((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value))} />
+             <Select size="sm" placeholder="全部分類" value={category ?? 'all'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategory(((e.target as HTMLSelectElement).value || 'all') as CategoryFilter)} options={FILTER_CATEGORY_OPTIONS as any} />
+            <Select size="sm" placeholder="全部基酒" value={spirit ?? 'all'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSpirit(((e.target as HTMLSelectElement).value || 'all') as SpiritFilter)} options={FILTER_SPIRIT_OPTIONS as any} />
+            <Input className="col-span-2 md:col-span-1" placeholder="搜尋名稱 / 描述" value={q} onChange={(e) => setQ(((e.target as HTMLInputElement).value))} />
             <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input className="h-4 w-4" type="checkbox" checked={onlyAvailable} onChange={(e) => setOnlyAvailable(((e as React.ChangeEvent<HTMLInputElement>).currentTarget.checked))} />
               僅顯示可供應

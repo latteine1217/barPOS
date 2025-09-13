@@ -69,45 +69,56 @@ export function usePerformanceMonitor(
   
   // 性能追蹤引用
   const renderStartTimeRef = useRef<number>(0);
+  const shouldSampleThisRenderRef = useRef<boolean>(true);
+  // 累積待提交的渲染數據（避免每次渲染 setState）
+  const pendingRef = useRef<{
+    count: number;
+    total: number;
+    max: number;
+    min: number;
+    last: number;
+    first: number;
+    hasFirst: boolean;
+    mem: number;
+  }>({ count: 0, total: 0, max: 0, min: Infinity, last: 0, first: 0, hasFirst: false, mem: 0 });
+  const lastCommitTsRef = useRef<number>(0);
+  const maxUpdatesPerSec = 10; // 防止高頻 UI 更新（可調）
+  const commitIntervalMs = 250; // 批次提交間隔（可調）
   const previousPropsRef = useRef<any>(null);
   const previousStateRef = useRef<any>(null);
   const renderReasonsRef = useRef<string[]>([]);
   
   // 開始渲染測量
   const startRenderMeasurement = useCallback(() => {
-    if (!isMonitoring || Math.random() > sampleRate) return;
-    
+    if (!isMonitoring) return;
+    // 根據採樣率決定是否記錄本次渲染
+    shouldSampleThisRenderRef.current = Math.random() <= sampleRate;
+    if (!shouldSampleThisRenderRef.current) return;
+
     renderStartTimeRef.current = performance.now();
   }, [isMonitoring, sampleRate]);
 
   // 結束渲染測量
   const endRenderMeasurement = useCallback(() => {
-    if (!isMonitoring || renderStartTimeRef.current === 0) return;
-    
+    if (!isMonitoring || !shouldSampleThisRenderRef.current || renderStartTimeRef.current === 0) return;
+
     const renderTime = performance.now() - renderStartTimeRef.current;
     renderStartTimeRef.current = 0;
 
-    setMetrics(prevMetrics => {
-      const newRenderCount = prevMetrics.renderCount + 1;
-      const newTotalRenderTime = prevMetrics.totalRenderTime + renderTime;
-      const newAverageRenderTime = newTotalRenderTime / newRenderCount;
-      
-      const newMetrics: PerformanceMetrics = {
-        renderCount: newRenderCount,
-        totalRenderTime: newTotalRenderTime,
-        averageRenderTime: newAverageRenderTime,
-        maxRenderTime: Math.max(prevMetrics.maxRenderTime, renderTime),
-        minRenderTime: Math.min(prevMetrics.minRenderTime, renderTime),
-        memoryUsage: trackMemory ? getMemoryUsage() : prevMetrics.memoryUsage,
-        lastRenderTime: renderTime,
-        firstRenderTime: prevMetrics.firstRenderTime || renderTime
-      };
-
-      // 檢查性能問題
-      checkPerformanceThresholds(newMetrics);
-
-      return newMetrics;
-    });
+    // 將結果累積到待提交區，不立即 setState 以避免自觸發渲染迴圈
+    const p = pendingRef.current;
+    p.count += 1;
+    p.total += renderTime;
+    p.max = Math.max(p.max, renderTime);
+    p.min = Math.min(p.min, renderTime);
+    p.last = renderTime;
+    if (!p.hasFirst) {
+      p.first = renderTime;
+      p.hasFirst = true;
+    }
+    if (trackMemory) {
+      p.mem = getMemoryUsage();
+    }
   }, [isMonitoring, trackMemory]);
 
   // 獲取內存使用情況
@@ -213,6 +224,8 @@ export function usePerformanceMonitor(
       lastRenderTime: 0,
       firstRenderTime: 0
     });
+    // 清空暫存
+    pendingRef.current = { count: 0, total: 0, max: 0, min: Infinity, last: 0, first: 0, hasFirst: false, mem: 0 };
     renderReasonsRef.current = [];
     logger.info(`Reset performance metrics for ${componentName}`, {
       component: 'usePerformanceMonitor'
@@ -240,20 +253,61 @@ export function usePerformanceMonitor(
     return JSON.stringify(report, null, 2);
   }, [componentName, metrics, thresholds, trackMemory, getMemoryUsage]);
 
-  // 自動開始測量每次渲染
+  // 在每次渲染時進行測量，但不直接 setState（避免回饋迴圈）
   useEffect(() => {
     startRenderMeasurement();
-    
-    // 使用 setTimeout 來在下一個 tick 結束測量
     const timeoutId = setTimeout(() => {
       endRenderMeasurement();
     }, 0);
-
     return () => {
       clearTimeout(timeoutId);
-      endRenderMeasurement();
+      // 不在清理階段強制提交，避免重入
     };
   });
+
+  // 以固定頻率批次提交累積的度量資料到 state（限制更新頻率）
+  useEffect(() => {
+    if (!isMonitoring) return;
+    const id = setInterval(() => {
+      const now = performance.now();
+      if (now - lastCommitTsRef.current < 1000 / maxUpdatesPerSec) return;
+      const p = pendingRef.current;
+      if (p.count === 0) return;
+
+      setMetrics(prev => {
+        const renderCount = prev.renderCount + p.count;
+        const totalRenderTime = prev.totalRenderTime + p.total;
+        const averageRenderTime = totalRenderTime / renderCount;
+        const maxRenderTime = Math.max(prev.maxRenderTime, p.max);
+        const minRenderTime = Math.min(prev.minRenderTime, p.min);
+        const lastRenderTime = p.last || prev.lastRenderTime;
+        const firstRenderTime = prev.firstRenderTime || (p.hasFirst ? p.first : 0);
+        const memoryUsage = p.mem || prev.memoryUsage;
+
+        const next: PerformanceMetrics = {
+          renderCount,
+          totalRenderTime,
+          averageRenderTime,
+          maxRenderTime,
+          minRenderTime,
+          memoryUsage,
+          lastRenderTime,
+          firstRenderTime
+        };
+
+        // 檢查性能問題（使用合併後的度量）
+        checkPerformanceThresholds(next);
+
+        return next;
+      });
+
+      // 重置暫存累積
+      pendingRef.current = { count: 0, total: 0, max: 0, min: Infinity, last: 0, first: 0, hasFirst: false, mem: 0 };
+      lastCommitTsRef.current = now;
+    }, commitIntervalMs);
+
+    return () => clearInterval(id);
+  }, [isMonitoring, commitIntervalMs, checkPerformanceThresholds]);
 
   return {
     metrics,

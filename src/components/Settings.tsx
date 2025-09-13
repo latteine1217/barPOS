@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
   const menuActions = undefined as unknown as any;
   
   // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
-  const { theme, supabaseConfig, updateSupabaseConfig, setTheme } = settingsData || ({} as any);
+  const { theme, accent, supabaseConfig, updateSupabaseConfig, setTheme, setAccent } = settingsData || ({} as any);
 
   const [testing, setTesting] = useState<boolean>(() => false);
   const [testResult, setTestResult] = useState<TestResult | null>(() => null);
@@ -329,7 +329,7 @@ const Settings: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               主題模式
             </label>
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setTheme && setTheme('light')}
                 className={`px-4 py-2 rounded-lg border ${
@@ -350,6 +350,44 @@ const Settings: React.FC = () => {
               >
                 深色模式
               </button>
+              <button
+                onClick={() => setTheme && setTheme('auto')}
+                className={`px-4 py-2 rounded-lg border ${
+                  theme === 'auto'
+                    ? 'bg-blue-500 text-white border-blue-500'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                跟隨系統
+              </button>
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              強調色 (Accent)
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {([
+                { key: 'blue', color: '#2563eb', name: '藍色' },
+                { key: 'violet', color: '#7c3aed', name: '紫色' },
+                { key: 'emerald', color: '#059669', name: '翠綠' },
+                { key: 'amber', color: '#d97706', name: '琥珀' },
+                { key: 'rose', color: '#e11d48', name: '玫瑰' },
+                { key: 'cyan', color: '#0891b2', name: '青色' },
+              ] as const).map(({ key, color, name }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAccent && setAccent(key as any)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                    accent === key ? 'border-[var(--color-accent)] bg-black/5 dark:bg-white/10' : 'border-[var(--glass-elevated-border)]'
+                  }`}
+                >
+                  <span className="inline-block w-5 h-5 rounded-full" style={{ backgroundColor: color }} />
+                  <span className="text-sm text-[var(--text-primary)]">{name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

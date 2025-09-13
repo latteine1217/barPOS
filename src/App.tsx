@@ -60,7 +60,7 @@ const renderActiveTab = () => {
       case 'tables':
         return <div className="page-transition active"><Tables /></div>;
       case 'dashboard':
-        return <div className="page-transition active"><Dashboard /></div>;
+        return <div className="page-transition active"><Dashboard onNavigate={handleSetActiveTab} /></div>;
       case 'menu':
         return <div className="page-transition active"><Menu /></div>;
       case 'history':
@@ -141,12 +141,34 @@ const renderActiveTab = () => {
    );}
 
 function App() {
+  const theme = useSettingsStore((s: any) => s.theme) as 'light' | 'dark' | 'auto';
+  const accent = useSettingsStore((s: any) => s.accent) as string;
+
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+    mq.addEventListener?.('change', handler);
+    return () => mq.removeEventListener?.('change', handler);
+  }, []);
+
+  const isDark = theme === 'dark' || (theme === 'auto' && systemPrefersDark);
+  const themeClass = isDark ? 'dark' : '';
+  const accentClass = `theme-${accent || 'blue'}`;
+
   return (
-    <GlobalErrorBoundary>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
-    </GlobalErrorBoundary>
+    <div className={`${themeClass} ${accentClass}`}>
+      <GlobalErrorBoundary>
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
+      </GlobalErrorBoundary>
+    </div>
   );
 }
 

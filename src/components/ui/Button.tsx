@@ -17,17 +17,24 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ring-[var(--color-accent)] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 focus:ring-blue-500',
-    secondary: 'bg-gray-600 hover:bg-gray-700 text-white border-gray-600 focus:ring-gray-500',
-    success: 'bg-green-600 hover:bg-green-700 text-white border-green-600 focus:ring-green-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white border-red-600 focus:ring-red-500',
-    warning: 'bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600 focus:ring-yellow-500',
-    info: 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-600 focus:ring-cyan-500',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 border-gray-300 focus:ring-gray-500',
-  };
+    primary:
+      'bg-[var(--color-accent)] hover:brightness-95 active:brightness-90 text-white border-[var(--color-accent)]',
+    secondary:
+      'bg-[var(--glass-elevated)] hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-primary)] border-[var(--glass-elevated-border)]',
+    success:
+      'bg-[var(--color-success)] hover:brightness-95 active:brightness-90 text-white border-[var(--color-success)]',
+    danger:
+      'bg-[var(--color-error)] hover:brightness-95 active:brightness-90 text-white border-[var(--color-error)]',
+    warning:
+      'bg-[var(--color-warning)] hover:brightness-95 active:brightness-90 text-white border-[var(--color-warning)]',
+    info:
+      'bg-[color:var(--color-accent)]/10 text-[var(--color-accent)] border-[color:var(--color-accent)]/30 hover:bg-[color:var(--color-accent)]/15',
+    ghost:
+      'bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-[var(--text-primary)] border-[var(--glass-elevated-border)]',
+  } as const;
 
   const sizeClasses = {
     xs: 'px-2 py-1 text-xs',

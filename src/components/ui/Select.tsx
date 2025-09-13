@@ -14,6 +14,7 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
   placeholder?: string;
   variant?: 'default' | 'filled' | 'outlined';
   size?: 'sm' | 'md' | 'lg';
+  info?: React.ReactNode | string;
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(({ 
@@ -25,13 +26,19 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   variant = 'default',
   size = 'md',
   className = '',
+  info,
   ...props
 }, ref) => {
-  const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 cursor-pointer';
+  const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 ring-[var(--color-accent)] cursor-pointer';
   
   const variantStyles = {
-     default: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500',    filled: 'bg-gray-100 border-transparent text-gray-900 focus:ring-blue-500 focus:bg-white',
-     outlined: 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'  };
+    default:
+      'bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-[var(--text-primary)] focus:border-[var(--color-accent)]',
+    filled:
+      'bg-[var(--glass-surface)] border-transparent text-[var(--text-primary)] focus:bg-[var(--glass-elevated)]',
+    outlined:
+      'bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-[var(--text-primary)] focus:border-[var(--color-accent)]',
+  };
   
   const sizeStyles = {
     sm: 'px-3 py-1.5 text-sm',
@@ -44,9 +51,19 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-white/80 mb-1">
-          {label}
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-[var(--text-secondary)]">
+            {label}
+          </label>
+          {info && (
+            <span
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none"
+              title={typeof info === 'string' ? info : undefined}
+            >
+              {typeof info === 'string' ? 'i' : info}
+            </span>
+          )}
+        </div>
       )}
       <select
         ref={ref}
@@ -63,16 +80,17 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
             key={option.value} 
             value={option.value}
             disabled={option.disabled}
-             className="bg-white text-gray-900"          >
+            className="bg-[var(--glass-elevated)] text-[var(--text-primary)] dark:bg-gray-800 dark:text-gray-100"
+          >
             {option.label}
           </option>
         ))}
       </select>
       {error && (
-        <p className="mt-1 text-sm text-red-400">{error}</p>
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-white/60">{helperText}</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">{helperText}</p>
       )}
     </div>
   );

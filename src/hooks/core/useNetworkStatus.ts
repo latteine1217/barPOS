@@ -47,6 +47,49 @@ interface NavigatorWithConnection extends Navigator {
   };
 }
 
+// ===== Module-level helpers to keep stable references =====
+
+function getConnectionType(): string {
+  try {
+    if (typeof navigator !== 'undefined' && 'connection' in navigator) {
+      const connection = (navigator as NavigatorWithConnection).connection;
+      return connection?.effectiveType || 'unknown';
+    }
+    return typeof navigator !== 'undefined' && navigator.onLine ? 'unknown' : 'none';
+  } catch {
+    return typeof navigator !== 'undefined' && navigator.onLine ? 'unknown' : 'none';
+  }
+}
+
+function getConnectionQuality(): NetworkStatus['connectionQuality'] {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
+  const connectionType = getConnectionType();
+
+  switch (connectionType) {
+    case '4g':
+      return 'excellent';
+    case '3g':
+      return 'good';
+    case '2g':
+    case 'slow-2g':
+      return 'poor';
+    default:
+      return 'unknown';
+  }
+}
+
+function shallowEqualNetworkStatus(a: NetworkStatus, b: NetworkStatus): boolean {
+  const aLast = a.lastOnline ? a.lastOnline.getTime() : null;
+  const bLast = b.lastOnline ? b.lastOnline.getTime() : null;
+  return (
+    a.isOnline === b.isOnline &&
+    a.isOfflineReady === b.isOfflineReady &&
+    a.connectionType === b.connectionType &&
+    a.connectionQuality === b.connectionQuality &&
+    aLast === bLast
+  );
+}
+
 // Hook 選項接口
 export interface UseNetworkStatusOptions {
   // 最大重試次數
@@ -76,9 +119,9 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
 
   // 網路狀態
   const [status, setStatus] = useState<NetworkStatus>({
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isOfflineReady: false,
-    lastOnline: navigator.onLine ? new Date() : null,
+    lastOnline: typeof navigator !== 'undefined' && navigator.onLine ? new Date() : null,
     connectionType: getConnectionType(),
     connectionQuality: getConnectionQuality()
   });
@@ -101,36 +144,7 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
     onError?.(error, context);
   }, [onError]);
 
-  // 獲取連接類型
-  function getConnectionType(): string {
-    try {
-      if ('connection' in navigator) {
-        const connection = (navigator as NavigatorWithConnection).connection;
-        return connection?.effectiveType || 'unknown';
-      }
-      return navigator.onLine ? 'unknown' : 'none';
-    } catch {
-      return navigator.onLine ? 'unknown' : 'none';
-    }
-  }
-
-  // 獲取連接品質
-  function getConnectionQuality(): NetworkStatus['connectionQuality'] {
-    if (!navigator.onLine) return 'offline';
-    const connectionType = getConnectionType();
-    
-    switch (connectionType) {
-      case '4g':
-        return 'excellent';
-      case '3g':
-        return 'good';
-      case '2g':
-      case 'slow-2g':
-        return 'poor';
-      default:
-        return 'unknown';
-    }
-  }
+  // getConnectionType/getConnectionQuality moved to module scope to keep stable references
 
   // 儲存離線隊列到 localStorage
   const saveOfflineQueueToStorage = useCallback((queue: OfflineQueueItem[]) => {
@@ -382,16 +396,16 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
   // 網路狀態變化處理
   useEffect(() => {
     const updateNetworkStatus = () => {
-      const newConnectionType = getConnectionType();
-      const newConnectionQuality = getConnectionQuality();
-      
-      setStatus(prev => ({
-        ...prev,
-        isOnline: navigator.onLine,
-        lastOnline: navigator.onLine ? new Date() : prev.lastOnline,
-        connectionType: newConnectionType,
-        connectionQuality: newConnectionQuality
-      }));
+      setStatus(prev => {
+        const next: NetworkStatus = {
+          ...prev,
+          isOnline: typeof navigator !== 'undefined' ? navigator.onLine : prev.isOnline,
+          lastOnline: typeof navigator !== 'undefined' && navigator.onLine ? new Date() : prev.lastOnline,
+          connectionType: getConnectionType(),
+          connectionQuality: getConnectionQuality()
+        };
+        return shallowEqualNetworkStatus(prev, next) ? prev : next;
+      });
     };
 
     const handleOnline = async () => {
@@ -443,7 +457,7 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
         clearTimeout(retryTimerRef.current);
       }
     };
-  }, [autoSync, offlineQueue.length, checkServiceWorkerStatus, processOfflineQueue, scheduleRetry, retryDelay, getConnectionQuality]);
+  }, [autoSync, offlineQueue.length, checkServiceWorkerStatus, processOfflineQueue, scheduleRetry, retryDelay]);
 
   // 初始化時載入離線隊列
   useEffect(() => {

@@ -198,7 +198,9 @@ export const useTableStore = create<TableStore>()(
       },
 
       getTableByNumber: (number: number) => {
-        return get().tables.find(table => table.number === number);
+        const n = Number(number);
+        // 寬鬆處理持久化資料中的型別偏差（可能為字串）
+        return get().tables.find(table => Number((table as any).number) === n);
       },
 
       getTablesByStatus: (status: TableStatus) => {

@@ -57,93 +57,26 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
     bar: '吧台'
   }), []);
 
-  // 獲取桌位樣式 - 全新 Glassmorphism 設計
+  // 獲取桌位樣式（使用統一的主題樣式 class）
   const getTableStyle = useCallback((table: Table): CSSProperties => {
     const size = tableSizes[table.size as keyof typeof tableSizes] || tableSizes.medium;
-    const baseStyle: CSSProperties = {
+    const style: CSSProperties = {
       position: 'absolute',
       left: `${table.position.x}px`,
       top: `${table.position.y}px`,
       width: `${size.width}px`,
       height: `${size.height}px`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
       cursor: isEditing ? 'move' : 'pointer',
       fontSize: '12px',
-      fontWeight: 'bold',
       userSelect: 'none',
-      transition: selectedTable?.id === table.id ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)', // Safari support
+      transition: selectedTable?.id === table.id ? 'none' : 'transform .2s ease',
+      borderRadius: table.shape === 'round' ? '9999px' : '16px',
     };
-
-    // 根據狀態設定 glassmorphism 顏色和效果
-    if (table.status === 'occupied') {
-      // 使用中：溫暖的琥珀色 glass 效果
-      baseStyle.background = 'linear-gradient(135deg, rgba(251, 191, 36, 0.3) 0%, rgba(245, 158, 11, 0.2) 100%)';
-      baseStyle.border = '2px solid rgba(251, 191, 36, 0.4)';
-      baseStyle.color = '#ffffff';
-      baseStyle.boxShadow = '0 8px 32px rgba(251, 191, 36, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-      baseStyle.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)';
-    } else if (table.status === 'reserved') {
-      // 已預約：紫色 glass 效果
-      baseStyle.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(124, 58, 237, 0.2) 100%)';
-      baseStyle.border = '2px solid rgba(139, 92, 246, 0.4)';
-      baseStyle.color = '#ffffff';
-      baseStyle.boxShadow = '0 8px 32px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-      baseStyle.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)';
-    } else if (table.status === 'cleaning') {
-      // 清潔中：藍色 glass 效果
-      baseStyle.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%)';
-      baseStyle.border = '2px solid rgba(59, 130, 246, 0.4)';
-      baseStyle.color = '#ffffff';
-      baseStyle.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-      baseStyle.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)';
-    } else {
-      // 空位：深色文字在明亮背景上
-      baseStyle.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(5, 150, 105, 0.3) 100%)';
-      baseStyle.border = '2px solid rgba(16, 185, 129, 0.5)';
-      baseStyle.color = '#ffffff';
-      baseStyle.boxShadow = '0 8px 32px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
-      baseStyle.textShadow = '0 2px 4px rgba(0, 0, 0, 0.5)';
+    if (table.shape === 'rectangular') {
+      style.width = `${size.width * 1.5}px`;
     }
-
-    // 選中狀態：增強的發光效果
-    if (selectedTable?.id === table.id) {
-      baseStyle.border = '3px solid rgba(236, 72, 153, 0.6)';
-      baseStyle.boxShadow = `
-        0 0 0 4px rgba(236, 72, 153, 0.2), 
-        0 8px 32px rgba(236, 72, 153, 0.3), 
-        inset 0 1px 0 rgba(255, 255, 255, 0.3)
-      `;
-      baseStyle.transform = 'scale(1.05)';
-    }
-
-    // 桌位形狀
-    if (table.shape === 'round') {
-      baseStyle.borderRadius = '50%';
-    } else if (table.shape === 'rectangular') {
-      baseStyle.width = `${size.width * 1.5}px`;
-      baseStyle.borderRadius = '16px';
-    } else {
-      baseStyle.borderRadius = '16px';
-    }
-
-    // VIP 桌位特殊效果：金色漸變
-    if (table.type === 'vip') {
-      baseStyle.background = 'linear-gradient(135deg, rgba(250, 204, 21, 0.4) 0%, rgba(245, 158, 11, 0.3) 100%)';
-      baseStyle.border = '2px solid rgba(250, 204, 21, 0.5)';
-      baseStyle.boxShadow = '0 8px 32px rgba(250, 204, 21, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
-    }
-
-    // Hover 效果（僅在非拖拽狀態）
-    if (!dragState.isDragging) {
-      baseStyle.filter = 'brightness(1)';
-    }
-
-    return baseStyle;
-  }, [isEditing, selectedTable, tableSizes, dragState.isDragging]);
+    return style;
+  }, [isEditing, selectedTable, tableSizes]);
 
   // 處理桌位鼠標按下事件
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, table: Table) => {
@@ -369,29 +302,36 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
               )}
 
               {/* 桌位 - 增強的 glassmorphism 效果 */}
-              {tables.map(table => (
+              {tables.map(table => {
+                const statusClass = table.status === 'available' ? 'table-node--available'
+                  : table.status === 'occupied' ? 'table-node--occupied'
+                  : table.status === 'reserved' ? 'table-node--reserved'
+                  : 'table-node--cleaning';
+                const selectedClass = selectedTable?.id === table.id ? 'table-node--selected' : '';
+                return (
                 <div
                   key={table.id}
                   style={getTableStyle(table)}
-                    onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }} className="flex flex-col items-center justify-center text-center group hover:brightness-110 transition-all duration-200"
-                   onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}                >
-                  <div className="font-bold text-xs truncate max-w-full drop-shadow-md">
+                  onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }}
+                  onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}
+                  className={`table-node ${statusClass} ${selectedClass}`}
+                >
+                  <div className="font-bold text-xs truncate max-w-full">
                     {table.name}
                   </div>
                   {table.status === 'occupied' && (
-                    <div className="text-xs opacity-90 drop-shadow-sm">
+                    <div className="text-xs opacity-90">
                       {table.customers}人
                     </div>
                   )}
-                  {/* 添加微妙的狀態指示器 */}
-                  <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-                    table.status === 'available' ? 'bg-emerald-400 shadow-emerald-400/50' :
-                    table.status === 'occupied' ? 'bg-amber-400 shadow-amber-400/50' :
-                    table.status === 'reserved' ? 'bg-purple-400 shadow-purple-400/50' :
-                    'bg-blue-400 shadow-blue-400/50'
-                  } shadow-lg`} />
+                  <div className="table-node__dot" style={{ color: (
+                    table.status === 'available' ? '#34d399' :
+                    table.status === 'occupied' ? '#f59e0b' :
+                    table.status === 'reserved' ? '#8b5cf6' : '#3b82f6'
+                  ) }} />
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

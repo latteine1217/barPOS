@@ -61,6 +61,7 @@ export const useMenuStore = create<MenuStore>()(
           id: Date.now().toString(),
           name: item.name,
           price: item.price,
+          cost: item.cost,
           category: item.category,
           baseSpirit: item.baseSpirit,
           description: item.description,
@@ -82,6 +83,7 @@ export const useMenuStore = create<MenuStore>()(
         if (updates.baseSpirit !== undefined) item.baseSpirit = updates.baseSpirit;
         if (updates.description !== undefined) item.description = updates.description;
         if (updates.available !== undefined) item.available = updates.available;
+        if (updates.cost !== undefined) item.cost = updates.cost;
         item.updatedAt = new Date().toISOString();
       });
     },

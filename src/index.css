@@ -8,6 +8,68 @@
 
 /* CSS 變數定義 - 調酒酒吧主題色彩 */
 :root {
+  /* 現代白色主題（預設） */
+  /* 背景採用柔和中性灰，對齊參考設計的頁面底色 */
+  --color-bg: #f8fafc; /* slate-50 */
+  --color-text: #0f172a; /* slate-900 */
+  --color-primary: #0ea5e9; /* sky-500 */
+  --color-secondary: #64748b; /* slate-500 */
+  --color-tertiary: #94a3b8; /* slate-400 */
+  --color-accent: #2563eb; /* indigo-600 */
+  --color-success: #16a34a; /* green-600 */
+  --color-warning: #d97706; /* amber-600 */
+  --color-error: #dc2626; /* red-600 */
+
+  /* 淺色層級表面（以卡片/面板為主，不再玻璃化） */
+  /* 第1層 - 背景層 */
+  --glass-surface: #ffffff;
+  --glass-surface-border: rgba(2, 6, 23, 0.06); /* slate-950 @ 6% */
+  --glass-surface-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  /* 第2層 - 卡片層 */
+  --glass-elevated: #ffffff;
+  --glass-elevated-border: rgba(2, 6, 23, 0.08);
+  --glass-elevated-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+
+  /* 第3層 - 浮動元素 */
+  --glass-floating: #ffffff;
+  --glass-floating-border: rgba(2, 6, 23, 0.1);
+  --glass-floating-shadow: 0 6px 16px rgba(16, 24, 40, 0.12);
+
+  /* 第4層 - 模態框 */
+  --glass-modal: #ffffff;
+  --glass-modal-border: rgba(2, 6, 23, 0.12);
+  --glass-modal-shadow: 0 12px 32px rgba(16, 24, 40, 0.16);
+
+  /* 第5層 - 焦點狀態 */
+  --glass-focus: #ffffff;
+  --glass-focus-border: rgba(37, 99, 235, 0.3); /* indigo focus */
+  --glass-focus-shadow: 0 16px 40px rgba(37, 99, 235, 0.15);
+
+  /* 文字層次（淺色） */
+  --text-primary: rgba(15, 23, 42, 0.98);
+  --text-secondary: rgba(15, 23, 42, 0.75);
+  --text-muted: rgba(15, 23, 42, 0.6);
+  --text-disabled: rgba(15, 23, 42, 0.4);
+
+  /* 兼容變數（保持名稱） */
+  --card-radius: 16px;
+  --card-bg: var(--glass-elevated);
+  --card-border: var(--glass-elevated-border);
+  --card-shadow: var(--glass-elevated-shadow);
+  --glass-bg: var(--glass-floating);
+  --glass-border: var(--glass-floating-border);
+  --glass-shadow: var(--glass-floating-shadow);
+
+  /* 動畫過渡 */
+  --transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+  --transition-fast: all 0.2s ease;
+  --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 深色主題覆寫（保留原有酒吧風格） */
+.dark {
   --color-bg: #050505;
   --color-text: #ffffff;
   --color-primary: #ff3366;
@@ -17,54 +79,43 @@
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
-  
-  /* 5層玻璃深度系統 - 視覺層次重構 */
-  /* 第1層 - 背景層：最底層元素，如背景容器 */
+
   --glass-surface: rgba(255, 255, 255, 0.03);
   --glass-surface-border: rgba(255, 255, 255, 0.08);
   --glass-surface-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  
-  /* 第2層 - 卡片層：一般內容卡片 */
+
   --glass-elevated: rgba(255, 255, 255, 0.08);
   --glass-elevated-border: rgba(255, 255, 255, 0.12);
   --glass-elevated-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  
-  /* 第3層 - 浮動元素：重要內容區域、側邊欄 */
+
   --glass-floating: rgba(255, 255, 255, 0.15);
   --glass-floating-border: rgba(255, 255, 255, 0.18);
   --glass-floating-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  
-  /* 第4層 - 模態框：彈出窗口、下拉選單 */
+
   --glass-modal: rgba(255, 255, 255, 0.25);
   --glass-modal-border: rgba(255, 255, 255, 0.28);
   --glass-modal-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-  
-  /* 第5層 - 焦點狀態：主要操作按鈕、活躍狀態 */
+
   --glass-focus: rgba(255, 255, 255, 0.35);
   --glass-focus-border: rgba(255, 255, 255, 0.4);
   --glass-focus-shadow: 0 20px 64px rgba(0, 0, 0, 0.55);
-  
-  /* 文字層次系統 - 增強對比度 */
-  --text-primary: rgba(255, 255, 255, 0.98);    /* 主要文字 */
-  --text-secondary: rgba(255, 255, 255, 0.85);  /* 次要文字 */
-  --text-muted: rgba(255, 255, 255, 0.65);      /* 輔助文字 */
-  --text-disabled: rgba(255, 255, 255, 0.45);   /* 禁用文字 */
-  
-  /* 舊版兼容變數（逐步淘汰） */
-  --card-radius: 16px;
-  --card-bg: var(--glass-elevated);
-  --card-border: var(--glass-elevated-border);
-  --card-shadow: var(--glass-elevated-shadow);
-  --glass-bg: var(--glass-floating);
-  --glass-border: var(--glass-floating-border);
-  --glass-shadow: var(--glass-floating-shadow);
-  
-  /* 動畫過渡 */
-  --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --transition-fast: all 0.3s ease;
-  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-smooth: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  --text-primary: rgba(255, 255, 255, 0.98);
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-disabled: rgba(255, 255, 255, 0.45);
 }
+
+/* 主題強調色預設與切換（可由根節點加上 .theme-xxx 控制） */
+:root,
+.theme-blue {
+  --color-accent: #2563eb; /* blue-600 */
+}
+.theme-violet { --color-accent: #7c3aed; /* violet-600 */ }
+.theme-emerald { --color-accent: #059669; /* emerald-600 */ }
+.theme-amber { --color-accent: #d97706; /* amber-600 */ }
+.theme-rose { --color-accent: #e11d48; /* rose-600 */ }
+.theme-cyan { --color-accent: #0891b2; /* cyan-600 */ }
 
 /* 全域字體和基礎設定 */
 @layer base {
@@ -91,6 +142,152 @@
 
 /* 自定義組件樣式 */
 @layer components {
+  /* === Dynamic Gooey Gradient Background === */
+  :root {
+    --color-bg1: rgb(108, 0, 162);
+    --color-bg2: rgb(0, 17, 82);
+    --color1: 18, 113, 255;
+    --color2: 221, 74, 255;
+    --color3: 100, 220, 255;
+    --color4: 200, 50, 50;
+    --color5: 180, 180, 50;
+    --color-interactive: 140, 100, 255; /* can be tied to accent later */
+    --circle-size: 80%;
+    --blending: hard-light;
+  }
+
+  @keyframes moveInCircle {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes moveVertical {
+    0% { transform: translateY(-50%); }
+    50% { transform: translateY(50%); }
+    100% { transform: translateY(-50%); }
+  }
+  @keyframes moveHorizontal {
+    0% { transform: translateX(-50%) translateY(-10%); }
+    50% { transform: translateX(50%) translateY(10%); }
+    100% { transform: translateX(-50%) translateY(-10%); }
+  }
+
+  .gradient-bg {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    overflow: hidden;
+    background: linear-gradient(40deg, var(--color-bg1), var(--color-bg2));
+    top: 0;
+    left: 0;
+  }
+  .gradient-bg svg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+  }
+  .gradient-bg .gradients-container {
+    filter: url(#goo) blur(40px);
+    width: 100%;
+    height: 100%;
+  }
+  .gradient-bg .g1,
+  .gradient-bg .g2,
+  .gradient-bg .g3,
+  .gradient-bg .g4,
+  .gradient-bg .g5,
+  .gradient-bg .interactive {
+    position: absolute;
+    mix-blend-mode: var(--blending);
+  }
+  .gradient-bg .g1 {
+    background: radial-gradient(circle at center, rgba(var(--color1), 0.8) 0, rgba(var(--color1), 0) 50%) no-repeat;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    top: calc(50% - var(--circle-size) / 2);
+    left: calc(50% - var(--circle-size) / 2);
+    transform-origin: center center;
+    animation: moveVertical 30s ease infinite;
+    opacity: 1;
+  }
+  .gradient-bg .g2 {
+    background: radial-gradient(circle at center, rgba(var(--color2), 0.8) 0, rgba(var(--color2), 0) 50%) no-repeat;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    top: calc(50% - var(--circle-size) / 2);
+    left: calc(50% - var(--circle-size) / 2);
+    transform-origin: calc(50% - 400px);
+    animation: moveInCircle 20s reverse infinite;
+    opacity: 1;
+  }
+  .gradient-bg .g3 {
+    background: radial-gradient(circle at center, rgba(var(--color3), 0.8) 0, rgba(var(--color3), 0) 50%) no-repeat;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    top: calc(50% - var(--circle-size) / 2 + 200px);
+    left: calc(50% - var(--circle-size) / 2 - 500px);
+    transform-origin: calc(50% + 400px);
+    animation: moveInCircle 40s linear infinite;
+    opacity: 1;
+  }
+  .gradient-bg .g4 {
+    background: radial-gradient(circle at center, rgba(var(--color4), 0.8) 0, rgba(var(--color4), 0) 50%) no-repeat;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    top: calc(50% - var(--circle-size) / 2);
+    left: calc(50% - var(--circle-size) / 2);
+    transform-origin: calc(50% - 200px);
+    animation: moveHorizontal 40s ease infinite;
+    opacity: 0.7;
+  }
+  .gradient-bg .g5 {
+    background: radial-gradient(circle at center, rgba(var(--color5), 0.8) 0, rgba(var(--color5), 0) 50%) no-repeat;
+    width: calc(var(--circle-size) * 2);
+    height: calc(var(--circle-size) * 2);
+    top: calc(50% - var(--circle-size));
+    left: calc(50% - var(--circle-size));
+    transform-origin: calc(50% - 800px) calc(50% + 200px);
+    animation: moveInCircle 20s ease infinite;
+    opacity: 1;
+  }
+  .gradient-bg .interactive {
+    width: 100%;
+    height: 100%;
+    top: -50%;
+    left: -50%;
+    opacity: 0.7;
+    background: radial-gradient(
+      circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+      rgba(var(--color-interactive), 0.8) 0,
+      rgba(var(--color-interactive), 0) 50%
+    ) no-repeat;
+  }
+
+  /* Table node styles for layout editor */
+  .table-node {
+    @apply glass-elevated;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    border-width: 2px;
+    border-style: solid;
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+  }
+  .table-node:hover { filter: brightness(1.05); }
+  .table-node--available { border-color: rgba(16,185,129,.45); box-shadow: 0 8px 24px rgba(16,185,129,.25), inset 0 1px 0 rgba(255,255,255,.2); }
+  .table-node--occupied { border-color: rgba(245,158,11,.5); box-shadow: 0 8px 24px rgba(245,158,11,.25), inset 0 1px 0 rgba(255,255,255,.2); }
+  .table-node--reserved { border-color: rgba(139,92,246,.5); box-shadow: 0 8px 24px rgba(139,92,246,.25), inset 0 1px 0 rgba(255,255,255,.2); }
+  .table-node--cleaning { border-color: rgba(59,130,246,.5); box-shadow: 0 8px 24px rgba(59,130,246,.25), inset 0 1px 0 rgba(255,255,255,.2); }
+  .table-node--selected { outline: 2px solid transparent; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent), transparent 30%), 0 16px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25); }
+  .table-node__dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 9999px; box-shadow: 0 0 0 2px rgba(255,255,255,.3), 0 0 10px currentColor; }
   /* 主背景容器 - 調酒酒吧風格漸變泡泡背景 */
   .app-background {
     @apply relative min-h-screen overflow-hidden;
@@ -106,6 +303,39 @@
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--glass-surface-border);
     box-shadow: var(--glass-surface-shadow);
+  }
+
+  /* Status badge tokens */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    line-height: 1;
+    border: 1px solid transparent;
+    background: var(--glass-surface);
+    color: var(--text-primary);
+  }
+  .status-pending, .status-preparing {
+    background: color-mix(in srgb, var(--color-warning), transparent 88%);
+    border-color: color-mix(in srgb, var(--color-warning), transparent 70%);
+    color: #b45309; /* amber-700 for readability in light mode */
+  }
+  .status-completed {
+    background: color-mix(in srgb, var(--color-success), transparent 88%);
+    border-color: color-mix(in srgb, var(--color-success), transparent 70%);
+    color: #065f46; /* emerald-800 */
+  }
+  .status-paid {
+    background: color-mix(in srgb, var(--color-accent), transparent 88%);
+    border-color: color-mix(in srgb, var(--color-accent), transparent 70%);
+    color: #1e3a8a; /* blue-800 */
+  }
+  .status-cancelled {
+    background: color-mix(in srgb, #64748b, transparent 88%);
+    border-color: color-mix(in srgb, #64748b, transparent 70%);
+    color: #334155; /* slate-700 */
   }
   
   /* 第2層 - 卡片層玻璃效果（升級版） */
@@ -207,21 +437,13 @@
     transition: var(--transition-smooth);
   }
 
-  /* 統一的卡片樣式（第三階段互動升級版） */
+  /* 統一的卡片樣式：預設即為毛玻璃，不依賴 hover 變化 */
   .card {
-    @apply glass-elevated rounded-2xl;
-    @apply btn-micro-interaction glass-shine-subtle haptic-light;
-    @apply table-state-transition;
+    @apply rounded-2xl glass-elevated;
     color: var(--text-primary);
     position: relative;
     overflow: hidden;
-  }
-  
-  .card:hover {
-    @apply glass-floating;
-    transform: translateY(-4px) scale(1.02);
-    color: var(--text-primary);
-    filter: brightness(1.05);
+    transition: var(--transition-smooth);
   }
 
   /* 數據展示卡片（第三階段互動升級版） */
@@ -234,11 +456,7 @@
     overflow: hidden;
   }
 
-  .card-data:hover {
-    @apply glass-floating;
-    transform: translateY(-2px) scale(1.01);
-    filter: brightness(1.08);
-  }
+  /* 卡片 hover 不改變材質，僅保留輕微陰影可選（此處關閉） */
 
   /* 統一的按鈕樣式（第三階段微互動升級版） */
   .btn {
