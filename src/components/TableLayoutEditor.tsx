@@ -57,26 +57,54 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
     bar: '吧台'
   }), []);
 
-  // 獲取桌位樣式（使用統一的主題樣式 class）
-  const getTableStyle = useCallback((table: Table): CSSProperties => {
+  // 計算不同形狀對應的寬高與圓角
+  const getTableDims = useCallback((table: Table) => {
     const size = tableSizes[table.size as keyof typeof tableSizes] || tableSizes.medium;
+    let width = size.width;
+    let height = size.height;
+    let radius = '16px';
+    switch (table.shape) {
+      case 'round':
+        width = height = size.width; // 使用寬作為直徑
+        radius = '9999px';
+        break;
+      case 'square':
+        width = height = size.width;
+        radius = '12px';
+        break;
+      case 'rectangular':
+        width = Math.round(size.width * 1.6);
+        height = size.height;
+        radius = '14px';
+        break;
+      case 'bar':
+        width = Math.round(size.width * 2.4);
+        height = Math.max(40, Math.round(size.height * 0.7));
+        radius = '10px';
+        break;
+      default:
+        radius = '16px';
+    }
+    return { width, height, radius };
+  }, [tableSizes]);
+
+  // 獲取桌位樣式（使用統一的主題樣式 class + 動態尺寸）
+  const getTableStyle = useCallback((table: Table): CSSProperties => {
+    const dims = getTableDims(table);
     const style: CSSProperties = {
       position: 'absolute',
       left: `${table.position.x}px`,
       top: `${table.position.y}px`,
-      width: `${size.width}px`,
-      height: `${size.height}px`,
-      cursor: isEditing ? 'move' : 'pointer',
+      width: `${dims.width}px`,
+      height: `${dims.height}px`,
+      cursor: isEditing ? 'grabbing' : 'pointer',
       fontSize: '12px',
       userSelect: 'none',
-      transition: selectedTable?.id === table.id ? 'none' : 'transform .2s ease',
-      borderRadius: table.shape === 'round' ? '9999px' : '16px',
+      transition: selectedTable?.id === table.id ? 'none' : 'transform .12s ease',
+      borderRadius: dims.radius,
     };
-    if (table.shape === 'rectangular') {
-      style.width = `${size.width * 1.5}px`;
-    }
     return style;
-  }, [isEditing, selectedTable, tableSizes]);
+  }, [getTableDims, isEditing, selectedTable]);
 
   // 處理桌位鼠標按下事件
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, table: Table) => {
@@ -87,11 +115,12 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
     const offsetX = e.clientX - rect.left - table.position.x;
     const offsetY = e.clientY - rect.top - table.position.y;
     setDragState(() => ({ 
-      isDragging: false,
+      isDragging: true,
       dragOffset: { x: offsetX, y: offsetY },
       startPosition: { x: e.clientX, y: e.clientY },
       hasMoved: false
-    }));    setSelectedTable((prev) => (prev?.id === table.id ? null : table));
+    }));
+    setSelectedTable(() => table);
   }, [isEditing]);
 
   // 拖拽中
@@ -103,25 +132,25 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
       Math.pow(e.clientY - dragState.startPosition.y, 2)
     );
     
-    if (moveDistance > 5 && !dragState.isDragging) {
-      setDragState(prev => ({ ...prev, isDragging: true, hasMoved: true }));
+    // 立即拖拽（取消延遲）
+    if (!dragState.isDragging) {
+      setDragState(prev => ({ ...prev, isDragging: true }));
     }
-    
+
     if (dragState.isDragging) {
       e.preventDefault();
       const rect = canvasRef.current.getBoundingClientRect();
-      const newX = Math.max(0, Math.min(
-        layoutConfig.canvasWidth - 100,
-        e.clientX - rect.left - dragState.dragOffset.x
-      ));
-      const newY = Math.max(0, Math.min(
-        layoutConfig.canvasHeight - 100,
-        e.clientY - rect.top - dragState.dragOffset.y
-      ));
+      const dims = selectedTable ? getTableDims(selectedTable) : { width: 100, height: 100 };
+      const maxX = Math.max(0, layoutConfig.canvasWidth - dims.width);
+      const maxY = Math.max(0, layoutConfig.canvasHeight - dims.height);
+      const tentativeX = e.clientX - rect.left - dragState.dragOffset.x;
+      const tentativeY = e.clientY - rect.top - dragState.dragOffset.y;
+      const newX = Math.min(maxX, Math.max(0, tentativeX));
+      const newY = Math.min(maxY, Math.max(0, tentativeY));
       
       setSelectedTable(prev => (prev ? { ...prev, position: { x: newX, y: newY } } : prev));
     }
-  }, [dragState, selectedTable, layoutConfig, isEditing]);
+  }, [dragState, selectedTable, layoutConfig, isEditing, getTableDims]);
 
   // 結束拖拽或點擊
   const handleMouseUp = useCallback(() => {

@@ -158,6 +158,14 @@ export const useTableStore = create<TableStore>()(
             logger.tableLog.error(id, new Error('Table not found for layout update'), { tableId: id });
             return;
           }
+          // 允許更新多數版面屬性（名稱、編號、形狀、大小、容量、型別、位置）
+          if (layoutData.name !== undefined) table.name = layoutData.name;
+          if (layoutData.number !== undefined) table.number = layoutData.number as any;
+          if ((layoutData as any).type !== undefined) (table as any).type = (layoutData as any).type;
+          if ((layoutData as any).shape !== undefined) (table as any).shape = (layoutData as any).shape;
+          if ((layoutData as any).size !== undefined) (table as any).size = (layoutData as any).size;
+          if (layoutData.maxCapacity !== undefined) table.maxCapacity = layoutData.maxCapacity;
+          if ((layoutData as any).capacity !== undefined) (table as any).capacity = (layoutData as any).capacity;
           if (layoutData.position) {
             table.position = { ...table.position, ...layoutData.position } as any;
           }
