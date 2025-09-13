@@ -329,3 +329,40 @@ app.on('certificate-error', (event, _webContents, _url, _error, _certificate, ca
     callback(false);
   }
 });
+
+// Dialog and JSON import/export bridges (no @electron/remote)
+ipcMain.handle('dialog:save-json', async (_evt, { data, filename }) => {
+  try {
+    const { dialog } = require('electron');
+    const result = await dialog.showSaveDialog(mainWindow, {
+      defaultPath: filename || 'export.json',
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (result.canceled || !result.filePath) return { success: false, canceled: true };
+    await fs.writeFile(result.filePath, JSON.stringify(data, null, 2), 'utf8');
+    return { success: true, path: result.filePath };
+  } catch (e) {
+    return { success: false, error: e?.message || String(e) };
+  }
+});
+
+ipcMain.handle('dialog:open-json', async () => {
+  try {
+    const { dialog } = require('electron');
+    const result = await dialog.showOpenDialog(mainWindow, {
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ],
+      properties: ['openFile']
+    });
+    if (result.canceled || result.filePaths.length === 0) return { success: false, canceled: true };
+    const data = await fs.readFile(result.filePaths[0], 'utf8');
+    return { success: true, data: JSON.parse(data) };
+  } catch (e) {
+    return { success: false, error: e?.message || String(e) };
+  }
+});

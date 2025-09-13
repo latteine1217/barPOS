@@ -115,49 +115,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDataPath: () => dataPath,
   
   // 檔案操作
-  exportToFile: async (data, filename) => {
-    try {
-      const { dialog } = require('@electron/remote');
-      const result = await dialog.showSaveDialog({
-        defaultPath: filename,
-        filters: [
-          { name: 'JSON Files', extensions: ['json'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
-      });
-      
-      if (!result.canceled && result.filePath) {
-        await fs.writeFile(result.filePath, JSON.stringify(data, null, 2), 'utf8');
-        return { success: true, path: result.filePath };
-      }
-      
-      return { success: false, canceled: true };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  },
-  
-  importFromFile: async () => {
-    try {
-      const { dialog } = require('@electron/remote');
-      const result = await dialog.showOpenDialog({
-        filters: [
-          { name: 'JSON Files', extensions: ['json'] },
-          { name: 'All Files', extensions: ['*'] }
-        ],
-        properties: ['openFile']
-      });
-      
-      if (!result.canceled && result.filePaths.length > 0) {
-        const data = await fs.readFile(result.filePaths[0], 'utf8');
-        return { success: true, data: JSON.parse(data) };
-      }
-      
-      return { success: false, canceled: true };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
+  exportToFile: async (data, filename) => ipcRenderer.invoke('dialog:save-json', { data, filename }),
+  importFromFile: async () => ipcRenderer.invoke('dialog:open-json')
 });
 
 // IPC 監聽器
