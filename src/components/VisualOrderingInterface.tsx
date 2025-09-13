@@ -95,8 +95,9 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
 
       const tableNumber = initialTableNumber || orderDetails.tableNumber;
       const subtotal = totalAmount;
-      const tip = tipEnabled ? Math.round(subtotal * (tipPercent / 100)) : 0;
-      const payable = subtotal + tip;
+      const base = subtotal + (Number.isFinite(adjustment) ? adjustment : 0);
+      const tip = tipEnabled ? Math.round(base * (tipPercent / 100)) : 0;
+      const payable = base + tip;
 
       const orderData: Order = {
         id: existingOrder?.id || `order-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
@@ -151,6 +152,9 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
   const displayItems = filteredMenuItems.filter(mi =>
     !query.trim() || mi.name.toLowerCase().includes(query.trim().toLowerCase())
   );
+
+  // Adjustment (surcharge/discount before tip)
+  const [adjustment, setAdjustment] = useState<number>(0);
 
   // Tip state
   const [tipEnabled, setTipEnabled] = useState<boolean>(false);
@@ -397,6 +401,21 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             )}
           </div>
 
+          {/* Adjustment then Tip toggle */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">加價 / 折價</h4>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={adjustment}
+                onChange={(e) => setAdjustment(Number(e.target.value) || 0)}
+                className="w-40 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                placeholder="例如 20 或 -15"
+              />
+              <span className="text-xs text-gray-500 dark:text-gray-400">將在小費之前計算</span>
+            </div>
+          </div>
+
           {/* Tip toggle */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
@@ -426,7 +445,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                     <option key={p} value={p}>{p}%</option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-600 dark:text-gray-400">小費金額：${Math.round(totalAmount * (tipPercent/100))}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">小費金額：${Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100))}</span>
               </div>
             )}
           </div>
@@ -436,9 +455,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             {/* Totals */}
             <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
-              <div className="flex justify-between"><span>小費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round(totalAmount * (tipPercent/100)) : 0}</span></div>
+              <div className="flex justify-between"><span>加價/折價</span><span>${Number.isFinite(adjustment) ? adjustment : 0}</span></div>
+              <div className="flex justify-between"><span>小費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0}</span></div>
               <div className="flex justify-between"><span>稅額</span><span>$0</span></div>
-              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${totalAmount + (tipEnabled ? Math.round(totalAmount * (tipPercent/100)) : 0)}</span></div>
+              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${(totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) + (tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0)}</span></div>
             </div>
             <div className="flex flex-col space-y-2">
               <button
