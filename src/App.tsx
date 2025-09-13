@@ -125,7 +125,7 @@ const renderActiveTab = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarCollapsed((c) => !c)}
-              className="p-2 rounded-lg hover:bg-gray-100 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50"
+              className="w-9 h-9 rounded-lg hover:bg-gray-100 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 flex items-center justify-center"
               aria-label={`切換側邊欄（${sidebarCollapsed ? '展開' : '收合'}）`}
               title="切換側邊欄"
             >

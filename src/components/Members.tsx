@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useMembers, useMemberActions } from '@/stores/membersStore';
 
 const Members: React.FC = () => {
@@ -7,36 +7,17 @@ const Members: React.FC = () => {
 
   const [name, setName] = useState('');
   const [cups, setInitialCups] = useState<number>(0);
-  const [filter, setFilter] = useState('');
-
-  const filtered = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter(m => m.name.toLowerCase().includes(q));
-  }, [members, filter]);
+  // 簡化需求：僅表格記錄名稱與杯數，不提供搜尋/過濾
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="card p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="flex-1">
-            <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-2">會員紀錄</h1>
-            <p className="text-sm text-[var(--text-muted)]">記錄會員姓名與剩餘杯數；儲值後可手動增加杯數。</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="搜尋會員..."
-              className="px-3 py-2 rounded-lg border bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-sm"
-            />
-          </div>
-        </div>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-1">會員紀錄</h1>
+        <p className="text-sm text-[var(--text-muted)]">只記錄會員名稱與剩餘杯數。</p>
       </div>
 
       <div className="card p-4 sm:p-6">
-        <h2 className="text-base font-medium text-[var(--text-primary)] mb-3">新增會員</h2>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex items-center gap-3">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -48,8 +29,8 @@ const Members: React.FC = () => {
             min={0}
             value={cups}
             onChange={(e) => setInitialCups(parseInt(e.target.value) || 0)}
-            placeholder="初始杯數（可空）"
-            className="w-40 px-3 py-2 rounded-lg border bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)]"
+            placeholder="杯數"
+            className="w-32 px-3 py-2 rounded-lg border bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)]"
           />
           <button
             onClick={() => { if (name.trim()) { addMember(name.trim(), cups || 0); setName(''); setInitialCups(0);} }}
@@ -70,7 +51,7 @@ const Members: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(m => (
+            {members.map(m => (
               <tr key={m.id} className="border-t border-[var(--glass-elevated-border)]">
                 <td className="px-4 py-3">
                   <input
@@ -94,14 +75,12 @@ const Members: React.FC = () => {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => addCups(m.id, 5)} className="px-3 py-1 rounded-lg border border-[var(--glass-elevated-border)] hover:bg-gray-50">+5 杯</button>
-                    <button onClick={() => addCups(m.id, 10)} className="px-3 py-1 rounded-lg border border-[var(--glass-elevated-border)] hover:bg-gray-50">+10 杯</button>
                     <button onClick={() => deleteMember(m.id)} className="px-3 py-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700">刪除</button>
                   </div>
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+            {members.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">目前沒有資料</td>
               </tr>
@@ -114,4 +93,3 @@ const Members: React.FC = () => {
 };
 
 export default Members;
-
