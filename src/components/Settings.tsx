@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSettings } from '../stores/settingsStore';
+import { useOrders, useTables } from '@/stores';
+import { useMenuItems } from '@/stores/menuStore';
+import { exportAllData, importAllData, type ExportData } from '@/services/storageService';
 import { logger } from '@/services/loggerService';
 
 import type { SupabaseConfig } from '@/types';
@@ -18,9 +21,10 @@ const Settings: React.FC = () => {
   
   // ✅ 必須在所有條件判斷之前調用所有 hooks
   const settingsData = useSettings();
-  const orders = undefined as unknown as any;
-  const tables = undefined as unknown as any;
-  const menuItems = undefined as unknown as any;
+  // 從各 store 讀取最新資料
+  const orders = useOrders();
+  const tables = useTables();
+  const menuItems = useMenuItems();
   const orderActions = undefined as unknown as any;
   const tableActions = undefined as unknown as any;
   const menuActions = undefined as unknown as any;
@@ -31,6 +35,8 @@ const Settings: React.FC = () => {
   const [testing, setTesting] = useState<boolean>(() => false);
   const [testResult, setTestResult] = useState<TestResult | null>(() => null);
   const [syncing, setSyncing] = useState<boolean>(() => false);
+  const [backupMsg, setBackupMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!settingsData) {
     return (
@@ -390,6 +396,87 @@ const Settings: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 資料備份 / 還原 */}
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">💾 資料備份 / 還原</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-4">匯出/匯入本地資料（訂單、桌位、菜單、佈局、設定）。桌面版將使用系統檔案對話框；瀏覽器將下載/讀取 JSON 檔。</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={async () => {
+              try {
+                setBackupMsg(null);
+                const data = await exportAllData();
+                // Electron：用 native dialog 儲存
+                if (window.electronAPI?.exportToFile) {
+                  const res = await window.electronAPI.exportToFile(data, `pos-backup-${new Date().toISOString().slice(0,10)}.json`);
+                  setBackupMsg(res.success ? '備份已匯出' : (res.canceled ? '已取消' : `匯出失敗: ${res.error}`));
+                  return;
+                }
+                // Web：下載 JSON 檔
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pos-backup-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setBackupMsg('備份已下載');
+              } catch (e) {
+                setBackupMsg(`匯出失敗: ${(e as Error).message}`);
+              }
+            }}
+          >
+            匯出備份
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={async () => {
+              setBackupMsg(null);
+              // Electron：用 native dialog 開啟
+              if (window.electronAPI?.importFromFile) {
+                const res = await window.electronAPI.importFromFile();
+                if (res.success && res.data) {
+                  const ok = await importAllData(res.data as ExportData);
+                  setBackupMsg(ok ? '備份已還原' : '還原失敗');
+                } else {
+                  setBackupMsg(res.canceled ? '已取消' : `開啟失敗: ${res.error}`);
+                }
+                return;
+              }
+              // Web：觸發隱藏 input
+              fileInputRef.current?.click();
+            }}
+          >
+            匯入備份
+          </button>
+          {backupMsg && <span className="text-sm text-[var(--text-secondary)]">{backupMsg}</span>}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const text = await file.text();
+                const data = JSON.parse(text) as ExportData;
+                const ok = await importAllData(data);
+                setBackupMsg(ok ? '備份已還原' : '還原失敗');
+              } catch (err) {
+                setBackupMsg(`讀取失敗: ${(err as Error).message}`);
+              } finally {
+                e.currentTarget.value = '';
+              }
+            }}
+          />
         </div>
       </div>
     </div>

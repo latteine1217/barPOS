@@ -16,7 +16,7 @@ interface StorageInfo {
   size: number;
 }
 
-interface ExportData {
+export interface ExportData {
   platform: Platform;
   exportDate: string;
   version: string;
@@ -398,6 +398,17 @@ export const loadFromStorage = async <T = unknown>(key: string, defaultValue?: T
   return service.getItem<T>(key, defaultValue);
 };
 
+// 匯出/匯入所有資料（提供 UI 使用）
+export const exportAllData = async (): Promise<ExportData> => {
+  const service = StorageService.getInstance();
+  return service.exportData();
+};
+
+export const importAllData = async (data: ExportData): Promise<boolean> => {
+  const service = StorageService.getInstance();
+  return service.importData(data);
+};
+
 // 防抖儲存函數
 import { debounce } from '../utils/debounce';
 
@@ -431,4 +442,3 @@ export const saveBatchDebouncedToStorage = (data: Record<string, unknown>, delay
     saveDebouncedToStorage(key, value, delay);
   });
 };
-
