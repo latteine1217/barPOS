@@ -9,6 +9,8 @@ type Accent = 'blue' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan';
 interface SettingsState {
   theme: 'light' | 'dark' | 'auto';
   accent: Accent;
+  // 營業日截止小時（0-23）。如設為 3，表示凌晨 3:00 才切換新的一天
+  businessDayCutoffHour: number;
   
   supabaseConfig: {
     url: string;
@@ -30,6 +32,7 @@ interface SettingsActions {
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
   setAccent: (accent: Accent) => void;
+  setBusinessDayCutoff: (hour: number) => void;
   
   
   
@@ -51,6 +54,7 @@ export type SettingsStore = SettingsState & SettingsActions;
 const initialState: SettingsState = {
   theme: 'light',
   accent: 'blue',
+  businessDayCutoffHour: 3,
   
   supabaseConfig: {
     url: '',
@@ -107,6 +111,13 @@ export const useSettingsStore = create<SettingsStore>()(
         });
       },
 
+      setBusinessDayCutoff: (hour: number) => {
+        set((state) => {
+          const h = Math.max(0, Math.min(23, Math.floor(hour)));
+          state.businessDayCutoffHour = h;
+        });
+      },
+
 
 
       // Supabase 設定
@@ -157,6 +168,7 @@ export const useSettingsStore = create<SettingsStore>()(
       partialize: (state) => ({
         theme: state.theme,
         accent: state.accent,
+        businessDayCutoffHour: state.businessDayCutoffHour,
         
         supabaseConfig: state.supabaseConfig,
         layoutConfig: state.layoutConfig,

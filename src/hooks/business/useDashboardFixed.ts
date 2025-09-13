@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOrderStore } from '@/stores';
+import { useSettingsStore } from '@/stores/settingsStore';
 import type { Order } from '@/types';
 
 interface DashboardData {
@@ -38,6 +39,7 @@ let lastRecentOrdersRef: Order[] | null = null;
 let lastRecentOrdersCache: Order[] | null = null;
 
 export const useDashboard = (): DashboardData => {
+  const cutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
   // ✅ 正確的時間更新機制
   const [currentTime, setCurrentTime] = useState(() => 
     new Date().toLocaleTimeString('zh-TW', {
@@ -69,10 +71,22 @@ export const useDashboard = (): DashboardData => {
       return lastTodayStatsCache;
     }
     
-    const todayString = getTodayString();
-    const todayOrders = orders.filter(order => 
-      new Date(order.createdAt).toDateString() === todayString
-    );
+    // 業務「營業日」區間：從 cutoffHour 當天到 +1 天的 cutoffHour
+    const now = new Date();
+    const end = new Date(now);
+    // 若現在時間 >= 截止小時，結束時間應該是「明天的 cutoffHour」；
+    // 否則為「今天的 cutoffHour」。
+    if (now.getHours() >= cutoffHour) {
+      end.setDate(end.getDate() + 1);
+    }
+    end.setHours(cutoffHour, 0, 0, 0);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 1);
+
+    const todayOrders = orders.filter(order => {
+      const t = new Date(order.createdAt).getTime();
+      return t >= start.getTime() && t < end.getTime();
+    });
     
     const result = {
       todayOrderCount: todayOrders.length,

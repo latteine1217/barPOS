@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react';
 import { useDashboard } from '@/hooks/business/useDashboard';
 import type { OrderStatus, Order } from '@/types';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 type TabNav = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
 
@@ -47,6 +48,8 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
     return amount.toLocaleString();
   }, []);
 
+  const cutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
+
   return (
     <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Header with greeting */}
@@ -67,7 +70,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
       </div>
 
       {/* KPI Cards with enhanced design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         <div className="card p-6 group">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -81,6 +84,24 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
             </div>
             <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               💰
+            </div>
+          </div>
+        </div>
+
+        {/* 營業結算（跨日 cutoff） */}
+        <div className="card p-6 group">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-[var(--text-secondary)] mb-2">營業結算</p>
+              <p className="text-3xl font-bold text-[var(--text-primary)]">
+                ${formatCurrency(todayRevenue)}
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                訂單 {todayOrderCount}，結算界線 {cutoffHour.toString().padStart(2,'0')}:00
+              </p>
+            </div>
+            <div className="w-16 h-16 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+              🧾
             </div>
           </div>
         </div>

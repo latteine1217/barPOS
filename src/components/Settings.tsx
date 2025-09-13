@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useSettings } from '../stores/settingsStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { useOrders, useTables } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
 import { exportAllData, importAllData, type ExportData } from '@/services/storageService';
@@ -31,6 +32,8 @@ const Settings: React.FC = () => {
   
   // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
   const { theme, accent, supabaseConfig, updateSupabaseConfig, setTheme, setAccent } = settingsData || ({} as any);
+  const businessDayCutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
+  const setBusinessDayCutoff = useSettingsStore((s) => s.setBusinessDayCutoff);
 
   const [testing, setTesting] = useState<boolean>(() => false);
   const [testResult, setTestResult] = useState<TestResult | null>(() => null);
@@ -395,6 +398,27 @@ const Settings: React.FC = () => {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 營運設定 */}
+      <div className="card p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">🏪 營運設定</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+              營業結算截止時間（小時）
+            </label>
+            <p className="text-xs text-[var(--text-muted)] mb-2">跨日統計用，0–23，例如 3 表示以凌晨 3:00 作為分界。</p>
+            <input
+              type="number"
+              min={0}
+              max={23}
+              value={businessDayCutoffHour}
+              onChange={(e) => setBusinessDayCutoff?.(Number(e.target.value) || 0)}
+              className="w-40 rounded-lg border bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] px-3 py-2 text-[var(--text-primary)]"
+            />
           </div>
         </div>
       </div>
