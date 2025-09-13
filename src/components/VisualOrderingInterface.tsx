@@ -142,27 +142,35 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
     return spiritNames[spirit] || spirit;
   };
 
+  const [query, setQuery] = useState('');
+  const displayItems = filteredMenuItems.filter(mi =>
+    !query.trim() || mi.name.toLowerCase().includes(query.trim().toLowerCase())
+  );
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {props.isAddOnMode ? '加點餐點' : '新增訂單'}
-          </h2>
-          {props.selectedTable && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              桌位 {props.selectedTable.number}
-            </p>
-          )}
+      {/* Header / Search */}
+      <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-shrink-0">
+          {props.isAddOnMode ? '加點餐點' : '新增訂單'}
+        </h2>
+        <div className="flex-1 relative">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搜尋品項..."
+            className="w-full pl-10 pr-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
         </div>
-        <div className="text-right">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">
-            總計: ${totalAmount}
+        {props.selectedTable && (
+          <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+            桌位 {props.selectedTable.number}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {orderItems.length} 項餐點
-          </div>
+        )}
+        <div className="text-right hidden sm:block">
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">${totalAmount}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{orderItems.length} 項</div>
         </div>
       </div>
 
@@ -184,10 +192,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  className={`px-3 py-1 rounded-full text-sm font-medium border ${
                     selectedCategory === category
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                      ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {getCategoryDisplayName(category)}
@@ -202,10 +210,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                   <button
                     key={spirit}
                     onClick={() => setSelectedBaseSpirit(spirit)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium border ${
                       selectedBaseSpirit === spirit
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {getBaseSpiritDisplayName(spirit)}
@@ -218,27 +226,26 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
           {/* Menu Items Grid */}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredMenuItems.map((menuItem) => (
+              {displayItems.map((menuItem) => (
                 <div
                   key={menuItem.id}
                   onClick={() => addToOrder(menuItem)}
-                  className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-lg transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-lg transition-all"
                 >
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                    {menuItem.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    {menuItem.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-blue-600">
-                      ${menuItem.price}
-                    </span>
-                    {menuItem.available !== false && (
-                      <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                        加入
-                      </button>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+                      {menuItem.imageUrl ? (
+                        <img src={menuItem.imageUrl} alt={menuItem.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg">🍸</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                        {menuItem.name}
+                      </h3>
+                      <div className="text-sm font-semibold text-[var(--color-accent)]">${menuItem.price}</div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -247,7 +254,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
         </div>
 
         {/* Order Summary */}
-        <div className="w-80 border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className="w-[360px] border-l border-gray-200 dark:border-gray-700 flex flex-col">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               訂單明細
@@ -392,6 +399,12 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
 
           {/* Action Buttons */}
           <div className="p-4 mt-auto">
+            {/* Totals */}
+            <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+              <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
+              <div className="flex justify-between"><span>稅額</span><span>$0</span></div>
+              <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${totalAmount}</span></div>
+            </div>
             <div className="flex flex-col space-y-2">
               <button
                 onClick={handleConfirmOrder}
@@ -404,7 +417,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
               >
                 {props.isAddOnMode ? '確認加點' : '確認訂單'}
               </button>
-              
+
               {orderItems.length > 0 && (
                 <button
                   onClick={clearOrder}
@@ -413,7 +426,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                   清空訂單
                 </button>
               )}
-              
+
               <button
                 onClick={() => props.onOrderComplete(null)}
                 className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
