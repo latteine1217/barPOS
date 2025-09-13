@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import GlobalErrorBoundary from './components/ErrorBoundary/GlobalErrorBoundary';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import Members from './components/Members';
 import Menu from './components/Menu';
 import Tables from './components/Tables';
 import History from './components/History';
@@ -17,7 +18,7 @@ import LogViewer from './components/LogViewer';
 import VisualOrderingModal from './components/VisualOrderingModal';
 import './index.css';
 
-type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
+type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout' | 'members';
 
 function AppContent() {
   // 直接使用個別 store hooks 避免組合選擇器的循環依賴
@@ -34,6 +35,7 @@ function AppContent() {
   
   const [activeTab, setActiveTab] = useState<TabType>(() => 'tables');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => false);
 
   // ✅ 使用 useCallback 穩定狀態更新函數引用
   const handleSetActiveTab = useCallback((tab: TabType) => {
@@ -63,6 +65,8 @@ const renderActiveTab = () => {
         return <div className="page-transition active"><Dashboard onNavigate={handleSetActiveTab} /></div>;
       case 'menu':
         return <div className="page-transition active"><Menu /></div>;
+      case 'members':
+        return <div className="page-transition active"><Members /></div>;
       case 'history':
         return <div className="page-transition active"><History /></div>;
       case 'analytics':
@@ -112,9 +116,27 @@ const renderActiveTab = () => {
           setActiveTab={handleSetActiveTab}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={handleSetSidebarOpen}
+          collapsed={sidebarCollapsed}
         />
       
       <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* 桌面頂部工具列：收合側邊欄按鈕 + 標題 */}
+        <div className="hidden lg:flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white/60 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              className="p-2 rounded-lg hover:bg-gray-100 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50"
+              aria-label={`切換側邊欄（${sidebarCollapsed ? '展開' : '收合'}）`}
+              title="切換側邊欄"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-base font-semibold text-slate-800">調酒酒吧 POS</h1>
+          </div>
+        </div>
+
         {/* 移動端頂部導航欄 - 玻璃風格 */}
         <div className="lg:hidden card border-0 border-b border-white/20 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
           <button
@@ -129,7 +151,7 @@ const renderActiveTab = () => {
           <div className="w-10"></div> {/* 佔位符保持平衡 */}
         </div>
 
-        <main className="flex-1 overflow-auto">
+       <main className="flex-1 overflow-auto">
             {renderActiveTab()}
          </main>
           

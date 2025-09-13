@@ -45,6 +45,7 @@ export const STORAGE_KEYS = {
   ORDERS: 'restaurant_pos_orders',
   MENU_ITEMS: 'restaurant_pos_menu',
   TABLES: 'restaurant_pos_tables',
+  MEMBERS: 'restaurant_pos_members',
   LAYOUT_CONFIG: 'restaurant_pos_layout',
   STATS: 'restaurant_pos_stats',
   

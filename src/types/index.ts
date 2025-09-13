@@ -187,6 +187,16 @@ export interface AppSettings {
   enableOfflineMode: boolean;
 }
 
+// ===== 會員相關類型 =====
+export interface MemberRecord {
+  id: ID;
+  name: string;
+  cups: number; // 剩餘杯數
+  notes?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 // ===== 統計相關類型 =====
 export interface DailyStats {
   date: string;

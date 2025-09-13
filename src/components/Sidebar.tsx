@@ -7,6 +7,7 @@ interface SidebarProps {
   setActiveTab: (tab: TabType) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  collapsed?: boolean;
 }
 
 const items: { id: TabType; label: string; icon: string }[] = [
@@ -14,12 +15,13 @@ const items: { id: TabType; label: string; icon: string }[] = [
   { id: 'layout', label: '佈局編輯', icon: '🎨' },
   { id: 'dashboard', label: '儀表板', icon: '📊' },
   { id: 'menu', label: '酒單管理', icon: '🍸' },
+  { id: 'members', label: '會員紀錄', icon: '👤' },
   { id: 'history', label: '歷史訂單', icon: '📋' },
   { id: 'analytics', label: '營運分析', icon: '📈' },
   { id: 'settings', label: '設定', icon: '⚙️' }
 ];
 
-const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
+const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, collapsed = false }) => {
   const handleNavClick = useCallback((tabId: TabType) => {
     if (activeTab === tabId) return;
     setActiveTab(tabId);
@@ -29,22 +31,23 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
   return (
     <>
       {/* 桌面版側邊欄 - 現代白色設計 */}
-      <div className="hidden lg:flex lg:flex-col w-72 bg-white border-r border-gray-200 shadow-sm">
+      <div className={`hidden lg:flex lg:flex-col ${collapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-200 shadow-sm transition-all duration-200`}>
         <nav className="flex-1 p-6">
           <ul className="space-y-3">
             {items.map((item) => (
               <li key={item.id}>
                 <button
                   onClick={() => handleNavClick(item.id)}
-                  className={`w-full text-left px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center border ${
+                  className={`w-full text-left ${collapsed ? 'px-3 justify-center' : 'px-5'} py-3 rounded-xl font-medium transition-all duration-200 flex items-center border ${
                     activeTab === item.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                       : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50'
                   }`}
                   aria-label={`切換到${item.label}`}
+                  title={item.label}
                 >
-                  <span className="text-2xl mr-4" aria-hidden="true" role="presentation">{item.icon}</span>
-                  <span className="text-lg">{item.label}</span>
+                  <span className={`text-2xl ${collapsed ? '' : 'mr-4'}`} aria-hidden="true" role="presentation">{item.icon}</span>
+                  {!collapsed && <span className="text-base">{item.label}</span>}
                 </button>
               </li>
             ))}

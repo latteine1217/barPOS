@@ -46,6 +46,13 @@ export {
   useStats
 } from './settingsStore';
 
+export {
+  useMembersStore,
+  useMembers,
+  useMembersLoaded,
+  useMemberActions,
+} from './membersStore';
+
 // 組合 store
 export { 
   useAppStore,
