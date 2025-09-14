@@ -154,9 +154,11 @@ const renderActiveTab = () => {
        <main className="flex-1 overflow-auto">
             {renderActiveTab()}
          </main>
-          
-         {/* 開發環境下顯示日誌查看器 */}
-         {import.meta.env.DEV && <LogViewer />}
+         
+         {/* 以環境變數控制是否顯示日誌查看器 */}
+         {import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOG_VIEWER === 'true' && (
+           <LogViewer />
+         )}
        </div>
        <VisualOrderingModal />
      </div>

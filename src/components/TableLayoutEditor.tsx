@@ -359,7 +359,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                     {table.name}
                   </div>
                   {table.status === 'occupied' && (
-                    <div className="text-xs opacity-90">
+                    <div className="text-[11px] font-normal opacity-90">
                       {table.customers}人
                     </div>
                   )}

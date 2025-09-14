@@ -269,8 +269,10 @@
   .table-node {
     @apply glass-elevated;
     display: flex;
+    flex-direction: column; /* 垂直堆疊名稱與人數 */
     align-items: center;
     justify-content: center;
+    gap: 2px;
     text-align: center;
     font-weight: 700;
     color: white;

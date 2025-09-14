@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/services/loggerService';
-import type { Order, Table, MenuItem, ApiResponse } from '@/types';
+import type { Order, Table, MenuItem, ApiResponse, MemberRecord } from '@/types';
 
 interface SyncResult {
   success: number;
@@ -12,12 +12,14 @@ interface SyncResults {
   orders: SyncResult;
   tables: SyncResult;
   menuItems: SyncResult;
+  members: SyncResult;
 }
 
 interface LocalData {
   orders: Order[];
   tables: Table[];
   menuItems: MenuItem[];
+  members: MemberRecord[];
 }
 
 interface ConnectionTestResult {
@@ -247,7 +249,8 @@ class SupabaseService {
       const results: SyncResults = {
         orders: { success: 0, failed: 0, errors: [] },
         tables: { success: 0, failed: 0, errors: [] },
-        menuItems: { success: 0, failed: 0, errors: [] }
+        menuItems: { success: 0, failed: 0, errors: [] },
+        members: { success: 0, failed: 0, errors: [] }
       };
 
       // 同步訂單
@@ -280,6 +283,17 @@ class SupabaseService {
         } else {
           results.menuItems.failed++;
           results.menuItems.errors.push(result.error || '未知錯誤');
+        }
+      }
+
+      // 同步會員資料
+      for (const member of localData.members) {
+        const result = await this.upsertMember(member);
+        if (result.success) {
+          results.members.success++;
+        } else {
+          results.members.failed++;
+          results.members.errors.push(result.error || '未知錯誤');
         }
       }
 
@@ -340,6 +354,7 @@ class SupabaseService {
       category: dbItem.category,
       baseSpirit: dbItem.base_spirit,
       price: dbItem.price,
+      cost: dbItem.cost ?? undefined,
       description: dbItem.description,
       available: dbItem.available,
       imageUrl: dbItem.image_url,
@@ -397,6 +412,7 @@ class SupabaseService {
         category: menuItem.category,
         base_spirit: menuItem.baseSpirit,
         price: menuItem.price,
+        cost: menuItem.cost ?? null,
         description: menuItem.description,
         available: menuItem.available,
         image_url: menuItem.imageUrl,
@@ -425,6 +441,55 @@ class SupabaseService {
         success: false,
         error: error instanceof Error ? error.message : '更新菜單項目失敗'
       };
+    }
+  }
+
+  // === Members ===
+  async fetchMembers(): Promise<ApiResponse<MemberRecord[]>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const members: MemberRecord[] = (data || []).map((m: any) => this.transformMemberFromDatabase(m));
+      return { success: true, data: members, message: `Fetched ${members.length} members` };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : '獲取會員失敗' };
+    }
+  }
+
+  private transformMemberFromDatabase(db: any): MemberRecord {
+    return {
+      id: db.id,
+      name: db.name,
+      cups: Number(db.cups) || 0,
+      notes: db.notes || undefined,
+      createdAt: db.created_at,
+      updatedAt: db.updated_at
+    };
+  }
+
+  private async upsertMember(member: MemberRecord): Promise<ApiResponse<MemberRecord>> {
+    try {
+      const payload = {
+        id: member.id,
+        name: member.name,
+        cups: member.cups,
+        notes: member.notes ?? null,
+        updated_at: new Date().toISOString()
+      };
+      const { data, error } = await this.supabase
+        .from('members')
+        .upsert([payload])
+        .select()
+        .single();
+      if (error) throw error;
+      return { success: true, data: this.transformMemberFromDatabase(data), message: 'Member upserted' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : '更新會員失敗' };
     }
   }
 }

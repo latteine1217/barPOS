@@ -33,14 +33,15 @@ const initializeMobileFeatures = async (): Promise<void> => {
 let devToolsInitialized = false; // ✅ 防止 StrictMode 雙重初始化
 
 const initializeDevTools = (): void => {
-  // 只在開發環境啟用 console 攔截器，並防止重複初始化
-  if (import.meta.env.DEV && !devToolsInitialized) {
+  const enableLogViewer = import.meta.env.VITE_ENABLE_LOG_VIEWER === 'true';
+  // 僅在 DEV 且開啟環境變數時啟用，並防止重複初始化
+  if (import.meta.env.DEV && enableLogViewer && !devToolsInitialized) {
     devToolsInitialized = true;
     initializeConsoleInterceptor({
       viteDevUrl: 'http://localhost:5173',
       componentName: 'Cocktail-Bar-POS',
       enabledTypes: ['log', 'info', 'warn', 'error', 'debug'],
-      enableViteLogger: true,
+      enableViteLogger: false,
       enableLocalStorage: true,
     });
     logger.info('調酒酒吧 POS 系統啟動', { component: 'main' });

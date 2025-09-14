@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useSettings } from '../stores/settingsStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { useOrders, useTables } from '@/stores';
+import { useOrders, useTables, useMembers, useSetMembers } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
 import { exportAllData, importAllData, type ExportData } from '@/services/storageService';
 import { logger } from '@/services/loggerService';
@@ -26,9 +26,12 @@ const Settings: React.FC = () => {
   const orders = useOrders();
   const tables = useTables();
   const menuItems = useMenuItems();
+  const members = useMembers();
+  const setMembers = useSetMembers();
   const orderActions = undefined as unknown as any;
   const tableActions = undefined as unknown as any;
   const menuActions = undefined as unknown as any;
+  // Members store currently lacks setMembers; only upload in sync for now
   
   // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
   const { theme, accent, supabaseConfig, updateSupabaseConfig, setTheme, setAccent } = settingsData || ({} as any);
@@ -120,7 +123,8 @@ const Settings: React.FC = () => {
       const localData = {
         orders: orders || [],
         tables: tables || [],
-        menuItems: menuItems || []
+        menuItems: menuItems || [],
+        members: members || []
       };
 
       logger.debug('Local data prepared for sync', { component: 'Settings', action: 'syncToSupabase', dataCount: { orders: localData.orders.length, tables: localData.tables.length, menuItems: localData.menuItems.length } });
@@ -130,8 +134,8 @@ const Settings: React.FC = () => {
       
       if (result.success) {
         const { results } = result.data!;
-        const totalSuccess = results.orders.success + results.tables.success + results.menuItems.success;
-        const totalFailed = results.orders.failed + results.tables.failed + results.menuItems.failed;
+        const totalSuccess = results.orders.success + results.tables.success + results.menuItems.success + results.members.success;
+        const totalFailed = results.orders.failed + results.tables.failed + results.menuItems.failed + results.members.failed;
         
         let message = `同步完成！\n成功: ${totalSuccess} 項`;
         
@@ -161,10 +165,11 @@ const Settings: React.FC = () => {
       const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
       
       // 從 Supabase 獲取資料
-      const [ordersResult, tablesResult, menuResult] = await Promise.all([
+      const [ordersResult, tablesResult, menuResult, membersResult] = await Promise.all([
         supabaseService.fetchOrders(),
         supabaseService.fetchTables(),
-        supabaseService.fetchMenuItems()
+        supabaseService.fetchMenuItems(),
+        supabaseService.fetchMembers()
       ]);
 
       let successCount = 0;
@@ -189,6 +194,14 @@ const Settings: React.FC = () => {
         successCount++;
       } else if (!menuResult.success) {
         errorMessages.push('菜單同步失敗: ' + menuResult.error);
+      }
+
+      // 會員資料直接寫入 members store
+      if (membersResult.success && membersResult.data) {
+        setMembers(membersResult.data);
+        successCount++;
+      } else if (!membersResult.success) {
+        errorMessages.push('會員同步失敗: ' + membersResult.error);
       }
 
       if (successCount > 0) {
@@ -501,6 +514,28 @@ const Settings: React.FC = () => {
               }
             }}
           />
+        </div>
+      </div>
+      {/* Footer */}
+      <div className="pt-2">
+        <div className="border-t border-[var(--glass-elevated-border)] pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+          <span className="font-medium text-[var(--text-secondary)]">調酒酒吧管理系統 - Cocktail Bar POS</span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/latteine1217/cocktail-bar-pos-system"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[var(--text-primary)] underline-offset-2 hover:underline"
+            >
+              GitHub 專案連結
+            </a>
+            <a
+              href="mailto:felix.tc.tw@gmail.com"
+              className="hover:text-[var(--text-primary)] underline-offset-2 hover:underline"
+            >
+              作者聯絡：felix.tc.tw@gmail.com
+            </a>
+          </div>
         </div>
       </div>
     </div>

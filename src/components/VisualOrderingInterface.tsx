@@ -167,35 +167,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-shrink-0">
           {props.isAddOnMode ? '加點餐點' : '新增訂單'}
         </h2>
-        {/* People count (left of table badge) */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
-            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
-          >
-            -
-          </button>
-          <input
-            type="number"
-            min={1}
-            value={orderDetails.customers}
-            onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
-            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
-          />
-          <button
-            type="button"
-            onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
-            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
-          >
-            +
-          </button>
-        </div>
-        {props.selectedTable && (
-          <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            桌位 {props.selectedTable.number}
-          </div>
-        )}
+        {/* Search input takes available width */}
         <div className="flex-1 relative">
           <input
             value={query}
@@ -205,10 +177,56 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
         </div>
-        <div className="text-right hidden sm:block">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">${totalAmount}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">{orderItems.length} 項</div>
+        {/* Table and People to the right of search */}
+        <div className="flex items-center gap-3">
+          {/* Table: show selected or input when not preset */}
+          {props.selectedTable ? (
+            <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+              桌位 {props.selectedTable.number}
+            </div>
+          ) : !props.initialTableNumber ? (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 dark:text-gray-300">桌號</label>
+              <input
+                type="number"
+                value={orderDetails.tableNumber}
+                onChange={(e) => updateOrderDetails({ tableNumber: e.target.value })}
+                className="w-20 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                placeholder="桌號"
+              />
+            </div>
+          ) : (
+            <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+              桌位 {props.initialTableNumber}
+            </div>
+          )}
+
+          {/* People count */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
+              className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              -
+            </button>
+            <input
+              type="number"
+              min={1}
+              value={orderDetails.customers}
+              onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
+              className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
+            />
+            <button
+              type="button"
+              onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
+              className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >
+              +
+            </button>
+          </div>
         </div>
+        {/* Removed header total; totals shown at bottom */}
       </div>
 
       {/* Error Display */}
@@ -283,13 +301,14 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
 
         {/* Order Summary */}
         <div className="w-[360px] border-l border-gray-200 dark:border-gray-700 flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              訂單明細
-            </h3>
-            
-            {/* Order Items */}
-            <div className="space-y-3 max-h-64 overflow-y-auto">
+          {/* Scrollable content: order items + details + status + adjustments */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                訂單明細
+              </h3>
+              {/* Order Items */}
+              <div className="space-y-3">
               {orderItems.map((item, index) => (
                 <div key={item.id} className="flex items-center justify-between">
                   <div className="flex-1">
@@ -321,55 +340,38 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                   </div>
                 </div>
               ))}
+              {orderItems.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+                  尚未選擇餐點
+                </p>
+              )}
+            </div>
+            {/* Close Order Items section wrapper */}
             </div>
 
-            {orderItems.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-                尚未選擇餐點
-              </p>
-            )}
-          </div>
-
-          {/* Order Details Form */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            {!props.initialTableNumber && (
+            {/* Order Details Form (notes only; table/people moved to header) */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  桌號
+                  備註
                 </label>
-                <input
-                  type="number"
-                  value={orderDetails.tableNumber}
-                  onChange={(e) => updateOrderDetails({ tableNumber: e.target.value })}
+                <textarea
+                  value={orderDetails.notes}
+                  onChange={(e) => updateOrderDetails({ notes: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="請輸入桌號"
+                  rows={3}
+                  placeholder="特殊需求或備註"
                 />
               </div>
-            )}
-
-            {/* 人數已移至頂部工具列 */}
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                備註
-              </label>
-              <textarea
-                value={orderDetails.notes}
-                onChange={(e) => updateOrderDetails({ notes: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-                placeholder="特殊需求或備註"
-              />
             </div>
-          </div>
 
-          {/* Order Status Controls (existing orders) */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">訂單狀態</h3>
-            {existingOrder ? (
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => handleStatusChange('pending')}
+            {/* Order Status Controls (existing orders) */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">訂單狀態</h3>
+              {existingOrder ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleStatusChange('pending')}
                   className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
                     currentStatus === 'pending'
                       ? 'bg-amber-100 border-amber-300 text-amber-800'
@@ -414,13 +416,13 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             )}
           </div>
 
-          {/* Adjustment then Service Fee toggle */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">加價 / 折價</h4>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setAdjustment(v => (Number.isFinite(v) ? v : 0) - 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
-              <input
-                type="number"
+            {/* Adjustment then Service Fee toggle */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">加價 / 折價</h4>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setAdjustment(v => (Number.isFinite(v) ? v : 0) - 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
+                <input
+                  type="number"
                 step={10}
                 value={adjustment}
                 onChange={(e) => setAdjustment(Number(e.target.value) || 0)}
@@ -429,15 +431,15 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
               <button type="button" onClick={() => setAdjustment(v => (Number.isFinite(v) ? v : 0) + 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">+</button>
               <span className="text-xs text-gray-500 dark:text-gray-400">先於服務費計算</span>
             </div>
-          </div>
+            </div>
 
-          {/* Service fee toggle */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">服務費</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">開啟後可加入百分比服務費</p>
-              </div>
+            {/* Service fee toggle */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">服務費</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">開啟後可加入百分比服務費</p>
+                </div>
               <button
                 type="button"
                 role="switch"
@@ -463,34 +465,11 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                 <span className="text-xs text-gray-600 dark:text-gray-400">服務費：${Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100))}</span>
               </div>
             )}
+            </div>
           </div>
 
           {/* Action Buttons */}
           <div className="mt-auto sticky bottom-0 p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-t border-gray-200 dark:border-gray-700">
-            {/* Compact service fee toggle (fixed at bottom) */}
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-sm text-gray-700 dark:text-gray-300">服務費</div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={tipEnabled}
-                  onClick={() => setTipEnabled((v) => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${tipEnabled ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${tipEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                </button>
-                {tipEnabled && (
-                  <select
-                    value={tipPercent}
-                    onChange={(e) => setTipPercent(parseInt(e.target.value) || 0)}
-                    className="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
-                  >
-                    {[5,10,12,15,18,20].map((p) => (<option key={p} value={p}>{p}%</option>))}
-                  </select>
-                )}
-              </div>
-            </div>
             {/* Totals */}
             <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>

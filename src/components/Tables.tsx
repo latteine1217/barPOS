@@ -87,19 +87,19 @@ const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (
       } ${selected ? 'ring-4 ring-blue-400' : ''}`}
     >
       <div className="text-center">
-        <div className="text-xl font-bold mb-2">位 {table.number}</div>
+        <div className="text-xl font-bold mb-1">位 {table.number}</div>
+        {table.status === 'occupied' && (
+          <div className="text-[11px] text-black/70 dark:text-white/80 mb-1">
+            {table.customers} 人
+          </div>
+        )}
         <div className="text-sm opacity-75 mb-2">
           {table.status === 'occupied' && table.currentOrder
             ? OrderStatusText[table.currentOrder.status]
             : StatusText[table.status]}
         </div>
-        {table.status === 'occupied' && (
-          <div className="text-xs">
-            {table.customers} 人
-            {table.currentOrder && (
-              <div className="mt-1">${table.currentOrder.total}</div>
-            )}
-          </div>
+        {table.status === 'occupied' && table.currentOrder && (
+          <div className="text-xs">${table.currentOrder.total}</div>
         )}
       </div>
       <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} />
@@ -175,21 +175,9 @@ const Tables: React.FC = memo(() => {
   const handleTableClick = useCallback((table: Table) => {
     if (!table || !table.id) return;
     const currentOrder = table.orderId ? ordersById.get(table.orderId as any) || null : null;
-    // 若已結帳，詢問是否建立新訂單
+    // 若已結帳：不再自動建立新訂單，依賴手動釋放桌位
     if (currentOrder && currentOrder.status === 'paid') {
-      const confirmNew = window.confirm('此桌已結帳，是否建立新訂單？');
-      if (!confirmNew) return;
-      const initialCustomers = table.customers || 1;
-      open({
-        selectedTable: table,
-        initialCustomers,
-        existingOrder: null,
-        isAddOnMode: false,
-        menuItems,
-        onComplete: onComplete(table, null),
-        updateOrderStatus: updateOrderStatusCb,
-      });
-      return;
+      return; // 保持桌位為佔用狀態，直到使用者在其他流程中手動釋放
     }
     const isAddOnMode = !!currentOrder && table.status === 'occupied' && currentOrder.status !== 'paid';
     const initialCustomers = table.customers || currentOrder?.customers || 1;

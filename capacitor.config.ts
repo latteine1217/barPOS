@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.restaurant.pos.system',
-  appName: '餐廳管理系統',
+  appName: '調酒酒吧管理系統',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

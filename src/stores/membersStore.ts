@@ -17,6 +17,7 @@ interface MembersActions {
   addCups: (id: ID, cups: number) => void;
   useCups: (id: ID, cups?: number) => void; // 預設 1 杯
   setCups: (id: ID, cups: number) => void;
+  setMembers: (members: MemberRecord[]) => void;
 }
 
 export type MembersStore = MembersState & MembersActions;
@@ -88,6 +89,13 @@ export const useMembersStore = create<MembersStore>()(
           m.updatedAt = new Date().toISOString();
         });
       },
+
+      setMembers: (members: MemberRecord[]) => {
+        set((s) => {
+          s.members = Array.isArray(members) ? members.map(m => ({ ...m })) : [];
+          s.isLoaded = true;
+        });
+      },
     })),
     { name: 'members-store', partialize: (s) => ({ members: s.members }) }
   )
@@ -103,3 +111,4 @@ export const useAddCups = () => useMembersStore((s) => s.addCups);
 export const useUseCups = () => useMembersStore((s) => s.useCups);
 export const useSetCups = () => useMembersStore((s) => s.setCups);
 export const useMembersInitialize = () => useMembersStore((s) => s.initialize);
+export const useSetMembers = () => useMembersStore((s) => s.setMembers);

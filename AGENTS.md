@@ -59,6 +59,95 @@ src/
 └── types/             # TypeScript 類型定義
 ```
 
+### 專案目錄樹（v4.0 實際快照）
+
+以下為目前儲存庫主要結構，便於快速定位檔案位置。為精簡閱讀，已略過大型目錄（node_modules、dist、dist-electron、android、ios、public、supabase 等）。
+
+```
+ROOT (depth=2)
+.
+├── .github/
+├── AGENTS.md
+├── API_GUIDE.md
+├── README.md
+├── SUPABASE_GUIDE.md
+├── TESTING_GUIDE.md
+├── TYPE_SYSTEM_BEST_PRACTICES.md
+├── electron/
+├── index.html
+├── package.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── src/
+    ├── App.tsx
+    ├── components/
+    ├── config/
+    ├── hooks/
+    ├── services/
+    ├── stores/
+    ├── types/
+    ├── utils/
+    ├── index.css
+    └── main.tsx
+
+SRC (depth=3)
+src
+├── components
+│   ├── Dashboard.tsx
+│   ├── Tables.tsx
+│   ├── TableLayoutEditor.tsx
+│   ├── VisualOrderingInterface.tsx
+│   ├── VisualOrderingModal.tsx
+│   ├── Members.tsx
+│   ├── History.tsx
+│   ├── Settings.tsx
+│   ├── Sidebar.tsx
+│   ├── EnhancedAnalytics.tsx
+│   ├── Analytics.tsx
+│   ├── LogViewer.tsx
+│   ├── OrderDetailsModal.tsx
+│   ├── ErrorBoundary/
+│   ├── Charts/
+│   └── ui/
+├── hooks
+│   ├── business/
+│   ├── core/
+│   ├── ui/
+│   └── utils/
+├── services
+│   ├── supabaseService.ts
+│   ├── storageService.ts
+│   ├── analyticsService.ts
+│   ├── loggerService.ts
+│   ├── agentLoggerService.ts
+│   └── consoleInterceptorService.ts
+├── stores
+│   ├── appStore.ts
+│   ├── orderStore.ts
+│   ├── tableStore.ts
+│   ├── menuStore.ts
+│   ├── membersStore.ts
+│   ├── settingsStore.ts
+│   └── index.ts
+├── types
+│   ├── core/
+│   └── index.ts
+└── utils
+    ├── cacheManager.ts
+    ├── chartHelpers.ts
+    ├── dataAnalysis.ts
+    └── performance.ts
+```
+
+查找指引：
+- 視覺化點餐：`src/components/VisualOrderingInterface.tsx`，業務邏輯 Hook 在 `src/hooks/business/useVisualOrdering.ts`
+- 桌位管理（格狀/地圖）：`src/components/Tables.tsx`、`src/components/TableLayoutEditor.tsx`
+- 會員儲值（杯數）：`src/components/Members.tsx`，Zustand 在 `src/stores/membersStore.ts`
+- Supabase 與儲存：`src/services/supabaseService.ts`、`src/services/storageService.ts`
+- 狀態管理：`src/stores/*.ts`（各模組分檔，`index.ts` 聚合導出）
+- UI 元件：`src/components/ui/*`
+- 型別：`src/types/*`（核心型別於 `types/core`）
+
 ## 👨‍💻 開發者指引
 
 ### 🎯 專家角色

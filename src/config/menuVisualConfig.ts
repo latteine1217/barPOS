@@ -41,7 +41,22 @@ export const pickEmojiForItem = (item: MenuItem): string => {
 };
 
 export const pickColorForCategory = (category?: string): string => {
-  const key = (category || '').toLowerCase();
+  const key = (category || '').toLowerCase().trim();
   return categoryColors[key] || categoryColors.others;
 };
 
+// 更智能的色條挑選：優先依類別，若沒有類別則依基酒
+export const pickStripeColor = (item: MenuItem): string => {
+  const cat = (item.category || '').toLowerCase().trim();
+  if (cat && categoryColors[cat]) return categoryColors[cat];
+
+  const spirit = (item.baseSpirit || '').toLowerCase().trim();
+  if (spirit) {
+    // 將常見基酒對應至接近的類別色
+    if (spirit === 'gin' || spirit === 'vodka' || spirit === 'rum' || spirit === 'tequila' || spirit === 'brandy' || spirit === 'whiskey' || spirit === 'liqueur') {
+      return categoryColors.spirits;
+    }
+    if (spirit === 'none') return categoryColors.mocktails;
+  }
+  return categoryColors.others;
+};

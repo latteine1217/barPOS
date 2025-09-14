@@ -57,6 +57,7 @@ export {
   useUseCups,
   useSetCups,
   useMembersInitialize,
+  useSetMembers,
 } from './membersStore';
 
 // 組合 store

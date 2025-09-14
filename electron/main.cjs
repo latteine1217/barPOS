@@ -28,7 +28,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs')
     },
     icon: undefined, // App icon - to be added later
-    title: '餐廳管理系統 - Restaurant POS',
+    title: '調酒酒吧管理系統 - Cocktail Bar POS',
     show: false, // Don't show until ready
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default'
   });
@@ -230,18 +230,14 @@ function createMenu() {
       label: '說明',
       submenu: [
         {
-          label: '關於餐廳管理系統',
+          label: '關於調酒酒吧管理系統',
           click: () => {
             const { dialog } = require('electron');
             dialog.showMessageBox(mainWindow, {
               type: 'info',
-              title: '關於餐廳管理系統',
-              message: '餐廳管理系統 v2.0.0',
-              detail: `功能類似 iChef 的現代化餐廳 POS 系統
-
-使用 React 19 + Electron 構建
-
-開發工具: opencode + GitHub Copilot`,
+              title: '關於調酒酒吧管理系統',
+              message: '調酒酒吧管理系統 v4.0.0',
+              detail: `現代化 Cocktail Bar POS 系統\n\n使用 React 19 + Electron 構建\n\n開發工具: GitHub Copilot + Codex`,
               buttons: ['確定']
             });
           }
@@ -250,7 +246,7 @@ function createMenu() {
         {
           label: 'GitHub Repository',
           click: () => {
-            shell.openExternal('https://github.com/latteine1217/restaurant-pos-system');
+            shell.openExternal('https://github.com/latteine1217/cocktail-bar-pos-system');
           }
         }
       ]
@@ -260,21 +256,17 @@ function createMenu() {
   // macOS specific menu adjustments
   if (process.platform === 'darwin') {
     template.unshift({
-      label: '餐廳管理系統',
+      label: '調酒酒吧管理系統',
       submenu: [
         {
-          label: '關於餐廳管理系統',
+          label: '關於調酒酒吧管理系統',
           click: () => {
             const { dialog } = require('electron');
             dialog.showMessageBox(mainWindow, {
               type: 'info',
-              title: '關於餐廳管理系統',
-              message: '餐廳管理系統 v2.0.0',
-              detail: `功能類似 iChef 的現代化餐廳 POS 系統
-
-使用 React 19 + Electron 構建
-
-開發工具: opencode + GitHub Copilot`,
+              title: '關於調酒酒吧管理系統',
+              message: '調酒酒吧管理系統 v4.0.0',
+              detail: `現代化 Cocktail Bar POS 系統\n\n使用 React 19 + Electron 構建\n\n開發工具: GitHub Copilot + Codex`,
               buttons: ['確定']
             });
           }
