@@ -167,6 +167,35 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-shrink-0">
           {props.isAddOnMode ? '加點餐點' : '新增訂單'}
         </h2>
+        {/* People count (left of table badge) */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
+            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            -
+          </button>
+          <input
+            type="number"
+            min={1}
+            value={orderDetails.customers}
+            onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
+            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
+          />
+          <button
+            type="button"
+            onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
+            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            +
+          </button>
+        </div>
+        {props.selectedTable && (
+          <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+            桌位 {props.selectedTable.number}
+          </div>
+        )}
         <div className="flex-1 relative">
           <input
             value={query}
@@ -176,11 +205,6 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
         </div>
-        {props.selectedTable && (
-          <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-            桌位 {props.selectedTable.number}
-          </div>
-        )}
         <div className="text-right hidden sm:block">
           <div className="text-lg font-semibold text-gray-900 dark:text-white">${totalAmount}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">{orderItems.length} 項</div>
@@ -323,34 +347,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
               </div>
             )}
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                人數
-              </label>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
-                  className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  value={orderDetails.customers}
-                  onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
-                  className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
-                  className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            {/* 人數已移至頂部工具列 */}
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -469,7 +466,31 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="p-4 mt-auto">
+          <div className="mt-auto sticky bottom-0 p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-t border-gray-200 dark:border-gray-700">
+            {/* Compact service fee toggle (fixed at bottom) */}
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-sm text-gray-700 dark:text-gray-300">服務費</div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={tipEnabled}
+                  onClick={() => setTipEnabled((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${tipEnabled ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${tipEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+                {tipEnabled && (
+                  <select
+                    value={tipPercent}
+                    onChange={(e) => setTipPercent(parseInt(e.target.value) || 0)}
+                    className="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+                  >
+                    {[5,10,12,15,18,20].map((p) => (<option key={p} value={p}>{p}%</option>))}
+                  </select>
+                )}
+              </div>
+            </div>
             {/* Totals */}
             <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
