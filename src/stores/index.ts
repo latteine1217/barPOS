@@ -50,7 +50,13 @@ export {
   useMembersStore,
   useMembers,
   useMembersLoaded,
-  useMemberActions,
+  useAddMember,
+  useDeleteMember,
+  useRenameMember,
+  useAddCups,
+  useUseCups,
+  useSetCups,
+  useMembersInitialize,
 } from './membersStore';
 
 // 組合 store

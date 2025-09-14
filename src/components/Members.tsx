@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
-import { useMembers, useMemberActions } from '@/stores/membersStore';
+import React, { useEffect, useState } from 'react';
+import {
+  useMembers,
+  useAddMember,
+  useDeleteMember,
+  useRenameMember,
+  useAddCups,
+  useUseCups,
+  useSetCups,
+  useMembersInitialize,
+} from '@/stores';
 
 const Members: React.FC = () => {
   const members = useMembers();
-  const { addMember, deleteMember, renameMember, addCups, useCups, setCups } = useMemberActions();
+  const addMember = useAddMember();
+  const deleteMember = useDeleteMember();
+  const renameMember = useRenameMember();
+  const addCups = useAddCups();
+  const useCups = useUseCups();
+  const setCups = useSetCups();
+  const initialize = useMembersInitialize();
+
+  useEffect(() => { initialize?.(); }, [initialize]);
 
   const [name, setName] = useState('');
   const [cups, setInitialCups] = useState<number>(0);

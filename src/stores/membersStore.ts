@@ -101,13 +101,11 @@ export const useMembersStore = create<MembersStore>()(
 
 export const useMembers = () => useMembersStore((s) => s.members);
 export const useMembersLoaded = () => useMembersStore((s) => s.isLoaded);
-export const useMemberActions = () => useMembersStore((s) => ({
-  addMember: s.addMember,
-  deleteMember: s.deleteMember,
-  renameMember: s.renameMember,
-  addCups: s.addCups,
-  useCups: s.useCups,
-  setCups: s.setCups,
-  initialize: s.initialize,
-}));
-
+// 為避免 React 19 對 useSyncExternalStore 的快照警告，避免回傳臨時物件
+export const useAddMember = () => useMembersStore((s) => s.addMember);
+export const useDeleteMember = () => useMembersStore((s) => s.deleteMember);
+export const useRenameMember = () => useMembersStore((s) => s.renameMember);
+export const useAddCups = () => useMembersStore((s) => s.addCups);
+export const useUseCups = () => useMembersStore((s) => s.useCups);
+export const useSetCups = () => useMembersStore((s) => s.setCups);
+export const useMembersInitialize = () => useMembersStore((s) => s.initialize);
