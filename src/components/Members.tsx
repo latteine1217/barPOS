@@ -19,8 +19,11 @@ const Members: React.FC = () => {
   const useCups = useUseCups();
   const setCups = useSetCups();
   const initialize = useMembersInitialize();
+  const loaded = useMembersLoaded();
 
-  useEffect(() => { initialize?.(); }, [initialize]);
+  useEffect(() => {
+    if (!loaded) initialize?.();
+  }, [loaded, initialize]);
 
   const [name, setName] = useState('');
   const [cups, setInitialCups] = useState<number>(0);
