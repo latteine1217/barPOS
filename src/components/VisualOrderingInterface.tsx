@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { pickEmojiForItem, pickColorForCategory } from '@/config/menuVisualConfig';
+import { pickEmojiForItem, pickStripeColor } from '@/config/menuVisualConfig';
 import { useTableStore } from '@/stores';
 import { useVisualOrdering } from '@/hooks/business/useVisualOrdering';
 import type { Order, Table, MenuItem, OrderStatus } from '@/types';
@@ -245,7 +245,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                   onClick={() => addToOrder(menuItem)}
                   className="relative rounded-2xl border p-4 cursor-pointer hover:shadow-lg transition-all bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-center"
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: pickColorForCategory(menuItem.category) }} />
+                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: pickStripeColor(menuItem) }} />
                   <div className="text-4xl mb-2 select-none">{pickEmojiForItem(menuItem)}</div>
                   <h3 className="font-medium text-gray-900 dark:text-white whitespace-normal break-words leading-snug">
                     {menuItem.name}
@@ -322,18 +322,34 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                 />
               </div>
             )}
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 人數
               </label>
-              <input
-                type="number"
-                value={orderDetails.customers}
-                onChange={(e) => updateOrderDetails({ customers: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min="1"
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
+                  className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={orderDetails.customers}
+                  onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
+                  className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
+                  className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  +
+                </button>
+              </div>
             </div>
             
             <div className="mb-4">
@@ -401,27 +417,29 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             )}
           </div>
 
-          {/* Adjustment then Tip toggle */}
+          {/* Adjustment then Service Fee toggle */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">加價 / 折價</h4>
             <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setAdjustment(v => (Number.isFinite(v) ? v : 0) - 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
               <input
                 type="number"
+                step={10}
                 value={adjustment}
                 onChange={(e) => setAdjustment(Number(e.target.value) || 0)}
-                className="w-40 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
-                placeholder="例如 20 或 -15"
+                className="w-24 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
               />
-              <span className="text-xs text-gray-500 dark:text-gray-400">將在小費之前計算</span>
+              <button type="button" onClick={() => setAdjustment(v => (Number.isFinite(v) ? v : 0) + 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">+</button>
+              <span className="text-xs text-gray-500 dark:text-gray-400">先於服務費計算</span>
             </div>
           </div>
 
-          {/* Tip toggle */}
+          {/* Service fee toggle */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">小費</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">開啟後可加入百分比小費</p>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">服務費</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">開啟後可加入百分比服務費</p>
               </div>
               <button
                 type="button"
@@ -445,7 +463,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
                     <option key={p} value={p}>{p}%</option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-600 dark:text-gray-400">小費金額：${Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100))}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">服務費：${Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100))}</span>
               </div>
             )}
           </div>
@@ -456,8 +474,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
             <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
               <div className="flex justify-between"><span>加價/折價</span><span>${Number.isFinite(adjustment) ? adjustment : 0}</span></div>
-              <div className="flex justify-between"><span>小費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0}</span></div>
-              <div className="flex justify-between"><span>稅額</span><span>$0</span></div>
+              <div className="flex justify-between"><span>服務費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0}</span></div>
               <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${(totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) + (tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0)}</span></div>
             </div>
             <div className="flex flex-col space-y-2">
