@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
-import { loadFromStorage, STORAGE_KEYS, saveDebouncedToStorage } from '@/services/storageService';
+import { loadFromStorage, STORAGE_KEYS } from '@/services/storageService';
 import type { MemberRecord, ID } from '@/types';
 
 interface MembersState {
@@ -44,14 +44,12 @@ export const useMembersStore = create<MembersStore>()(
           const now = new Date().toISOString();
           const rec: MemberRecord = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, name: name.trim(), cups: Math.max(0, Math.floor(cups)), notes, createdAt: now, updatedAt: now };
           s.members.push(rec);
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
 
       deleteMember: (id: ID) => {
         set((s) => {
           s.members = s.members.filter(m => m.id !== id);
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
 
@@ -61,7 +59,6 @@ export const useMembersStore = create<MembersStore>()(
           if (!m) return;
           m.name = name.trim();
           m.updatedAt = new Date().toISOString();
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
 
@@ -71,7 +68,6 @@ export const useMembersStore = create<MembersStore>()(
           if (!m) return;
           m.cups = Math.max(0, m.cups + Math.max(0, Math.floor(cups)));
           m.updatedAt = new Date().toISOString();
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
 
@@ -81,7 +77,6 @@ export const useMembersStore = create<MembersStore>()(
           if (!m) return;
           m.cups = Math.max(0, m.cups - Math.max(0, Math.floor(cups)));
           m.updatedAt = new Date().toISOString();
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
 
@@ -91,7 +86,6 @@ export const useMembersStore = create<MembersStore>()(
           if (!m) return;
           m.cups = Math.max(0, Math.floor(cups));
           m.updatedAt = new Date().toISOString();
-          saveDebouncedToStorage(STORAGE_KEYS.MEMBERS, s.members);
         });
       },
     })),
