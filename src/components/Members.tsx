@@ -8,6 +8,7 @@ import {
   useUseCups,
   useSetCups,
   useMembersInitialize,
+  useMembersLoaded,
 } from '@/stores';
 
 const Members: React.FC = () => {
