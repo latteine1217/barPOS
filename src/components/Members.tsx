@@ -87,8 +87,8 @@ const Members: React.FC = () => {
                     <input
                       type="number"
                       min={0}
-                      defaultValue={m.cups}
-                      onBlur={(e) => setCups(m.id, parseInt(e.target.value) || 0)}
+                      value={m.cups}
+                      onChange={(e) => setCups(m.id, parseInt(e.target.value) || 0)}
                       className="w-20 text-center px-2 py-1 rounded-lg border bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)]"
                     />
                     <button onClick={() => addCups(m.id, 1)} className="w-7 h-7 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">+</button>
