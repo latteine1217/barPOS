@@ -129,21 +129,32 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
   ]);
 
   const getCategoryDisplayName = (category: string) => {
-    if (category === 'all') return '全部';
-    return category || '其他';
+    if (category === 'all') return 'All';
+    const map: Record<string, string> = {
+      cocktails: 'Cocktails',
+      classic: 'Classic',
+      signature: 'Signature',
+      mocktails: 'Mocktails',
+      spirits: 'Spirits',
+      wine: 'Wine',
+      beer: 'Beer',
+      snacks: 'Snacks',
+      others: 'Others'
+    };
+    return map[category] || category || 'Others';
   };
 
   const getBaseSpiritDisplayName = (spirit: string) => {
     const spiritNames: Record<string, string> = {
-      all: '全部',
-      gin: 'Gin 琴酒',
-      vodka: 'Vodka 伏特加',
-      rum: 'Rum 蘭姆酒',
-      whiskey: 'Whiskey 威士忌',
-      tequila: 'Tequila 龍舌蘭',
-      brandy: 'Brandy 白蘭地',
-      liqueur: 'Liqueur 利口酒',
-      none: '無酒精'
+      all: 'All',
+      gin: 'Gin',
+      vodka: 'Vodka',
+      rum: 'Rum',
+      whiskey: 'Whiskey',
+      tequila: 'Tequila',
+      brandy: 'Brandy',
+      liqueur: 'Liqueur',
+      none: 'Non-alcoholic'
     };
     return spiritNames[spirit] || spirit;
   };
@@ -165,7 +176,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
       {/* Header / Search */}
       <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-shrink-0">
-          {props.isAddOnMode ? '加點餐點' : '新增訂單'}
+          {props.isAddOnMode ? 'Add Items' : 'New Order'}
         </h2>
         {/* Search input takes available width */}
         <div className="flex-1 relative">

@@ -46,10 +46,14 @@ const Menu: React.FC = () => {
   const stats = useMemo(() => ({
     totalItems: items.length,
     availableItems: items.filter((i) => i.available).length,
-    cocktailCount: items.filter((i) => i.category === 'cocktails').length,
-    mocktailCount: items.filter((i) => i.category === 'mocktails').length,
+    classicCount: items.filter((i) => i.category === 'classic').length,
+    signatureCount: items.filter((i) => i.category === 'signature').length,
+    mocktailCount: items.filter((i) => i.category === 'mocktail').length,
+    wineCount: items.filter((i) => i.category === 'wine').length,
+    otherCount: items.filter((i) => i.category === 'other').length,
+    smallBiteCount: items.filter((i) => i.category === 'small_bite').length,
   }), [items]);
-  type CategoryFilter = 'all' | 'cocktails' | 'mocktails' | 'spirits';
+  type CategoryFilter = 'all' | 'classic' | 'mocktail' | 'wine' | 'signature' | 'other' | 'small_bite';
   type SpiritFilter = 'all' | 'whiskey' | 'gin' | 'rum' | 'tequila' | 'vodka' | 'brandy' | 'liqueur' | 'none';
   const [category, setCategory] = useState<CategoryFilter>(() => 'all');
   const [spirit, setSpirit] = useState<SpiritFilter>(() => 'all');
@@ -58,7 +62,7 @@ const Menu: React.FC = () => {
 
    const filtered = useMemo(() => items.filter((i) => {
     if (category !== 'all' && i.category !== category) return false;
-    if (spirit !== 'all' && (i.baseSpirit || 'none') !== spirit) return false;
+    if (spirit !== 'all' && (category === 'classic' || category === 'signature' || category === 'other') && (i.baseSpirit || 'none') !== spirit) return false;
     if (onlyAvailable && !i.available) return false;
     const qq = q.trim();
     if (qq) {
@@ -80,14 +84,17 @@ const Menu: React.FC = () => {
   const updateMenuItem = useMenuStore(s => s.updateMenuItem);
   const deleteMenuItem = useMenuStore(s => s.deleteMenuItem);
   const [editId, setEditId] = useState<string | null>(() => null);
-  type MenuCategoryT = 'cocktails' | 'mocktails' | 'spirits' | 'wine' | 'beer' | 'snacks' | 'others';
+  type MenuCategoryT = 'classic' | 'mocktail' | 'wine' | 'signature' | 'other' | 'small_bite';
   type BaseSpiritT = 'vodka' | 'gin' | 'rum' | 'whiskey' | 'tequila' | 'brandy' | 'liqueur' | 'none';
 
   const FILTER_CATEGORY_OPTIONS = useMemo(() => ([
     { value: 'all', label: '全部分類' },
-    { value: 'cocktails', label: '調酒' },
-    { value: 'mocktails', label: 'mocktail' },
-    { value: 'spirits', label: '烈酒' },
+    { value: 'classic', label: '經典調酒' },
+    { value: 'signature', label: '招牌調酒' },
+    { value: 'mocktail', label: '無酒精調酒' },
+    { value: 'wine', label: '葡萄酒' },
+    { value: 'other', label: '其他酒類' },
+    { value: 'small_bite', label: '小點' },
   ] as const), []);
   const FILTER_SPIRIT_OPTIONS = useMemo(() => ([
     { value: 'all', label: '全部基酒' },
@@ -102,14 +109,13 @@ const Menu: React.FC = () => {
   ] as const), []);
 
    const CATEGORY_OPTIONS = useMemo(() => ([
-    { value: 'cocktails', label: '調酒' },
-    { value: 'mocktails', label: 'mocktail' },
-    { value: 'spirits', label: '烈酒' },
+    { value: 'classic', label: '經典調酒' },
+    { value: 'signature', label: '招牌調酒' },
+    { value: 'mocktail', label: '無酒精調酒' },
     { value: 'wine', label: '葡萄酒' },
-    { value: 'beer', label: '啤酒' },
-    { value: 'snacks', label: '點心' },
-    { value: 'others', label: '其他' },
-  ] as const), []);
+    { value: 'other', label: '其他酒類' },
+    { value: 'small_bite', label: '小點' },
+   ] as const), []);
    const SPIRIT_OPTIONS = useMemo(() => ([
     { value: 'none', label: '無' },
     { value: 'whiskey', label: 'Whiskey' },
@@ -119,11 +125,11 @@ const Menu: React.FC = () => {
     { value: 'vodka', label: 'Vodka' },
     { value: 'brandy', label: 'Brandy' },
     { value: 'liqueur', label: 'Liqueur' },
-  ] as const), []);
+   ] as const), []);
 
-   const [form, setForm] = useState<{ name: string; price: number; cost?: number; category: MenuCategoryT; baseSpirit: BaseSpiritT; description: string; available: boolean }>(() => ({ name: '', price: 0, cost: undefined, category: 'cocktails', baseSpirit: 'none', description: '', available: true }));
+   const [form, setForm] = useState<{ name: string; price: number; cost?: number; category: MenuCategoryT; baseSpirit: BaseSpiritT; description: string; available: boolean }>(() => ({ name: '', price: 0, category: 'classic', baseSpirit: 'none', description: '', available: true }));
    const [isFormOpen, setIsFormOpen] = useState(false);
-   const openCreate = useCallback(() => { setEditId(() => null); setForm(() => ({ name: '', price: 0, category: 'cocktails', baseSpirit: 'none', description: '', available: true })); setIsFormOpen(() => true); }, []);
+   const openCreate = useCallback(() => { setEditId(() => null); setForm(() => ({ name: '', price: 0, category: 'classic', baseSpirit: 'none', description: '', available: true })); setIsFormOpen(() => true); }, []);
      const openEdit = useCallback((id: string) => {
       const item = items.find(i => i.id === id);
       if (!item) return;
@@ -132,13 +138,13 @@ const Menu: React.FC = () => {
         name: item.name ?? '',
         price: (typeof item.price === 'number' ? item.price : 0),
         cost: (typeof (item as any).cost === 'number' ? (item as any).cost : undefined),
-        category: (item.category ?? 'cocktails') as MenuCategoryT,
+        category: (item.category ?? 'classic') as MenuCategoryT,
         baseSpirit: (item.baseSpirit ?? 'none') as BaseSpiritT,
         description: item.description ?? '',
         available: item.available ?? true,
       }));
       setIsFormOpen(() => true);
-    }, [items]);  const resetForm = useCallback(() => { setEditId(() => null); setForm(() => ({ name: '', price: 0, category: 'cocktails', baseSpirit: 'none', description: '', available: true })); setIsFormOpen(() => false); }, []);
+    }, [items]);  const resetForm = useCallback(() => { setEditId(() => null); setForm(() => ({ name: '', price: 0, category: 'classic', baseSpirit: 'none', description: '', available: true })); setIsFormOpen(() => false); }, []);
   const handleDelete = useCallback((id: string) => { deleteMenuItem(id); }, [deleteMenuItem]);
 
     const handleSubmit = useCallback(() => {
@@ -170,12 +176,20 @@ const Menu: React.FC = () => {
              setForm(prev => ({ ...prev, price: Number(v) || 0 }));
            }} error={form.price <= 0 ? '售價需大於 0' : undefined} />
            <Input label="成本 (可選)" info="製作此品項的平均成本" helperText="用於計算毛利與成本占比" type="number" value={form.cost ?? ''} onChange={(e) => {
-             const v = (e.target as HTMLInputElement).value;
-             setForm(prev => ({ ...prev, cost: v === '' ? undefined : Number(v) || 0 }));
-           }} error={typeof form.cost === 'number' && form.price > 0 && (form.cost > form.price) ? '成本不可高於售價' : undefined} />
-           <Select label="分類" info="用於篩選與報表分類" value={(form.category ?? 'cocktails') as MenuCategoryT} onChange={(e) => {
+              const v = (e.target as HTMLInputElement).value;
+              setForm(prev => {
+                const next = { ...prev };
+                if (v === '') {
+                  delete (next as { cost?: number }).cost;
+                } else {
+                  next.cost = Number(v) || 0;
+                }
+                return next;
+              });
+            }} error={typeof form.cost === 'number' && form.price > 0 && (form.cost > form.price) ? '成本不可高於售價' : undefined} />
+            <Select label="分類" info="用於篩選與報表分類" value={(form.category ?? 'classic') as MenuCategoryT} onChange={(e) => {
              const v = (e.target as HTMLSelectElement).value as MenuCategoryT;
-             setForm(prev => ({ ...prev, category: (v || 'cocktails') as MenuCategoryT }));
+             setForm(prev => ({ ...prev, category: (v || 'classic') as MenuCategoryT }));
            }} options={CATEGORY_OPTIONS as any} />
            <Select label="基酒" info="此品項主要使用的酒類（若無可選『無』）" value={(form.baseSpirit ?? 'none') as BaseSpiritT} onChange={(e) => {
              const v = (e.target as HTMLSelectElement).value as BaseSpiritT;
@@ -228,16 +242,16 @@ const Menu: React.FC = () => {
         </Card>
         <Card padding="md">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-gray-300">調酒</div>
-            <Badge>{stats.cocktailCount}</Badge>
+            <div className="text-sm text-gray-600 dark:text-gray-300">經典調酒</div>
+            <Badge>{stats.classicCount}</Badge>
           </div>
         </Card>
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-gray-300">mocktail</div>
-            <Badge>{stats.mocktailCount}</Badge>
-          </div>
-        </Card>
+         <Card padding="md">
+           <div className="flex items-center justify-between">
+             <div className="text-sm text-gray-600 dark:text-gray-300">無酒精調酒</div>
+             <Badge>{stats.mocktailCount}</Badge>
+           </div>
+         </Card>
       </div>
 
       <Card padding="md" className="space-y-3">
@@ -258,9 +272,17 @@ const Menu: React.FC = () => {
 
       {Object.entries(grouped).map(([cat, list]) => (
         <div key={cat} className="space-y-3">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-            {cat === 'cocktails' ? '調酒' : cat === 'mocktails' ? 'mocktail' : cat === 'spirits' ? '烈酒' : cat}
-          </h2>
+           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+             {
+               cat === 'classic' ? '經典調酒'
+               : cat === 'signature' ? '招牌調酒'
+               : cat === 'mocktail' ? '無酒精調酒'
+               : cat === 'wine' ? '葡萄酒'
+               : cat === 'other' ? '其他酒類'
+               : cat === 'small_bite' ? '小點'
+               : cat
+             }
+           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {list.map((it) => (
                <ItemCard key={it.id} {...it} id={it.id} onEdit={(id) => openEdit(id)} onDelete={(id) => handleDelete(id)} />            ))}
@@ -271,7 +293,7 @@ const Menu: React.FC = () => {
       {filtered.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🍸</div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">找不到符合的調酒</h3>
+           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">找不到符合的品項</h3>
           <p className="text-gray-500 dark:text-gray-400">調整篩選條件再試試</p>
         </div>
       )}

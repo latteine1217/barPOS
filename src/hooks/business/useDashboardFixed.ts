@@ -13,19 +13,6 @@ interface DashboardData {
   recentOrders: Order[];
 }
 
-// 緩存今天的日期字符串
-let cachedTodayString: string | null = null;
-let lastTodayUpdate = 0;
-
-const getTodayString = (): string => {
-  const now = Date.now();
-  if (!cachedTodayString || now - lastTodayUpdate > 60000) { // 每分鐘更新
-    cachedTodayString = new Date().toDateString();
-    lastTodayUpdate = now;
-  }
-  return cachedTodayString;
-};
-
 // 緩存計算結果避免重複計算
 let lastOrdersRef: Order[] | null = null;
 let lastTodayStatsCache: {

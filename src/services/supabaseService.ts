@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/services/loggerService';
-import type { Order, Table, MenuItem, ApiResponse, MemberRecord } from '@/types';
+import type { Order, Table, MenuItem, ApiResponse, MemberRecord, TableStatus, OrderStatus } from '@/types';
 
 interface SyncResult {
   success: number;
@@ -28,6 +28,61 @@ interface ConnectionTestResult {
   data?: { tablesCount: number };
   error?: string;
 }
+
+const ORDER_STATUS_MAP: Record<OrderStatus, OrderStatus> = {
+  pending: 'pending',
+  preparing: 'preparing',
+  completed: 'completed',
+  paid: 'paid',
+  cancelled: 'cancelled',
+};
+
+const TABLE_STATUS_MAP: Record<TableStatus, TableStatus> = {
+  available: 'available',
+  occupied: 'occupied',
+  reserved: 'reserved',
+  cleaning: 'cleaning',
+};
+
+const safeParseJson = <T>(value: unknown, fallback: T): T => {
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.warn('Failed to parse JSON field, fallback applied', {
+        component: 'SupabaseService',
+        action: 'safeParseJson',
+        valueSnippet: value.slice(0, 60),
+        error: errorMessage,
+      });
+      return fallback;
+    }
+  }
+
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  return value as T;
+};
+
+const serializeJson = (value: unknown): string | null => {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn('Failed to stringify JSON field, returning null', {
+      component: 'SupabaseService',
+      action: 'serializeJson',
+      error: errorMessage,
+    });
+    return null;
+  }
+};
 
 class SupabaseService {
   private supabase: SupabaseClient;
@@ -83,30 +138,14 @@ class SupabaseService {
   }
 
   // 狀態映射函數
-  private mapStatusToDatabase(appStatus: string): string {
-    const statusMapping: Record<string, string> = {
-      'pending': 'pending',
-      'preparing': 'preparing',
-      'ready': 'ready',
-      'completed': 'completed',
-      'paid': 'paid',
-      'cancelled': 'cancelled'
-    };
-    
-    const mappedStatus = statusMapping[appStatus] || 'pending';
+  private mapStatusToDatabase(appStatus: OrderStatus): OrderStatus {
+    const mappedStatus = ORDER_STATUS_MAP[appStatus] ?? ORDER_STATUS_MAP.pending;
     logger.debug('Order status mapping', { component: 'SupabaseService', action: 'mapStatusToDatabase', appStatus, mappedStatus });
     return mappedStatus;
   }
 
-  private mapTableStatusToDatabase(appStatus: string): string {
-    const statusMapping: Record<string, string> = {
-      'available': 'available',
-      'occupied': 'occupied',
-      'reserved': 'reserved',
-      'cleaning': 'available'
-    };
-    
-    const mappedStatus = statusMapping[appStatus] || 'available';
+  private mapTableStatusToDatabase(appStatus: TableStatus): TableStatus {
+    const mappedStatus = TABLE_STATUS_MAP[appStatus] ?? TABLE_STATUS_MAP.available;
     logger.debug('Table status mapping', { component: 'SupabaseService', action: 'mapTableStatusToDatabase', appStatus, mappedStatus });
     return mappedStatus;
   }
@@ -119,11 +158,11 @@ class SupabaseService {
         id: order.id,
         table_number: order.tableNumber,
         table_name: order.tableName,
-        items: JSON.stringify(order.items),
-        total: order.total,
-        subtotal: order.subtotal,
-        tax: order.tax || 0,
-        discount: order.discount || 0,
+        items: serializeJson(order.items ?? []),
+        total: order.total ?? 0,
+        subtotal: order.subtotal ?? 0,
+        tax: order.tax ?? 0,
+        discount: order.discount ?? 0,
         status: this.mapStatusToDatabase(order.status),
         customers: order.customers,
         notes: order.notes,
@@ -204,7 +243,7 @@ class SupabaseService {
         message: `Successfully fetched ${tables.length} tables`
       };
     } catch (error) {
-      console.error('獲取桌位錯誤:', error);
+      logger.error('Failed to fetch tables', { component: 'SupabaseService', action: 'fetchTables' }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : '獲取桌位失敗'
@@ -234,7 +273,7 @@ class SupabaseService {
         message: `Successfully fetched ${menuItems.length} menu items`
       };
     } catch (error) {
-      console.error('獲取菜單錯誤:', error);
+      logger.error('Failed to fetch menu items', { component: 'SupabaseService', action: 'fetchMenuItems' }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : '獲取菜單失敗'
@@ -246,56 +285,19 @@ class SupabaseService {
   
   async syncLocalData(localData: LocalData): Promise<ApiResponse<{ results: SyncResults }>> {
     try {
+      const [ordersResult, tablesResult, menuResult, membersResult] = await Promise.all([
+        this.syncEntities('orders', localData.orders ?? [], (order) => this.createOrder(order)),
+        this.syncEntities('tables', localData.tables ?? [], (table) => this.upsertTable(table)),
+        this.syncEntities('menuItems', localData.menuItems ?? [], (item) => this.upsertMenuItem(item)),
+        this.syncEntities('members', localData.members ?? [], (member) => this.upsertMember(member)),
+      ]);
+
       const results: SyncResults = {
-        orders: { success: 0, failed: 0, errors: [] },
-        tables: { success: 0, failed: 0, errors: [] },
-        menuItems: { success: 0, failed: 0, errors: [] },
-        members: { success: 0, failed: 0, errors: [] }
+        orders: ordersResult,
+        tables: tablesResult,
+        menuItems: menuResult,
+        members: membersResult,
       };
-
-      // 同步訂單
-      for (const order of localData.orders) {
-        const result = await this.createOrder(order);
-        if (result.success) {
-          results.orders.success++;
-        } else {
-          results.orders.failed++;
-          results.orders.errors.push(result.error || '未知錯誤');
-        }
-      }
-
-      // 同步桌位
-      for (const table of localData.tables) {
-        const result = await this.upsertTable(table);
-        if (result.success) {
-          results.tables.success++;
-        } else {
-          results.tables.failed++;
-          results.tables.errors.push(result.error || '未知錯誤');
-        }
-      }
-
-      // 同步菜單項目
-      for (const menuItem of localData.menuItems) {
-        const result = await this.upsertMenuItem(menuItem);
-        if (result.success) {
-          results.menuItems.success++;
-        } else {
-          results.menuItems.failed++;
-          results.menuItems.errors.push(result.error || '未知錯誤');
-        }
-      }
-
-      // 同步會員資料
-      for (const member of localData.members) {
-        const result = await this.upsertMember(member);
-        if (result.success) {
-          results.members.success++;
-        } else {
-          results.members.failed++;
-          results.members.errors.push(result.error || '未知錯誤');
-        }
-      }
 
       return {
         success: true,
@@ -303,7 +305,7 @@ class SupabaseService {
         message: 'Local data sync completed'
       };
     } catch (error) {
-      console.error('同步本地資料錯誤:', error);
+      logger.error('Sync local data failed', { component: 'SupabaseService', action: 'syncLocalData' }, error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         error: error instanceof Error ? error.message : '同步失敗'
@@ -318,13 +320,13 @@ class SupabaseService {
       id: dbOrder.id,
       tableNumber: dbOrder.table_number,
       tableName: dbOrder.table_name,
-      items: typeof dbOrder.items === 'string' ? JSON.parse(dbOrder.items) : dbOrder.items,
-      total: dbOrder.total,
-      subtotal: dbOrder.subtotal,
-      tax: dbOrder.tax,
-      discount: dbOrder.discount,
-      status: dbOrder.status,
-      customers: dbOrder.customers,
+      items: safeParseJson(dbOrder.items, []),
+      total: Number(dbOrder.total) || 0,
+      subtotal: Number(dbOrder.subtotal) || 0,
+      tax: Number(dbOrder.tax) || 0,
+      discount: Number(dbOrder.discount) || 0,
+      status: (dbOrder.status as OrderStatus) ?? ORDER_STATUS_MAP.pending,
+      customers: Number(dbOrder.customers) || 0,
       notes: dbOrder.notes,
       createdAt: dbOrder.created_at,
       updatedAt: dbOrder.updated_at,
@@ -339,8 +341,8 @@ class SupabaseService {
       name: dbTable.name,
       status: dbTable.status,
       customers: dbTable.customers || 0,
-      maxCapacity: dbTable.max_capacity || 4,
-      position: typeof dbTable.position === 'string' ? JSON.parse(dbTable.position) : dbTable.position,
+      maxCapacity: Number(dbTable.max_capacity) || 4,
+      position: safeParseJson(dbTable.position, { x: 0, y: 0 }),
       orderId: dbTable.order_id,
       createdAt: dbTable.created_at,
       updatedAt: dbTable.updated_at
@@ -358,7 +360,7 @@ class SupabaseService {
       description: dbItem.description,
       available: dbItem.available,
       imageUrl: dbItem.image_url,
-      ingredients: typeof dbItem.ingredients === 'string' ? JSON.parse(dbItem.ingredients) : dbItem.ingredients,
+      ingredients: safeParseJson(dbItem.ingredients, []),
       alcoholContent: dbItem.alcohol_content,
       createdAt: dbItem.created_at,
       updatedAt: dbItem.updated_at
@@ -376,7 +378,7 @@ class SupabaseService {
         status: this.mapTableStatusToDatabase(table.status),
         customers: table.customers,
         max_capacity: table.maxCapacity,
-        position: JSON.stringify(table.position),
+        position: serializeJson(table.position) ?? serializeJson({ x: 0, y: 0 }),
         order_id: table.orderId,
         updated_at: new Date().toISOString()
       };
@@ -416,7 +418,7 @@ class SupabaseService {
         description: menuItem.description,
         available: menuItem.available,
         image_url: menuItem.imageUrl,
-        ingredients: JSON.stringify(menuItem.ingredients),
+        ingredients: serializeJson(menuItem.ingredients),
         alcohol_content: menuItem.alcoholContent,
         updated_at: new Date().toISOString()
       };
@@ -457,19 +459,20 @@ class SupabaseService {
       const members: MemberRecord[] = (data || []).map((m: any) => this.transformMemberFromDatabase(m));
       return { success: true, data: members, message: `Fetched ${members.length} members` };
     } catch (error) {
+      logger.error('Failed to fetch members', { component: 'SupabaseService', action: 'fetchMembers' }, error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: error instanceof Error ? error.message : '獲取會員失敗' };
     }
   }
 
   private transformMemberFromDatabase(db: any): MemberRecord {
-    return {
-      id: db.id,
-      name: db.name,
-      cups: Number(db.cups) || 0,
-      notes: db.notes || undefined,
-      createdAt: db.created_at,
-      updatedAt: db.updated_at
-    };
+      return {
+        id: db.id,
+        name: db.name,
+        cups: Number(db.cups) || 0,
+        ...(typeof db.notes === 'string' ? { notes: db.notes } : {}),
+        createdAt: db.created_at,
+        updatedAt: db.updated_at
+      };
   }
 
   private async upsertMember(member: MemberRecord): Promise<ApiResponse<MemberRecord>> {
@@ -489,8 +492,43 @@ class SupabaseService {
       if (error) throw error;
       return { success: true, data: this.transformMemberFromDatabase(data), message: 'Member upserted' };
     } catch (error) {
+      logger.error('Failed to upsert member', { component: 'SupabaseService', action: 'upsertMember', memberId: member.id }, error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: error instanceof Error ? error.message : '更新會員失敗' };
     }
+  }
+
+  private async syncEntities<T>(
+    label: keyof SyncResults,
+    items: readonly T[],
+    handler: (item: T) => Promise<ApiResponse<unknown>>
+  ): Promise<SyncResult> {
+    if (!Array.isArray(items) || items.length === 0) {
+      return { success: 0, failed: 0, errors: [] };
+    }
+
+    const settled = await Promise.allSettled(items.map(async (item) => handler(item)));
+
+    return settled.reduce<SyncResult>((acc, result, index) => {
+      if (result.status === 'fulfilled') {
+        if (result.value.success) {
+          acc.success += 1;
+        } else {
+          acc.failed += 1;
+          acc.errors.push(result.value.error ?? `${String(label)}[${index}] failed`);
+        }
+      } else {
+        acc.failed += 1;
+        const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        acc.errors.push(`${String(label)}[${index}] rejected: ${reason}`);
+        logger.error('Sync entity rejected', {
+          component: 'SupabaseService',
+          action: 'syncEntities',
+          label,
+          index,
+        }, result.reason instanceof Error ? result.reason : new Error(reason));
+      }
+      return acc;
+    }, { success: 0, failed: 0, errors: [] });
   }
 }
 

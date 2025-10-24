@@ -121,14 +121,13 @@ export interface TableStats {
 }
 
 // ===== 菜單相關類型 =====
-export type MenuCategory = 
-  | 'cocktails' 
-  | 'mocktails' 
-  | 'spirits' 
-  | 'wine' 
-  | 'beer' 
-  | 'snacks' 
-  | 'others';
+export type MenuCategory =
+  | 'classic'     // 經典調酒
+  | 'mocktail'    // 無酒精調酒
+  | 'wine'        // 葡萄酒
+  | 'signature'   // 招牌/自創
+  | 'other'       // 其他酒類
+  | 'small_bite'; // 小點
 
 export type BaseSpirit = 
   | 'vodka' 
@@ -140,11 +139,14 @@ export type BaseSpirit =
   | 'liqueur' 
   | 'none';
 
+export type MenuStyle = 'classic' | 'signature' | 'mocktail';
+
 export interface MenuItem {
   id: ID;
   name: string;
   category: MenuCategory;
   baseSpirit?: BaseSpirit;
+  style?: MenuStyle;
   price: number;
   cost?: number; // 成本價（可選）
   description?: string;

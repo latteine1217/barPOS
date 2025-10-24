@@ -17,7 +17,21 @@ declare global {
       exportToFile?: (data: unknown, filename: string) => Promise<{ success: boolean; path?: string; error?: string; canceled?: boolean; }>;
       importFromFile?: () => Promise<{ success: boolean; data?: unknown; error?: string; canceled?: boolean; }>;
     };
-    Capacitor?: unknown; // presence check only
+    Capacitor?: {
+      isNativePlatform?: () => boolean;
+      [key: string]: unknown;
+    }; // runtime presence check
+  }
+
+  interface ImportMetaEnv {
+    readonly DEV: boolean;
+    readonly PROD: boolean;
+    readonly MODE: string;
+    readonly BASE_URL: string;
+    readonly VITE_ENABLE_LOG_VIEWER?: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
   }
 }
-

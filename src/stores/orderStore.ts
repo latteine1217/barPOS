@@ -159,16 +159,47 @@ export const useOrderStore = create<OrderStore>()(
         });
       },
 
-      // 初始化 - 從儲存載入資料
+      // 初始化 - 從儲存載入資料（優先使用 persist 的本地資料）
       initialize: async () => {
         logger.storeLog.init('orderStore', { component: 'orderStore' });
         try {
+          // 1) 若已被 persist 重新載入且有資料，避免覆蓋
+          const current = get().orders;
+          if (Array.isArray(current) && current.length > 0) {
+            set((state) => { state.isLoaded = true; });
+            logger.info('Orders already hydrated from persist; skipped storageService load', { component: 'orderStore', count: current.length });
+            return;
+          }
+
+          // 2) 嘗試直接讀取 persist 的 localStorage 快照
+          let persistedOrders: Order[] | null = null;
+          try {
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem('order-store') : null;
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              const persistedState = parsed?.state;
+              if (persistedState && Array.isArray(persistedState.orders)) {
+                persistedOrders = persistedState.orders as Order[];
+              }
+            }
+          } catch {}
+
+          if (persistedOrders && persistedOrders.length > 0) {
+            set((state) => {
+              state.orders = persistedOrders as Order[];
+              state.isLoaded = true;
+            });
+            logger.info('Orders restored from localStorage persist snapshot', { component: 'orderStore', count: persistedOrders.length });
+            return;
+          }
+
+          // 3) 最後才回退至跨平台 storageService
           const orders = await loadFromStorage(STORAGE_KEYS.ORDERS, []);
           set((state) => {
             state.orders = Array.isArray(orders) ? orders : [];
             state.isLoaded = true;
           });
-          logger.info('Orders loaded successfully', { component: 'orderStore', count: orders?.length || 0 });
+          logger.info('Orders loaded from storageService', { component: 'orderStore', count: (Array.isArray(orders) ? orders.length : 0) });
         } catch (error) {
           logger.storeLog.error('orderStore', error as Error, { action: 'initialize' });
           set((state) => {

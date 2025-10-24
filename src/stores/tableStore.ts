@@ -182,6 +182,37 @@ export const useTableStore = create<TableStore>()(
 
       initialize: async () => {
         try {
+          // 1) 若 persist 已載入且有資料，避免覆蓋
+          const current = get().tables;
+          if (Array.isArray(current) && current.length > 0 && current.some(t => t?.id != null)) {
+            set((state) => { state.isLoaded = true; });
+            logger.info('Tables already hydrated from persist; skipped storageService load', { component: 'tableStore', count: current.length });
+            return;
+          }
+
+          // 2) 嘗試從 persist 的 localStorage 快照讀取
+          let persistedTables: Table[] | null = null;
+          try {
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem('table-store') : null;
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              const persistedState = parsed?.state;
+              if (persistedState && Array.isArray(persistedState.tables)) {
+                persistedTables = persistedState.tables as Table[];
+              }
+            }
+          } catch {}
+
+          if (persistedTables && persistedTables.length > 0) {
+            set((state) => {
+              state.tables = persistedTables!.map(t => ({ ...t }));
+              state.isLoaded = true;
+            });
+            logger.info('Tables restored from localStorage persist snapshot', { component: 'tableStore', count: persistedTables.length });
+            return;
+          }
+
+          // 3) 回退至 storageService
           const savedTables = await loadFromStorage(STORAGE_KEYS.TABLES, []) as Table[];
           set((state) => {
             if (Array.isArray(savedTables) && savedTables.length > 0) {

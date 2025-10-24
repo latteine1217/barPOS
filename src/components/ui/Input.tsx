@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
-  error?: string;
+  error?: string | undefined;
   helperText?: string;
   variant?: 'default' | 'filled' | 'outlined';
   size?: 'sm' | 'md' | 'lg';

@@ -167,18 +167,13 @@ export interface TableWithOrder extends Table {
 // 菜單相關類型
 // ============
 
-export type MenuCategory = 
-  | 'cocktails'   // 調酒
-  | 'mocktails'   // 無酒精調飲
-  | 'spirits'     // 烈酒
-  | 'wine'        // 葡萄酒
-  | 'beer'        // 啤酒
-  | 'coffee'      // 咖啡
-  | 'tea'         // 茶
-  | 'appetizers'  // 開胃菜
-  | 'mains'       // 主菜
-  | 'desserts'    // 甜點
-  | 'others';     // 其他
+export type MenuCategory =
+  | 'classic'      // 經典調酒
+  | 'signature'    // 招牌/自創
+  | 'mocktail'     // 無酒精
+  | 'wine'         // 葡萄酒
+  | 'small_bite'   // 小點
+  | 'other';       // 其他
 
 export type BaseSpirit = 
   | 'vodka'     // 伏特加

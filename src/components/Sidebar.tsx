@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 
-export type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
+export type TabType = 'tables' | 'dashboard' | 'menu' | 'members' | 'history' | 'analytics' | 'settings' | 'layout';
 
 interface SidebarProps {
   activeTab: TabType;

@@ -128,12 +128,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!selectedTable || !isEditing || !canvasRef.current) return;
-    
-    const moveDistance = Math.sqrt(
-      Math.pow(e.clientX - dragState.startPosition.x, 2) + 
-      Math.pow(e.clientY - dragState.startPosition.y, 2)
-    );
-    
+
     // 立即拖拽（取消延遲）
     if (!dragState.isDragging) {
       setDragState(prev => ({ ...prev, isDragging: true }));

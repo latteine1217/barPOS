@@ -30,6 +30,35 @@ export const useMembersStore = create<MembersStore>()(
 
       initialize: async () => {
         try {
+          // 1) 若 persist 已載入且有資料，避免覆蓋
+          const current = get().members;
+          if (Array.isArray(current) && current.length > 0) {
+            set((s) => { s.isLoaded = true; });
+            return;
+          }
+
+          // 2) 嘗試從 persist 的 localStorage 快照讀取
+          let persistedMembers: MemberRecord[] | null = null;
+          try {
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem('members-store') : null;
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              const persistedState = parsed?.state;
+              if (persistedState && Array.isArray(persistedState.members)) {
+                persistedMembers = persistedState.members as MemberRecord[];
+              }
+            }
+          } catch {}
+
+          if (persistedMembers && persistedMembers.length > 0) {
+            set((s) => {
+              s.members = persistedMembers!.map(m => ({ ...m }));
+              s.isLoaded = true;
+            });
+            return;
+          }
+
+          // 3) 回退至 storageService
           const saved = await loadFromStorage<MemberRecord[]>(STORAGE_KEYS.MEMBERS, []);
           set((s) => {
             s.members = Array.isArray(saved) ? saved : [];
@@ -43,7 +72,14 @@ export const useMembersStore = create<MembersStore>()(
       addMember: (name: string, cups: number = 0, notes?: string) => {
         set((s) => {
           const now = new Date().toISOString();
-          const rec: MemberRecord = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, name: name.trim(), cups: Math.max(0, Math.floor(cups)), notes, createdAt: now, updatedAt: now };
+          const rec: MemberRecord = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+            name: name.trim(),
+            cups: Math.max(0, Math.floor(cups)),
+            createdAt: now,
+            updatedAt: now,
+            ...(typeof notes === 'string' ? { notes } : {})
+          };
           s.members.push(rec);
         });
       },

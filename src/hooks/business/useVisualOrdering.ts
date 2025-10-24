@@ -72,15 +72,16 @@ export const useVisualOrdering = (props: UseVisualOrderingProps) => {
 
   // ✅ 簡化的基酒計算 - 移除複雜依賴鏈
   const availableBaseSpirits = useMemo(() => {
-    if (selectedCategory !== 'cocktails') return ['all'];
+    const categoriesForSpirits = new Set(['cocktails','classic','signature']);
+    if (!categoriesForSpirits.has(selectedCategory)) return ['all'];
     
     try {
-      const cocktailItems = menuItems.filter(item => 
-        item && item.category === 'cocktails' && item.baseSpirit
+      const spiritItems = menuItems.filter(item => 
+        item && categoriesForSpirits.has(item.category) && item.baseSpirit
       );
       
       const uniqueSpirits = new Set(
-        cocktailItems.map(item => item.baseSpirit as BaseSpirit)
+        spiritItems.map(item => item.baseSpirit as BaseSpirit)
       );
       
       return ['all', ...Array.from(uniqueSpirits)];
@@ -106,8 +107,11 @@ export const useVisualOrdering = (props: UseVisualOrderingProps) => {
       }
       
       // 基酒過濾
-      if (selectedBaseSpirit !== 'all' && selectedCategory === 'cocktails') {
-        filtered = filtered.filter(item => item.baseSpirit === selectedBaseSpirit);
+      {
+        const categoriesForSpirits = new Set(['cocktails','classic','signature']);
+        if (selectedBaseSpirit !== 'all' && categoriesForSpirits.has(selectedCategory)) {
+          filtered = filtered.filter(item => item.baseSpirit === selectedBaseSpirit);
+        }
       }
       
       return filtered;

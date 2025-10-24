@@ -175,10 +175,7 @@ const Tables: React.FC = memo(() => {
   const handleTableClick = useCallback((table: Table) => {
     if (!table || !table.id) return;
     const currentOrder = table.orderId ? ordersById.get(table.orderId as any) || null : null;
-    // 若已結帳：不再自動建立新訂單，依賴手動釋放桌位
-    if (currentOrder && currentOrder.status === 'paid') {
-      return; // 保持桌位為佔用狀態，直到使用者在其他流程中手動釋放
-    }
+    // 已結帳也允許開啟視窗，讓使用者釋放桌位或檢視訂單
     const isAddOnMode = !!currentOrder && table.status === 'occupied' && currentOrder.status !== 'paid';
     const initialCustomers = table.customers || currentOrder?.customers || 1;
     open({

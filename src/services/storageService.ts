@@ -78,10 +78,11 @@ class StorageService {
   private platform: Platform;
   private mobileStorage?: MobileStorage;
   private electronStore?: ElectronStore;
+  private initializationPromise: Promise<void>;
 
   private constructor() {
     this.platform = detectPlatform();
-    this.initializeStorage(); // 在建構時非同步初始化
+    this.initializationPromise = this.initializeStorage();
   }
 
   public static getInstance(): StorageService {
@@ -127,7 +128,12 @@ class StorageService {
   private async initMobileStorage(): Promise<void> {
     try {
       // 只在 Capacitor 環境中導入
-      if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+      const isNativeCapacitor = typeof window !== 'undefined'
+        && window.Capacitor
+        && typeof window.Capacitor.isNativePlatform === 'function'
+        && window.Capacitor.isNativePlatform();
+
+      if (isNativeCapacitor) {
         const { Preferences } = await import('@capacitor/preferences');
         this.mobileStorage = Preferences;
         logger.info('Using Mobile Storage (Capacitor Preferences)', { component: 'StorageService', action: 'initMobileStorage' });
@@ -160,6 +166,7 @@ class StorageService {
   // 統一的儲存介面
   async setItem<T>(key: string, value: T): Promise<void> {
     try {
+      await this.initializationPromise;
       const stringValue = JSON.stringify(value);
       
       switch (this.platform) {
@@ -169,9 +176,10 @@ class StorageService {
           }
           break;
         case 'electron':
-          if (this.electronStore) {
-            await this.electronStore.set(key, stringValue);
+          if (!this.electronStore) {
+            throw new Error('Electron store not initialized');
           }
+          await this.electronStore.set(key, stringValue);
           break;
         case 'web':
         default:
@@ -187,6 +195,7 @@ class StorageService {
   // 統一的讀取介面
   async getItem<T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> {
     try {
+      await this.initializationPromise;
       let stringValue: string | null = null;
       
       switch (this.platform) {
@@ -197,9 +206,10 @@ class StorageService {
           }
           break;
         case 'electron':
-          if (this.electronStore) {
-            stringValue = await this.electronStore.get(key);
+          if (!this.electronStore) {
+            throw new Error('Electron store not initialized');
           }
+          stringValue = await this.electronStore.get(key);
           break;
         case 'web':
         default:
@@ -221,6 +231,7 @@ class StorageService {
   // 統一的刪除介面
   async removeItem(key: string): Promise<void> {
     try {
+      await this.initializationPromise;
       switch (this.platform) {
         case 'mobile':
           if (this.mobileStorage) {
@@ -228,9 +239,10 @@ class StorageService {
           }
           break;
         case 'electron':
-          if (this.electronStore) {
-            await this.electronStore.delete(key);
+          if (!this.electronStore) {
+            throw new Error('Electron store not initialized');
           }
+          await this.electronStore.delete(key);
           break;
         case 'web':
         default:
@@ -246,6 +258,7 @@ class StorageService {
   // 清除所有資料
   async clear(): Promise<void> {
     try {
+      await this.initializationPromise;
       const keys = Object.values(STORAGE_KEYS);
       
       switch (this.platform) {
@@ -255,10 +268,11 @@ class StorageService {
           }
           break;
         case 'electron':
-          if (this.electronStore) {
-            for (const key of keys) {
-              await this.electronStore.delete(key);
-            }
+          if (!this.electronStore) {
+            throw new Error('Electron store not initialized');
+          }
+          for (const key of keys) {
+            await this.electronStore.delete(key);
           }
           break;
         case 'web':
@@ -277,6 +291,7 @@ class StorageService {
   // 取得所有儲存的 keys
   async getAllKeys(): Promise<string[]> {
     try {
+      await this.initializationPromise;
       switch (this.platform) {
         case 'mobile':
           if (this.mobileStorage) {
@@ -285,9 +300,10 @@ class StorageService {
           }
           break;
         case 'electron':
-          if (this.electronStore) {
-            return await this.electronStore.keys();
+          if (!this.electronStore) {
+            throw new Error('Electron store not initialized');
           }
+          return await this.electronStore.keys();
           break;
         case 'web':
         default:
