@@ -169,7 +169,7 @@ export interface TableWithOrder extends Table {
 
 export type MenuCategory =
   | 'classic'      // 經典調酒
-  | 'signature'    // 招牌/自創
+  | 'signature'    // signature
   | 'mocktail'     // 無酒精
   | 'wine'         // 葡萄酒
   | 'small_bite'   // 小點

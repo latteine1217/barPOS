@@ -90,7 +90,7 @@ const Menu: React.FC = () => {
   const FILTER_CATEGORY_OPTIONS = useMemo(() => ([
     { value: 'all', label: '全部分類' },
     { value: 'classic', label: '經典調酒' },
-    { value: 'signature', label: '招牌調酒' },
+    { value: 'signature', label: 'signature' },
     { value: 'mocktail', label: '無酒精調酒' },
     { value: 'wine', label: '葡萄酒' },
     { value: 'other', label: '其他酒類' },
@@ -110,7 +110,7 @@ const Menu: React.FC = () => {
 
    const CATEGORY_OPTIONS = useMemo(() => ([
     { value: 'classic', label: '經典調酒' },
-    { value: 'signature', label: '招牌調酒' },
+    { value: 'signature', label: 'signature' },
     { value: 'mocktail', label: '無酒精調酒' },
     { value: 'wine', label: '葡萄酒' },
     { value: 'other', label: '其他酒類' },
@@ -275,7 +275,7 @@ const Menu: React.FC = () => {
            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
              {
                cat === 'classic' ? '經典調酒'
-               : cat === 'signature' ? '招牌調酒'
+               : cat === 'signature' ? 'signature'
                : cat === 'mocktail' ? '無酒精調酒'
                : cat === 'wine' ? '葡萄酒'
                : cat === 'other' ? '其他酒類'

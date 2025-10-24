@@ -1,6 +1,6 @@
 {
   "name": "cocktail-bar-pos-system",
-  "productName": "調酒酒吧管理系統",
+  "productName": "barPOS",
   "version": "4.1.0",
   "description": "專為調酒酒吧設計的現代化 POS 系統",
   "author": "Cocktail Bar POS Team",
@@ -111,7 +111,7 @@
   },
   "build": {
     "appId": "com.cocktail.bar.pos.system",
-    "productName": "調酒酒吧管理系統",
+    "productName": "barPOS",
     "directories": {
       "output": "dist-electron"
     },

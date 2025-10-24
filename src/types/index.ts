@@ -125,7 +125,7 @@ export type MenuCategory =
   | 'classic'     // 經典調酒
   | 'mocktail'    // 無酒精調酒
   | 'wine'        // 葡萄酒
-  | 'signature'   // 招牌/自創
+  | 'signature'   // signature
   | 'other'       // 其他酒類
   | 'small_bite'; // 小點
 
