@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🍸 Cocktail Bar POS System
+# 🍸 barPOS
 
 **Modern Point-of-Sale system designed specifically for cocktail bars**
 
@@ -310,6 +310,13 @@ npm run test:ui
 
 ## 🔄 Version History
 
+### [v4.2] - 2025-10-29
+- **Branding**: Updated project name to barPOS
+- **CI/CD**: Fixed deprecated GitHub Actions (upgraded to v4)
+- **Storage**: Enhanced Supabase storage mechanism
+- **Assets**: Added application icons for desktop builds
+- **Documentation**: Restructured README to professional GitHub standards
+
 ### [v4.1] - 2025-10-24
 - **Security**: Full RLS implementation with 16 security policies
 - **Performance**: 14 indexes with 70-95% query improvement
@@ -384,7 +391,7 @@ This project was developed with assistance from:
 
 <div align="center">
 
-**[⬆ back to top](#-cocktail-bar-pos-system)**
+**[⬆ back to top](#-barpos)**
 
 Made with ❤️ for cocktail bars
 

@@ -304,7 +304,6 @@ class StorageService {
             throw new Error('Electron store not initialized');
           }
           return await this.electronStore.keys();
-          break;
         case 'web':
         default:
           return Object.keys(localStorage);

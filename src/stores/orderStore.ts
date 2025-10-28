@@ -182,7 +182,9 @@ export const useOrderStore = create<OrderStore>()(
                 persistedOrders = persistedState.orders as Order[];
               }
             }
-          } catch {}
+          } catch {
+            // Ignore parsing errors for persisted state
+          }
 
           if (persistedOrders && persistedOrders.length > 0) {
             set((state) => {

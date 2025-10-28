@@ -90,7 +90,9 @@ export const useSettingsStore = create<SettingsStore>()(
             if (typeof window !== 'undefined') {
               localStorage.setItem('settings-theme', state.theme);
             }
-          } catch {}
+          } catch {
+            // Ignore localStorage errors
+          }
         });
       },
 
@@ -101,7 +103,9 @@ export const useSettingsStore = create<SettingsStore>()(
             if (typeof window !== 'undefined') {
               localStorage.setItem('settings-theme', theme);
             }
-          } catch {}
+          } catch {
+            // Ignore localStorage errors
+          }
         });
       },
 

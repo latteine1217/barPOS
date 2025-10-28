@@ -201,7 +201,9 @@ export const useTableStore = create<TableStore>()(
                 persistedTables = persistedState.tables as Table[];
               }
             }
-          } catch {}
+          } catch {
+            // Ignore parsing errors for persisted state
+          }
 
           if (persistedTables && persistedTables.length > 0) {
             set((state) => {

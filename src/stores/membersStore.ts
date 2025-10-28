@@ -48,7 +48,9 @@ export const useMembersStore = create<MembersStore>()(
                 persistedMembers = persistedState.members as MemberRecord[];
               }
             }
-          } catch {}
+          } catch {
+            // Ignore parsing errors for persisted state
+          }
 
           if (persistedMembers && persistedMembers.length > 0) {
             set((s) => {

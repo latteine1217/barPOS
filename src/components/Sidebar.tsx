@@ -57,7 +57,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
         <div className={`${collapsed ? 'px-2' : 'px-4'} py-3 border-t border-gray-200 text-[11px] text-gray-500`}>
           {!collapsed ? (
             <div className="space-y-1">
-              <div className="font-medium text-gray-600">調酒酒吧管理系統 - Cocktail Bar POS</div>
+              <div className="font-medium text-gray-600">barPOS - Cocktail Bar Management System</div>
               <div className="flex items-center justify-between gap-2">
                 <a
                   href="https://github.com/latteine1217/cocktail-bar-pos-system"
@@ -132,7 +132,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
           </nav>
           {/* Footer (mobile) */}
           <div className="p-4 border-t border-gray-200 text-xs text-gray-500">
-            <div className="font-medium text-gray-600 mb-1">調酒酒吧管理系統 - Cocktail Bar POS</div>
+            <div className="font-medium text-gray-600 mb-1">barPOS - Cocktail Bar Management System</div>
             <div className="flex items-center justify-between gap-3">
               <a
                 href="https://github.com/latteine1217/cocktail-bar-pos-system"

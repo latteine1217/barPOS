@@ -37,7 +37,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs')
     },
     icon: getIconPath(),
-    title: '調酒酒吧管理系統 - Cocktail Bar POS',
+    title: 'barPOS - Cocktail Bar Management System',
     show: false, // Don't show until ready
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default'
   });

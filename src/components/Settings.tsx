@@ -519,7 +519,7 @@ const Settings: React.FC = () => {
       {/* Footer */}
       <div className="pt-2">
         <div className="border-t border-[var(--glass-elevated-border)] pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
-          <span className="font-medium text-[var(--text-secondary)]">調酒酒吧管理系統 - Cocktail Bar POS</span>
+          <span className="font-medium text-[var(--text-secondary)]">barPOS - Cocktail Bar Management System</span>
           <div className="flex items-center gap-4">
             <a
               href="https://github.com/latteine1217/cocktail-bar-pos-system"

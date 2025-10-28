@@ -17,7 +17,7 @@ const Members: React.FC = () => {
   const deleteMember = useDeleteMember();
   const renameMember = useRenameMember();
   const addCups = useAddCups();
-  const useCups = useUseCups();
+  const deductCups = useUseCups();
   const setCups = useSetCups();
   const initialize = useMembersInitialize();
   const loaded = useMembersLoaded();
@@ -83,7 +83,7 @@ const Members: React.FC = () => {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => useCups(m.id, 1)} className="w-7 h-7 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
+                    <button onClick={() => deductCups(m.id, 1)} className="w-7 h-7 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
                     <input
                       type="number"
                       min={0}
