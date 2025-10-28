@@ -13,6 +13,15 @@ if (isDev) {
 
 let mainWindow;
 
+function getIconPath() {
+  // Resolve icon path for dev (raw file) and production (packaged resources)
+  if (isDev) {
+    return path.join(__dirname, '..', 'resources', 'icon.png');
+  }
+
+  return path.join(process.resourcesPath, 'icon.png');
+}
+
 function createWindow() {
   // Create the browser window
   mainWindow = new BrowserWindow({
@@ -27,7 +36,7 @@ function createWindow() {
       webSecurity: true,
       preload: path.join(__dirname, 'preload.cjs')
     },
-    icon: undefined, // App icon - to be added later
+    icon: getIconPath(),
     title: '調酒酒吧管理系統 - Cocktail Bar POS',
     show: false, // Don't show until ready
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default'
@@ -184,6 +193,18 @@ function createMenu() {
             mainWindow.setFullScreen(!mainWindow.isFullScreen());
           }
         }
+      ]
+    },
+    {
+      label: '編輯',
+      submenu: [
+        { label: '復原', role: 'undo' },
+        { label: '重做', role: 'redo' },
+        { type: 'separator' },
+        { label: '剪下', role: 'cut' },
+        { label: '複製', role: 'copy' },
+        { label: '貼上', role: 'paste' },
+        { label: '全選', role: 'selectAll' }
       ]
     },
     {

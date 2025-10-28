@@ -120,8 +120,14 @@
       "electron/**/*",
       "node_modules/**/*"
     ],
-    "extraResources": [],
+    "extraResources": [
+      {
+        "from": "resources/icon.png",
+        "to": "icon.png"
+      }
+    ],
     "mac": {
+      "icon": "resources/icons/bar-pos.icns",
       "category": "public.app-category.business",
       "target": [
         {
@@ -145,6 +151,7 @@
       "internetEnabled": false
     },
     "win": {
+      "icon": "resources/icons/bar-pos.ico",
       "target": [
         {
           "target": "nsis",
@@ -156,6 +163,7 @@
       ]
     },
     "linux": {
+      "icon": "resources/icon.png",
       "target": [
         {
           "target": "AppImage",
