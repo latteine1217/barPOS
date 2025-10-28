@@ -222,6 +222,49 @@ class SupabaseService {
     }
   }
 
+  private async upsertOrder(order: Order): Promise<ApiResponse<Order>> {
+    try {
+      const orderData = {
+        id: order.id,
+        table_number: order.tableNumber,
+        table_name: order.tableName,
+        items: serializeJson(order.items ?? []),
+        total: order.total ?? 0,
+        subtotal: order.subtotal ?? 0,
+        tax: order.tax ?? 0,
+        discount: order.discount ?? 0,
+        status: this.mapStatusToDatabase(order.status),
+        customers: order.customers,
+        notes: order.notes,
+        created_at: order.createdAt,
+        updated_at: new Date().toISOString(),
+        completed_at: order.completedAt
+      };
+
+      const { data, error } = await this.supabase
+        .from('orders')
+        .upsert([orderData])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: this.transformOrderFromDatabase(data),
+        message: 'Order upserted successfully'
+      };
+    } catch (error) {
+      logger.error('Failed to upsert order', { component: 'SupabaseService', action: 'upsertOrder', orderId: order.id }, error instanceof Error ? error : new Error(String(error)));
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '更新訂單失敗'
+      };
+    }
+  }
+
   // === 桌位管理 ===
   
   async fetchTables(): Promise<ApiResponse<Table[]>> {
@@ -258,7 +301,6 @@ class SupabaseService {
       const { data, error } = await this.supabase
         .from('menu_items')
         .select('*')
-        .eq('available', true)
         .order('name', { ascending: true });
 
       if (error) {
@@ -286,7 +328,7 @@ class SupabaseService {
   async syncLocalData(localData: LocalData): Promise<ApiResponse<{ results: SyncResults }>> {
     try {
       const [ordersResult, tablesResult, menuResult, membersResult] = await Promise.all([
-        this.syncEntities('orders', localData.orders ?? [], (order) => this.createOrder(order)),
+        this.syncEntities('orders', localData.orders ?? [], (order) => this.upsertOrder(order)),
         this.syncEntities('tables', localData.tables ?? [], (table) => this.upsertTable(table)),
         this.syncEntities('menuItems', localData.menuItems ?? [], (item) => this.upsertMenuItem(item)),
         this.syncEntities('members', localData.members ?? [], (member) => this.upsertMember(member)),

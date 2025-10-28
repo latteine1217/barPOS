@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useSettings } from '../stores/settingsStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { useOrders, useTables, useMembers, useSetMembers } from '@/stores';
+import { useOrders, useTables, useMembers, useSetMembers, useOrderActions, useTableActions, useMenuActions } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
 import { exportAllData, importAllData, type ExportData } from '@/services/storageService';
 import { logger } from '@/services/loggerService';
@@ -28,10 +28,10 @@ const Settings: React.FC = () => {
   const menuItems = useMenuItems();
   const members = useMembers();
   const setMembers = useSetMembers();
-  const orderActions = undefined as unknown as any;
-  const tableActions = undefined as unknown as any;
-  const menuActions = undefined as unknown as any;
-  // Members store currently lacks setMembers; only upload in sync for now
+  // 獲取 store actions 用於資料同步
+  const orderActions = useOrderActions();
+  const tableActions = useTableActions();
+  const menuActions = useMenuActions();
   
   // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
   const { theme, accent, supabaseConfig, updateSupabaseConfig, setTheme, setAccent } = settingsData || ({} as any);
