@@ -522,7 +522,7 @@ const Settings: React.FC = () => {
           <span className="font-medium text-[var(--text-secondary)]">barPOS - Cocktail Bar Management System</span>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/latteine1217/cocktail-bar-pos-system"
+              href="https://github.com/latteine1217/barPOS"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[var(--text-primary)] underline-offset-2 hover:underline"

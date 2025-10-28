@@ -4,7 +4,7 @@
 
 **Modern Point-of-Sale system designed specifically for cocktail bars**
 
-[![CI/CD](https://github.com/latteine1217/restaurant-pos-system/actions/workflows/ci.yml/badge.svg)](https://github.com/latteine1217/restaurant-pos-system/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/latteine1217/barPOS/actions/workflows/ci.yml/badge.svg)](https://github.com/latteine1217/barPOS/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.1-61dafb?logo=react)](https://react.dev/)
@@ -114,8 +114,8 @@ A full-featured POS system built with React 19, TypeScript, and Supabase, suppor
 
 ```bash
 # Clone the repository
-git clone https://github.com/latteine1217/restaurant-pos-system.git
-cd restaurant-pos-system
+git clone https://github.com/latteine1217/barPOS.git
+cd barPOS
 
 # Install dependencies
 npm install
@@ -384,8 +384,8 @@ This project was developed with assistance from:
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/latteine1217/restaurant-pos-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/latteine1217/restaurant-pos-system/discussions)
+- **Issues**: [GitHub Issues](https://github.com/latteine1217/barPOS/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/latteine1217/barPOS/discussions)
 
 ---
 

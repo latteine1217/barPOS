@@ -60,7 +60,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
               <div className="font-medium text-gray-600">barPOS - Cocktail Bar Management System</div>
               <div className="flex items-center justify-between gap-2">
                 <a
-                  href="https://github.com/latteine1217/cocktail-bar-pos-system"
+                  href="https://github.com/latteine1217/barPOS"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-gray-700 underline-offset-2 hover:underline"
@@ -78,7 +78,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
           ) : (
             <div className="flex flex-col items-center gap-1">
               <a
-                href="https://github.com/latteine1217/cocktail-bar-pos-system"
+                href="https://github.com/latteine1217/barPOS"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub 專案連結"
@@ -135,7 +135,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
             <div className="font-medium text-gray-600 mb-1">barPOS - Cocktail Bar Management System</div>
             <div className="flex items-center justify-between gap-3">
               <a
-                href="https://github.com/latteine1217/cocktail-bar-pos-system"
+                href="https://github.com/latteine1217/barPOS"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-gray-700 underline-offset-2 hover:underline"

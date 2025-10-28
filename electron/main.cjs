@@ -267,7 +267,7 @@ function createMenu() {
         {
           label: 'GitHub Repository',
           click: () => {
-            shell.openExternal('https://github.com/latteine1217/cocktail-bar-pos-system');
+            shell.openExternal('https://github.com/latteine1217/barPOS');
           }
         }
       ]
