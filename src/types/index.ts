@@ -17,27 +17,27 @@ export type OrderStatus = 'pending' | 'preparing' | 'completed' | 'paid' | 'canc
 export interface Order {
   id: ID;
   tableNumber: number;
-  tableName?: string;
+  tableName?: string | undefined;
   items: OrderItem[];
   total: number;
   subtotal: number;
-  tax?: number;
-  discount?: number;
+  tax?: number | undefined;
+  discount?: number | undefined;
   status: OrderStatus;
   customers: number;
-  customerId?: string; // 添加客戶ID用於CRM分析
-  notes?: string;
+  customerId?: string | undefined; // 添加客戶ID用於CRM分析
+  notes?: string | undefined;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  completedAt?: Timestamp;
+  completedAt?: Timestamp | undefined;
 }
 
 export interface NewOrderData {
   tableNumber: number;
-  tableName?: string;
+  tableName?: string | undefined;
   items: Omit<OrderItem, 'id'>[];
   customers: number;
-  notes?: string;
+  notes?: string | undefined;
 }
 
 // ===== 桌位相關類型 =====
@@ -58,14 +58,14 @@ export interface Table {
   status: TableStatus;
   customers: number;
   maxCapacity: number;
-  capacity?: number; // 座位數
-  type?: TableType; // 桌位類型
-  shape?: TableShape; // 桌位形狀
-  size?: TableSize; // 桌位大小
+  capacity?: number | undefined; // 座位數
+  type?: TableType | undefined; // 桌位類型
+  shape?: TableShape | undefined; // 桌位形狀
+  size?: TableSize | undefined; // 桌位大小
   position: Position;
-  orderId?: ID;
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  orderId?: ID | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface TableLayoutSettings {
@@ -145,17 +145,17 @@ export interface MenuItem {
   id: ID;
   name: string;
   category: MenuCategory;
-  baseSpirit?: BaseSpirit;
-  style?: MenuStyle;
+  baseSpirit?: BaseSpirit | undefined;
+  style?: MenuStyle | undefined;
   price: number;
-  cost?: number; // 成本價（可選）
-  description?: string;
+  cost?: number | undefined; // 成本價（可選）
+  description?: string | undefined;
   available: boolean;
-  imageUrl?: string;
-  ingredients?: string[];
-  alcoholContent?: number;
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  imageUrl?: string | undefined;
+  ingredients?: string[] | undefined;
+  alcoholContent?: number | undefined;
+  createdAt?: Timestamp | undefined;
+  updatedAt?: Timestamp | undefined;
 }
 
 export interface MenuSettings {
@@ -194,7 +194,7 @@ export interface MemberRecord {
   id: ID;
   name: string;
   cups: number; // 剩餘杯數
-  notes?: string;
+  notes?: string | undefined;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -224,63 +224,6 @@ export interface BusinessStats {
   popularItems: MenuItemStats[];
   peakHours: number[];
   averageTableTurnover: number;
-}
-
-// ===== 應用狀態類型 =====
-export interface AppState {
-  orders: Order[];
-  tables: Table[];
-  menuItems: MenuItem[];
-  settings: AppSettings;
-  stats: BusinessStats;
-  isLoading: boolean;
-  error: string | null;
-  lastSyncTime?: Timestamp;
-}
-
-// ===== Context Actions 類型 =====
-export interface OrderActions {
-  addOrder: (orderData: NewOrderData) => Promise<Order>;
-  updateOrder: (orderId: ID, updates: Partial<Order>) => Promise<void>;
-  deleteOrder: (orderId: ID) => Promise<void>;
-  completeOrder: (orderId: ID) => Promise<void>;
-  addItemToOrder: (orderId: ID, item: Omit<OrderItem, 'id'>) => Promise<void>;
-  removeItemFromOrder: (orderId: ID, itemId: ID) => Promise<void>;
-}
-
-export interface TableActions {
-  updateTable: (tableId: number, updates: Partial<Table>) => Promise<void>;
-  addTable: (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  removeTable: (tableId: number) => Promise<void>;
-  resetTableLayout: () => Promise<void>;
-}
-
-export interface MenuActions {
-  addMenuItem: (item: Omit<MenuItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateMenuItem: (itemId: ID, updates: Partial<MenuItem>) => Promise<void>;
-  deleteMenuItem: (itemId: ID) => Promise<void>;
-  toggleMenuItemAvailability: (itemId: ID) => Promise<void>;
-}
-
-// 定義可導入的數據類型
-type ImportableData = {
-  orders?: Order[];
-  tables?: Table[];
-  menuItems?: MenuItem[];
-  settings?: Partial<AppSettings>;
-};
-
-export interface SettingsActions {
-  updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
-  testConnection: () => Promise<boolean>;
-  syncData: () => Promise<void>;
-  exportData: () => Promise<void>;
-  importData: (data: ImportableData) => Promise<void>;
-}
-
-export interface AppContextType {
-  state: AppState;
-  actions: OrderActions & TableActions & MenuActions & SettingsActions;
 }
 
 // ===== API 相關類型 =====
@@ -313,24 +256,6 @@ export interface AppError {
   details?: Record<string, unknown>;
   timestamp: Timestamp;
   resolved: boolean;
-}
-
-export interface ErrorContextType {
-  errors: AppError[];
-  addError: (error: Omit<AppError, 'id' | 'timestamp' | 'resolved'>) => void;
-  removeError: (errorId: ID) => void;
-  clearErrors: () => void;
-  resolveError: (errorId: ID) => void;
-  
-  // Toast 相關方法
-  showToast: (message: string, type?: ToastNotification['type'], duration?: number) => string;
-  removeToast: (id: string) => void;
-  showError: (error: unknown, context?: string) => string;
-  showSuccess: (message: string) => string;
-  showWarning: (message: string) => string;
-  showInfo: (message: string) => string;
-  handleApiError: (error: unknown, context?: string) => void;
-  toasts: ToastNotification[];
 }
 
 // ===== 分析相關類型 =====

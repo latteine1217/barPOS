@@ -260,15 +260,20 @@ export const useMenuStore = create<MenuStore>()(
 
 export const useMenuItems = () => useMenuStore((state) => state.menuItems);
 export const useMenuLoaded = () => useMenuStore((state) => state.isLoaded);
-const actionsSelector = (state: MenuStore) => ({
-  addMenuItem: state.addMenuItem,
-  updateMenuItem: state.updateMenuItem,
-  deleteMenuItem: state.deleteMenuItem,
-  setMenuItems: state.setMenuItems,
-  toggleMenuItemAvailability: state.toggleMenuItemAvailability,
-  resetToDefaultMenu: state.resetToDefaultMenu,
-});
-export const useMenuActions = () => useMenuStore(actionsSelector);
+// Actions 恆定不變，不需要訂閱 Store 更新
+export const useMenuActions = () => {
+  const state = useMenuStore.getState();
+  return {
+    addMenuItem: state.addMenuItem,
+    updateMenuItem: state.updateMenuItem,
+    deleteMenuItem: state.deleteMenuItem,
+    setMenuItems: state.setMenuItems,
+    toggleMenuItemAvailability: state.toggleMenuItemAvailability,
+    resetToDefaultMenu: state.resetToDefaultMenu,
+    setLoaded: state.setLoaded,
+    initialize: state.initialize,
+  };
+};
 export const useMenuItemById = (id: ID) => useMenuStore((state) => state.getMenuItemById(id));
 export const useMenuItemsByCategory = (category: MenuCategory) => useMenuStore((state) => state.getMenuItemsByCategory(category));
 export const useMenuItemsBySpirit = (spirit: BaseSpirit) => useMenuStore((state) => state.getMenuItemsBySpirit(spirit));

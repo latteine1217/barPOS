@@ -71,7 +71,8 @@ class AgentLoggerService {
       await this.writeToLocalStorage(logsToWrite);
       
       // 方案 2: 寫入到專案目錄 (透過 Vite 開發服務器)
-      await this.writeToProjectFile(logsToWrite);
+      // 目前端點 /api/write-logs 未實作，暫時註解以避免 404 錯誤
+      // await this.writeToProjectFile(logsToWrite);
       
     } catch {
       console.error('Agent 日誌寫入失敗:')
@@ -107,36 +108,7 @@ class AgentLoggerService {
     }
   }
 
-  /**
-   * 嘗試寫入到專案檔案 (透過 fetch API)
-   */
-  private async writeToProjectFile(logs: AgentLogEntry[]): Promise<void> {
-    try {
-      // 建立日誌內容
-      const logContent = logs.map(log => 
-        `[${log.timestamp}] ${log.level.toUpperCase()} (${log.component}@${log.url}) ${log.message}`
-      ).join('\n') + '\n';
 
-      // 嘗試透過自定義端點寫入
-      const response = await fetch('/api/write-logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: logContent,
-          session: this.sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`日誌寫入回應錯誤: ${response.status}`);
-      }
-    } catch {
-      // 如果無法寫入檔案，這是正常的（沒有後端支援）
-      // console.warn('無法寫入專案日誌檔案:', error);
-    }
-  }
 
   /**
    * 格式化日誌訊息

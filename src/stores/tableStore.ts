@@ -287,17 +287,21 @@ export const useTables = () => useTableStore(tablesCacheSelector);
 export const useTablesLoaded = () => useTableStore(tablesLoadedSelector);
 
 // 穩定的 actions 選擇器，避免重新渲染 - 使用緩存的選擇器函數
-const tableActionsSelector = (state: TableStore) => ({
-  updateTable: state.updateTable,
-  addTable: state.addTable,
-  deleteTable: state.deleteTable,
-  releaseTable: state.releaseTable,
-  updateTableLayout: state.updateTableLayout,
-  setTables: state.setTables,
-  resetAllTables: state.resetAllTables,
-});
-
-export const useTableActions = () => useTableStore(tableActionsSelector);
+// Actions 恆定不變，不需要訂閱 Store 更新
+export const useTableActions = () => {
+  const state = useTableStore.getState();
+  return {
+    updateTable: state.updateTable,
+    addTable: state.addTable,
+    deleteTable: state.deleteTable,
+    releaseTable: state.releaseTable,
+    updateTableLayout: state.updateTableLayout,
+    setTables: state.setTables,
+    resetAllTables: state.resetAllTables,
+    setLoaded: state.setLoaded,
+    initialize: state.initialize,
+  };
+};
 
 // 特定功能的選擇器
 export const useTableById = (id: number) => 

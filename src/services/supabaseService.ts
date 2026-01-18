@@ -29,6 +29,61 @@ interface ConnectionTestResult {
   error?: string;
 }
 
+interface DatabaseOrder {
+  id: string;
+  table_number: number;
+  table_name: string | null;
+  items: string | null; // JSON string
+  total: number;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  status: string;
+  customers: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+interface DatabaseTable {
+  id: number;
+  number: number;
+  name: string;
+  status: string;
+  customers: number;
+  max_capacity: number;
+  position: string | null; // JSON string
+  order_id: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface DatabaseMenuItem {
+  id: string;
+  name: string;
+  category: string;
+  base_spirit: string | null;
+  price: number;
+  cost: number | null;
+  description: string | null;
+  available: boolean;
+  image_url: string | null;
+  ingredients: string | null; // JSON string
+  alcohol_content: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface DatabaseMember {
+  id: string;
+  name: string;
+  cups: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const ORDER_STATUS_MAP: Record<OrderStatus, OrderStatus> = {
   pending: 'pending',
   preparing: 'preparing',
@@ -154,10 +209,10 @@ class SupabaseService {
   
   async createOrder(order: Order): Promise<ApiResponse<Order>> {
     try {
-      const orderData = {
+      const orderData: DatabaseOrder = {
         id: order.id,
         table_number: order.tableNumber,
-        table_name: order.tableName,
+        table_name: order.tableName ?? null,
         items: serializeJson(order.items ?? []),
         total: order.total ?? 0,
         subtotal: order.subtotal ?? 0,
@@ -165,10 +220,10 @@ class SupabaseService {
         discount: order.discount ?? 0,
         status: this.mapStatusToDatabase(order.status),
         customers: order.customers,
-        notes: order.notes,
+        notes: order.notes ?? null,
         created_at: order.createdAt,
         updated_at: order.updatedAt,
-        completed_at: order.completedAt
+        completed_at: order.completedAt ?? null
       };
 
       const { data, error } = await this.supabase
@@ -183,7 +238,7 @@ class SupabaseService {
 
       return {
         success: true,
-        data: this.transformOrderFromDatabase(data),
+        data: this.transformOrderFromDatabase(data as DatabaseOrder),
         message: 'Order created successfully'
       };
     } catch (error) {
@@ -206,7 +261,7 @@ class SupabaseService {
         throw error;
       }
 
-      const orders = data?.map(order => this.transformOrderFromDatabase(order)) || [];
+      const orders = (data as DatabaseOrder[])?.map(order => this.transformOrderFromDatabase(order)) || [];
 
       return {
         success: true,
@@ -224,10 +279,10 @@ class SupabaseService {
 
   private async upsertOrder(order: Order): Promise<ApiResponse<Order>> {
     try {
-      const orderData = {
+      const orderData: DatabaseOrder = {
         id: order.id,
         table_number: order.tableNumber,
-        table_name: order.tableName,
+        table_name: order.tableName ?? null,
         items: serializeJson(order.items ?? []),
         total: order.total ?? 0,
         subtotal: order.subtotal ?? 0,
@@ -235,10 +290,10 @@ class SupabaseService {
         discount: order.discount ?? 0,
         status: this.mapStatusToDatabase(order.status),
         customers: order.customers,
-        notes: order.notes,
+        notes: order.notes ?? null,
         created_at: order.createdAt,
         updated_at: new Date().toISOString(),
-        completed_at: order.completedAt
+        completed_at: order.completedAt ?? null
       };
 
       const { data, error } = await this.supabase
@@ -253,7 +308,7 @@ class SupabaseService {
 
       return {
         success: true,
-        data: this.transformOrderFromDatabase(data),
+        data: this.transformOrderFromDatabase(data as DatabaseOrder),
         message: 'Order upserted successfully'
       };
     } catch (error) {
@@ -278,7 +333,7 @@ class SupabaseService {
         throw error;
       }
 
-      const tables = data?.map(table => this.transformTableFromDatabase(table)) || [];
+      const tables = (data as DatabaseTable[])?.map(table => this.transformTableFromDatabase(table)) || [];
 
       return {
         success: true,
@@ -307,7 +362,7 @@ class SupabaseService {
         throw error;
       }
 
-      const menuItems = data?.map(item => this.transformMenuItemFromDatabase(item)) || [];
+      const menuItems = (data as DatabaseMenuItem[])?.map(item => this.transformMenuItemFromDatabase(item)) || [];
 
       return {
         success: true,
@@ -357,11 +412,11 @@ class SupabaseService {
 
   // === 私有方法：資料轉換 ===
   
-  private transformOrderFromDatabase(dbOrder: any): Order {
+  private transformOrderFromDatabase(dbOrder: DatabaseOrder): Order {
     return {
       id: dbOrder.id,
       tableNumber: dbOrder.table_number,
-      tableName: dbOrder.table_name,
+      tableName: dbOrder.table_name ?? undefined,
       items: safeParseJson(dbOrder.items, []),
       total: Number(dbOrder.total) || 0,
       subtotal: Number(dbOrder.subtotal) || 0,
@@ -369,41 +424,41 @@ class SupabaseService {
       discount: Number(dbOrder.discount) || 0,
       status: (dbOrder.status as OrderStatus) ?? ORDER_STATUS_MAP.pending,
       customers: Number(dbOrder.customers) || 0,
-      notes: dbOrder.notes,
+      notes: dbOrder.notes ?? undefined,
       createdAt: dbOrder.created_at,
       updatedAt: dbOrder.updated_at,
-      completedAt: dbOrder.completed_at
+      completedAt: dbOrder.completed_at ?? undefined
     };
   }
 
-  private transformTableFromDatabase(dbTable: any): Table {
+  private transformTableFromDatabase(dbTable: DatabaseTable): Table {
     return {
       id: dbTable.id,
       number: dbTable.number,
       name: dbTable.name,
-      status: dbTable.status,
+      status: dbTable.status as TableStatus,
       customers: dbTable.customers || 0,
       maxCapacity: Number(dbTable.max_capacity) || 4,
       position: safeParseJson(dbTable.position, { x: 0, y: 0 }),
-      orderId: dbTable.order_id,
+      orderId: dbTable.order_id ?? undefined,
       createdAt: dbTable.created_at,
       updatedAt: dbTable.updated_at
     };
   }
 
-  private transformMenuItemFromDatabase(dbItem: any): MenuItem {
+  private transformMenuItemFromDatabase(dbItem: DatabaseMenuItem): MenuItem {
     return {
       id: dbItem.id,
       name: dbItem.name,
-      category: dbItem.category,
-      baseSpirit: dbItem.base_spirit,
+      category: dbItem.category as any, // Cast to any to avoid strict check if DB has invalid category
+      baseSpirit: (dbItem.base_spirit as any) ?? undefined,
       price: dbItem.price,
       cost: dbItem.cost ?? undefined,
-      description: dbItem.description,
+      description: dbItem.description ?? undefined,
       available: dbItem.available,
-      imageUrl: dbItem.image_url,
+      imageUrl: dbItem.image_url ?? undefined,
       ingredients: safeParseJson(dbItem.ingredients, []),
-      alcoholContent: dbItem.alcohol_content,
+      alcoholContent: dbItem.alcohol_content ?? undefined,
       createdAt: dbItem.created_at,
       updatedAt: dbItem.updated_at
     };
@@ -413,15 +468,15 @@ class SupabaseService {
   
   private async upsertTable(table: Table): Promise<ApiResponse<Table>> {
     try {
-      const tableData = {
+      const tableData: DatabaseTable = {
         id: table.id,
         number: table.number,
         name: table.name,
         status: this.mapTableStatusToDatabase(table.status),
         customers: table.customers,
         max_capacity: table.maxCapacity,
-        position: serializeJson(table.position) ?? serializeJson({ x: 0, y: 0 }),
-        order_id: table.orderId,
+        position: serializeJson(table.position),
+        order_id: table.orderId ?? null,
         updated_at: new Date().toISOString()
       };
 
@@ -437,7 +492,7 @@ class SupabaseService {
 
       return {
         success: true,
-        data: this.transformTableFromDatabase(data),
+        data: this.transformTableFromDatabase(data as DatabaseTable),
         message: 'Table upserted successfully'
       };
     } catch (error) {
@@ -450,18 +505,18 @@ class SupabaseService {
 
   private async upsertMenuItem(menuItem: MenuItem): Promise<ApiResponse<MenuItem>> {
     try {
-      const menuItemData = {
+      const menuItemData: DatabaseMenuItem = {
         id: menuItem.id,
         name: menuItem.name,
         category: menuItem.category,
-        base_spirit: menuItem.baseSpirit,
+        base_spirit: menuItem.baseSpirit ?? null,
         price: menuItem.price,
         cost: menuItem.cost ?? null,
-        description: menuItem.description,
+        description: menuItem.description ?? null,
         available: menuItem.available,
-        image_url: menuItem.imageUrl,
+        image_url: menuItem.imageUrl ?? null,
         ingredients: serializeJson(menuItem.ingredients),
-        alcohol_content: menuItem.alcoholContent,
+        alcohol_content: menuItem.alcoholContent ?? null,
         updated_at: new Date().toISOString()
       };
 
@@ -477,7 +532,7 @@ class SupabaseService {
 
       return {
         success: true,
-        data: this.transformMenuItemFromDatabase(data),
+        data: this.transformMenuItemFromDatabase(data as DatabaseMenuItem),
         message: 'Menu item upserted successfully'
       };
     } catch (error) {
@@ -498,7 +553,7 @@ class SupabaseService {
 
       if (error) throw error;
 
-      const members: MemberRecord[] = (data || []).map((m: any) => this.transformMemberFromDatabase(m));
+      const members: MemberRecord[] = (data as DatabaseMember[] || []).map((m: DatabaseMember) => this.transformMemberFromDatabase(m));
       return { success: true, data: members, message: `Fetched ${members.length} members` };
     } catch (error) {
       logger.error('Failed to fetch members', { component: 'SupabaseService', action: 'fetchMembers' }, error instanceof Error ? error : new Error(String(error)));
@@ -506,12 +561,12 @@ class SupabaseService {
     }
   }
 
-  private transformMemberFromDatabase(db: any): MemberRecord {
+  private transformMemberFromDatabase(db: DatabaseMember): MemberRecord {
       return {
         id: db.id,
         name: db.name,
         cups: Number(db.cups) || 0,
-        ...(typeof db.notes === 'string' ? { notes: db.notes } : {}),
+        notes: db.notes ?? undefined,
         createdAt: db.created_at,
         updatedAt: db.updated_at
       };
@@ -519,11 +574,12 @@ class SupabaseService {
 
   private async upsertMember(member: MemberRecord): Promise<ApiResponse<MemberRecord>> {
     try {
-      const payload = {
+      const payload: DatabaseMember = {
         id: member.id,
         name: member.name,
         cups: member.cups,
         notes: member.notes ?? null,
+        created_at: member.createdAt,
         updated_at: new Date().toISOString()
       };
       const { data, error } = await this.supabase
@@ -532,7 +588,7 @@ class SupabaseService {
         .select()
         .single();
       if (error) throw error;
-      return { success: true, data: this.transformMemberFromDatabase(data), message: 'Member upserted' };
+      return { success: true, data: this.transformMemberFromDatabase(data as DatabaseMember), message: 'Member upserted' };
     } catch (error) {
       logger.error('Failed to upsert member', { component: 'SupabaseService', action: 'upsertMember', memberId: member.id }, error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: error instanceof Error ? error.message : '更新會員失敗' };

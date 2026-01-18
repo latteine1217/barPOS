@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import { useSettings } from '../stores/settingsStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useOrders, useTables, useMembers, useSetMembers, useOrderActions, useTableActions, useMenuActions } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
@@ -8,8 +7,6 @@ import { logger } from '@/services/loggerService';
 
 import type { SupabaseConfig } from '@/types';
 import SupabaseService from '../services/supabaseService';
-// ❌ 暫時註釋掉渲染追蹤工具，這可能是導致無限循環的原因
-// import { useRenderTracker, useStoreTracker } from '../utils/renderTracker';
 
 interface TestResult {
   success: boolean;
@@ -17,11 +14,18 @@ interface TestResult {
 }
 
 const Settings: React.FC = () => {
-  // ❌ 暫時移除渲染追蹤
-  // useRenderTracker('Settings');
+  // ✅ 統一使用 useSettingsStore 選擇器，避免全量重新渲染
+  const theme = useSettingsStore((s) => s.theme);
+  const accent = useSettingsStore((s) => s.accent);
+  const supabaseConfig = useSettingsStore((s) => s.supabaseConfig);
+  const businessDayCutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
   
-  // ✅ 必須在所有條件判斷之前調用所有 hooks
-  const settingsData = useSettings();
+  // Actions
+  const updateSupabaseConfig = useSettingsStore((s) => s.updateSupabaseConfig);
+  const setTheme = useSettingsStore((s) => s.setTheme);
+  const setAccent = useSettingsStore((s) => s.setAccent);
+  const setBusinessDayCutoff = useSettingsStore((s) => s.setBusinessDayCutoff);
+
   // 從各 store 讀取最新資料
   const orders = useOrders();
   const tables = useTables();
@@ -33,28 +37,11 @@ const Settings: React.FC = () => {
   const tableActions = useTableActions();
   const menuActions = useMenuActions();
   
-  // ✅ 先取出可能為未定義的屬性，避免條件內呼叫 hooks
-  const { theme, accent, supabaseConfig, updateSupabaseConfig, setTheme, setAccent } = settingsData || ({} as any);
-  const businessDayCutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
-  const setBusinessDayCutoff = useSettingsStore((s) => s.setBusinessDayCutoff);
-
   const [testing, setTesting] = useState<boolean>(() => false);
   const [testResult, setTestResult] = useState<TestResult | null>(() => null);
   const [syncing, setSyncing] = useState<boolean>(() => false);
   const [backupMsg, setBackupMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  if (!settingsData) {
-    return (
-      <div className="p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h2 className="text-yellow-800 font-semibold">設定載入中...</h2>
-          <p className="text-yellow-600 mt-2">正在初始化設定數據...</p>
-        </div>
-      </div>
-    );
-  }
-
 
   // === Supabase 相關函數 ===
   

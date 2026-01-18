@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { Card, Select, Badge, Input, Button, Modal } from '@/components/ui';
 import { useMenuItems, useMenuStore } from '@/stores/menuStore';
 
-const ItemCard: React.FC<{ id?: string; name: string; price: number; cost?: number; category: string; baseSpirit?: string; available?: boolean; description?: string; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }>
+const ItemCard: React.FC<{ id?: string; name: string; price: number; cost?: number | undefined; category: string; baseSpirit?: string | undefined; available?: boolean | undefined; description?: string | undefined; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }>
 = ({ id, name, price, cost, category, baseSpirit, available = true, description, onEdit, onDelete }) => (
   <Card padding="lg" className={`card ${!available ? 'opacity-60' : ''} bg-white/10 dark:bg-white/5 hover:shadow-md transition-shadow`}>
     <div className="flex justify-between items-start mb-3">

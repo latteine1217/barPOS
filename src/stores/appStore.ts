@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { useOrderStore, type OrderStore } from './orderStore';
-import { useTableStore, type TableStore } from './tableStore';
-import { useMenuStore, type MenuStore } from './menuStore';
+import { useOrderStore } from './orderStore';
+import { useTableStore } from './tableStore';
+import { useMenuStore } from './menuStore';
 import { useSettingsStore } from './settingsStore';
 import { logger } from '@/services/loggerService';
 import type { Order, ID } from '@/types';
@@ -192,51 +192,39 @@ export const useAppState = () => {
   };
 };
 
-// 優化的選擇器：避免重新渲染問題
-const appActionsSelector = (state: AppStore) => ({
-  initialize: state.initialize,
-  setOffline: state.setOffline,
-  addOrderWithTableUpdate: state.addOrderWithTableUpdate,
-  deleteOrderWithTableRelease: state.deleteOrderWithTableRelease,
-  clearAllData: state.clearAllData,
-});
-
-const orderActionsForAppSelector = (state: OrderStore) => ({
-  addOrder: state.addOrder,
-  updateOrder: state.updateOrder,
-  deleteOrder: state.deleteOrder,
-  setOrders: state.setOrders,
-});
-
-const tableActionsForAppSelector = (state: TableStore) => ({
-  updateTable: state.updateTable,
-  addTable: state.addTable,
-  deleteTable: state.deleteTable,
-  updateTableLayout: state.updateTableLayout,
-  setTables: state.setTables,
-});
-
-const menuActionsForAppSelector = (state: MenuStore) => ({
-  addMenuItem: state.addMenuItem,
-  updateMenuItem: state.updateMenuItem,
-  deleteMenuItem: state.deleteMenuItem,
-  setMenuItems: state.setMenuItems,
-});
-
 // 組合操作 - 提供統一的操作接口
+// Actions 恆定不變，不需要訂閱 Store 更新
 export const useAppActions = () => {
-  const appActions = useAppStore(appActionsSelector);
-  const orderActions = useOrderStore(orderActionsForAppSelector);
-  const tableActions = useTableStore(tableActionsForAppSelector);
-  const menuActions = useMenuStore(menuActionsForAppSelector);
+  const appState = useAppStore.getState();
+  const orderState = useOrderStore.getState();
+  const tableState = useTableStore.getState();
+  const menuState = useMenuStore.getState();
 
   return {
-    // 組合操作
-    ...appActions,
+    // App Actions
+    initialize: appState.initialize,
+    setOffline: appState.setOffline,
+    addOrderWithTableUpdate: appState.addOrderWithTableUpdate,
+    deleteOrderWithTableRelease: appState.deleteOrderWithTableRelease,
+    clearAllData: appState.clearAllData,
     
-    // 個別 store 操作
-    ...orderActions,
-    ...tableActions,
-    ...menuActions,
+    // Order Actions
+    addOrder: orderState.addOrder,
+    updateOrder: orderState.updateOrder,
+    deleteOrder: orderState.deleteOrder,
+    setOrders: orderState.setOrders,
+    
+    // Table Actions
+    updateTable: tableState.updateTable,
+    addTable: tableState.addTable,
+    deleteTable: tableState.deleteTable,
+    updateTableLayout: tableState.updateTableLayout,
+    setTables: tableState.setTables,
+    
+    // Menu Actions
+    addMenuItem: menuState.addMenuItem,
+    updateMenuItem: menuState.updateMenuItem,
+    deleteMenuItem: menuState.deleteMenuItem,
+    setMenuItems: menuState.setMenuItems,
   };
 };

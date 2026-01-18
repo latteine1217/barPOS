@@ -28,7 +28,7 @@ function AppContent() {
   const menuLoaded = useMenuStore((state) => state.isLoaded);
   
   // 暫時移除 settingsStore 依賴以快速恢復功能
-  const settingsLoaded = useSettingsStore((state: any) => state.isLoaded);
+  const settingsLoaded = useSettingsStore((state) => state.isLoaded);
   
   // 計算載入狀態 - 簡化條件
   const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
@@ -165,8 +165,8 @@ const renderActiveTab = () => {
    );}
 
 function App() {
-  const theme = useSettingsStore((s: any) => s.theme) as 'light' | 'dark' | 'auto';
-  const accent = useSettingsStore((s: any) => s.accent) as string;
+  const theme = useSettingsStore((s) => s.theme);
+  const accent = useSettingsStore((s) => s.accent);
 
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return false;

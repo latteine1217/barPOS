@@ -251,15 +251,19 @@ const ordersLoadedSelector = (state: OrderStore) => state.isLoaded;
 export const useOrders = () => useOrderStore(ordersCacheSelector);
 export const useOrdersLoaded = () => useOrderStore(ordersLoadedSelector);
 // 優化的選擇器：避免重新渲染問題
-const orderActionsSelector = (state: OrderStore) => ({
-  addOrder: state.addOrder,
-  updateOrder: state.updateOrder,
-  deleteOrder: state.deleteOrder,
-  setOrders: state.setOrders,
-  clearAllOrders: state.clearAllOrders,
-});
-
-export const useOrderActions = () => useOrderStore(orderActionsSelector);
+// Actions 恆定不變，不需要訂閱 Store 更新
+export const useOrderActions = () => {
+  const state = useOrderStore.getState();
+  return {
+    addOrder: state.addOrder,
+    updateOrder: state.updateOrder,
+    deleteOrder: state.deleteOrder,
+    setOrders: state.setOrders,
+    clearAllOrders: state.clearAllOrders,
+    setLoaded: state.setLoaded,
+    initialize: state.initialize,
+  };
+};
 
 // 特定功能的選擇器
 export const useOrderById = (id: ID) => 
