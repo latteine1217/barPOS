@@ -50,7 +50,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
   });
 
   // ✅ 修復：解構 props 以避免依賴問題
-  const { initialTableNumber, existingOrder, onOrderComplete } = props;
+  const { initialTableNumber, existingOrder, onOrderComplete, updateOrderStatus, selectedTable } = props;
 
   // 訂單狀態控制（僅針對既有訂單顯示與更新）
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(existingOrder?.status ?? 'pending');
@@ -68,20 +68,25 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
   const handleStatusChange = useCallback((status: OrderStatus) => {
     if (!existingOrder) return;
     setCurrentStatus(status);
-    props.updateOrderStatus(existingOrder.id, status);
+    updateOrderStatus(existingOrder.id, status);
     // Toast 成功提示
     showToast(`狀態已更新為「${status === 'pending' ? '待處理' : status === 'completed' ? '已完成' : status === 'paid' ? '已結帳' : status}」`);
-  }, [existingOrder, props, showToast]);
+  }, [existingOrder, showToast, updateOrderStatus]);
 
   // 釋放桌位
-  const updateTable = useTableStore((s) => s.updateTable);
+  const releaseTable = useTableStore((s) => s.releaseTable);
   const handleReleaseTable = useCallback(() => {
-    if (!props.selectedTable) return;
-    updateTable(props.selectedTable.id, { status: 'available', orderId: null as any, customers: 0 });
-    showToast(`已釋放桌位 ${props.selectedTable.number}`);
+    if (!selectedTable || !existingOrder) return;
+    if (currentStatus !== 'paid') {
+      showToast('尚未結帳');
+      return;
+    }
+
+    releaseTable(existingOrder.id);
+    showToast(`已釋放桌位 ${selectedTable.number}`);
     // 關閉視窗
     onOrderComplete(null);
-  }, [props.selectedTable, updateTable, onOrderComplete, showToast]);
+  }, [selectedTable, existingOrder, currentStatus, releaseTable, onOrderComplete, showToast]);
 
   // Adjustment (surcharge/discount before tip)
   const [adjustment, setAdjustment] = useState<number>(0);
@@ -117,7 +122,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
         items: orderItems,
         subtotal,
         total: payable,
-        status: existingOrder?.status || 'pending',
+        status: currentStatus,
         notes: orderDetails.notes,
         createdAt: existingOrder?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -136,6 +141,7 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
     orderDetails,
     orderItems,
     totalAmount,
+    currentStatus,
     setError,
     adjustment,
     tipEnabled,

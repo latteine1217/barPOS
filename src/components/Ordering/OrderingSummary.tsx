@@ -132,7 +132,8 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">訂單狀態</h3>
           {existingOrder ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleStatusChange('pending')}
               className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
@@ -150,28 +151,43 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
                   ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
                   : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
               }`}
-            >
-              已完成
-            </button>
-            <button
-              onClick={() => handleStatusChange('paid')}
-              className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+              >
+                已完成
+              </button>
+              </div>
+              <label className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg border ${
                 currentStatus === 'paid'
-                  ? 'bg-blue-100 border-blue-300 text-blue-800'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
-              }`}
-            >
-              已結帳
-            </button>
-          </div>
+                  ? 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300'
+                  : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
+              }`}>
+                <span className="text-sm font-medium">已結帳</span>
+                <input
+                  type="checkbox"
+                  aria-label="已結帳"
+                  checked={currentStatus === 'paid'}
+                  disabled={currentStatus !== 'completed' && currentStatus !== 'paid'}
+                  onChange={(e) => handleStatusChange(e.target.checked ? 'paid' : 'completed')}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </label>
+              {currentStatus !== 'completed' && currentStatus !== 'paid' && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  請先將狀態設為「已完成」後再勾選結帳。
+                </p>
+              )}
+            </div>
         ) : (
           <p className="text-xs text-gray-500">建立訂單後可變更狀態</p>
         )}
-        {existingOrder && currentStatus === 'paid' && (
+        {existingOrder && (currentStatus === 'completed' || currentStatus === 'paid') && (
           <div className="mt-4">
             <button
               onClick={handleReleaseTable}
-              className="w-full py-2 px-4 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700"
+              className={`w-full py-2 px-4 rounded-lg font-medium text-white ${
+                currentStatus === 'paid'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
             >
               釋放桌位
             </button>

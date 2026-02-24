@@ -62,6 +62,23 @@ A full-featured POS system built with React 19, TypeScript, and Supabase, suppor
 - 100% compatibility for core features (menu, orders, tables, members)
 - Proper JSONB field handling and data format validation
 
+### v4.3 Updates (2026-02-24)
+
+#### 📈 Analytics Consistency
+- **Unified Period Filtering** - All analytics views now consume the same `selectedPeriod` scope
+- **Order Status Scope** - Revenue/product/customer/time analytics share the same order status filter (`completed` / `paid`)
+- **Business Day Cutoff** - Cross-day statistics support configurable cutoff hour for business-day boundaries
+- **Trend Gap Fill** - Missing trend buckets are backfilled with zero values for stable chart continuity
+
+#### 🧩 Settings UX
+- **Settings Layout Refresh** - Reorganized into a two-column responsive structure for clearer section hierarchy
+- **Visual Readability** - Unified card spacing, labels, input contrast, and action grouping
+- **Type Safety Cleanup** - Removed loose `any` usage in settings accent selection and chart formatter wrappers
+
+#### ✅ Test Coverage Expansion
+- Added integration tests for backup/restore, sync from Supabase, and store initialization paths
+- Added service tests for analytics period + status filtering and business-day cutoff behavior
+
 ### v4.0 Updates
 
 - **Member Credit System** - Cup-based prepaid system with add/deduct/set operations
@@ -309,6 +326,12 @@ npm run test:ui
 ---
 
 ## 🔄 Version History
+
+### [v4.3] - 2026-02-24
+- **Analytics**: Unified `selectedPeriod` + order status filtering across all analysis views
+- **Business Day**: Added cutoff-aware cross-day split and trend gap-filling
+- **Settings**: Reworked settings page layout to responsive two-column information architecture
+- **Quality**: Added high-value integration/service tests for sync, backup/restore, store init, and analytics cutoff scenarios
 
 ### [v4.2] - 2025-10-29
 - **Branding**: Updated project name to barPOS

@@ -1,7 +1,16 @@
-import { differenceInDays, startOfWeek, startOfMonth, endOfWeek, endOfMonth, startOfDay, format } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  differenceInDays,
+  format,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import { groupBy, sumBy, meanBy, orderBy } from 'lodash';
 import type { 
   Order, 
+  OrderStatus,
   RFMAnalysis, 
   CustomerSegment, 
   TimePeriod, 
@@ -10,6 +19,78 @@ import type {
   ProductAnalysis, 
   SeatingAnalysis 
 } from '../types';
+
+interface PeriodFilterOptions {
+  now?: Date;
+  cutoffHour?: number;
+  includedStatuses?: OrderStatus[];
+}
+
+const HOUR_IN_MS = 60 * 60 * 1000;
+
+const normalizeCutoffHour = (cutoffHour: number | undefined): number => {
+  const hour = Number.isFinite(cutoffHour) ? Math.floor(cutoffHour as number) : 3;
+  return Math.max(0, Math.min(23, hour));
+};
+
+const shiftByCutoff = (date: Date, cutoffHour: number): Date =>
+  new Date(date.getTime() - cutoffHour * HOUR_IN_MS);
+
+const getBusinessDayStart = (date: Date, cutoffHour: number): Date => {
+  const start = new Date(date);
+  if (start.getHours() < cutoffHour) {
+    start.setDate(start.getDate() - 1);
+  }
+  start.setHours(cutoffHour, 0, 0, 0);
+  return start;
+};
+
+const getPeriodKey = (date: Date, period: TrendPeriod): string => {
+  switch (period) {
+    case 'hourly':
+      return format(date, 'yyyy-MM-dd-HH');
+    case 'daily':
+      return format(date, 'yyyy-MM-dd');
+    case 'weekly':
+      return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    case 'monthly':
+      return format(date, 'yyyy-MM');
+    default:
+      return format(date, 'yyyy-MM-dd');
+  }
+};
+
+export const getPeriodRange = (
+  period: TimePeriod,
+  options: Pick<PeriodFilterOptions, 'now' | 'cutoffHour'> = {}
+): { start: Date; end: Date } | null => {
+  const now = options.now ?? new Date();
+  const cutoffHour = normalizeCutoffHour(options.cutoffHour);
+  const businessDayStart = getBusinessDayStart(now, cutoffHour);
+
+  switch (period) {
+    case 'today': {
+      const start = businessDayStart;
+      const end = addDays(start, 1);
+      return { start, end };
+    }
+    case 'week': {
+      const weekStart = startOfWeek(businessDayStart, { weekStartsOn: 1 });
+      weekStart.setHours(cutoffHour, 0, 0, 0);
+      const end = addWeeks(weekStart, 1);
+      return { start: weekStart, end };
+    }
+    case 'month': {
+      const monthStart = startOfMonth(businessDayStart);
+      monthStart.setHours(cutoffHour, 0, 0, 0);
+      const end = addMonths(monthStart, 1);
+      return { start: monthStart, end };
+    }
+    case 'all':
+    default:
+      return null;
+  }
+};
 
 // Private helper to get raw RFM values for all customers
 const getAllRFMValues = (orders: Order[]): Omit<RFMAnalysis, 'score'>[] => {
@@ -109,45 +190,35 @@ const determineSegment = (rfmScore: string): CustomerSegment => {
 };
 
 // Filter orders by time period
-export const filterOrdersByPeriod = (orders: Order[], period: TimePeriod): Order[] => {
-  const now = new Date();
-  let startDate: Date, endDate: Date;
-  
-  switch (period) {
-    case 'today':
-      startDate = startOfDay(now);
-      endDate = new Date(); // up to now
-      break;
-    case 'week':
-      startDate = startOfWeek(now, { weekStartsOn: 1 });
-      endDate = endOfWeek(now, { weekStartsOn: 1 });
-      break;
-    case 'month':
-      startDate = startOfMonth(now);
-      endDate = endOfMonth(now);
-      break;
-    case 'all':
-    default:
-      return orders;
-  }
-  
-  return orders.filter(order => {
+export const filterOrdersByPeriod = (
+  orders: Order[],
+  period: TimePeriod,
+  options: PeriodFilterOptions = {}
+): Order[] => {
+  const includedStatuses = options.includedStatuses;
+  const range = getPeriodRange(period, options);
+
+  return orders.filter((order) => {
+    if (includedStatuses && !includedStatuses.includes(order.status)) {
+      return false;
+    }
+    if (!range) return true;
     const orderDate = new Date(order.createdAt);
-    return orderDate >= startDate && orderDate <= endDate;
+    return orderDate >= range.start && orderDate < range.end;
   });
 };
 
 // Calculate trend data
-export const calculateTrends = (orders: Order[], period: TrendPeriod = 'daily'): TrendData[] => {
-  const groupedData = groupBy(orders, order => {
-    const date = new Date(order.createdAt);
-    switch (period) {
-      case 'hourly': return format(date, 'yyyy-MM-dd-HH');
-      case 'daily': return format(date, 'yyyy-MM-dd');
-      case 'weekly': return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      case 'monthly': return format(date, 'yyyy-MM');
-      default: return format(date, 'yyyy-MM-dd');
-    }
+export const calculateTrends = (
+  orders: Order[],
+  period: TrendPeriod = 'daily',
+  options: Pick<PeriodFilterOptions, 'cutoffHour'> = {}
+): TrendData[] => {
+  const cutoffHour = normalizeCutoffHour(options.cutoffHour);
+  const groupedData = groupBy(orders, (order) => {
+    const sourceDate = new Date(order.createdAt);
+    const businessDate = shiftByCutoff(sourceDate, cutoffHour);
+    return getPeriodKey(businessDate, period);
   });
   
   return Object.entries(groupedData).map(([periodStr, periodOrders]) => ({

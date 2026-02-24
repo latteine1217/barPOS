@@ -1,23 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 const BubbleBackground: React.FC = () => {
-  const interactiveRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = interactiveRef.current;
-    if (!el) return;
-
-    const onMove = (e: PointerEvent) => {
-      const x = e.clientX;
-      const y = e.clientY;
-      el.style.setProperty('--pointer-x', `${x}px`);
-      el.style.setProperty('--pointer-y', `${y}px`);
-    };
-
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove as any);
-  }, []);
-
   return (
     <div className="fixed inset-0 -z-10 pointer-events-none gradient-bg">
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -35,7 +18,7 @@ const BubbleBackground: React.FC = () => {
         <div className="g3" />
         <div className="g4" />
         <div className="g5" />
-        <div ref={interactiveRef} className="interactive" />
+        <div className="interactive" />
       </div>
     </div>
   );

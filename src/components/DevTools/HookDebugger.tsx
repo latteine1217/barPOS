@@ -1,12 +1,12 @@
 // Hook 調試器組件 - 可視化 Hook 狀態變更
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Card from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { logger } from '@/services/loggerService';
 
 interface HookState {
   name: string;
-  value: any;
+  value: unknown;
   timestamp: number;
   changeCount: number;
   lastChangeReason: string | undefined;
@@ -16,8 +16,8 @@ interface HookHistory {
   timestamp: number;
   changes: Array<{
     hookName: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
     reason: string | undefined;
   }>;
 }
@@ -44,7 +44,7 @@ export function HookDebugger({
   const historyRef = useRef<HookHistory[]>([]);
 
   // 註冊 Hook 狀態追蹤
-  const trackHook = (name: string, value: any, reason?: string) => {
+  const trackHook = useCallback((name: string, value: unknown, reason?: string) => {
     setHooks(prev => {
       const existing = prev[name];
       const hasChanged = !existing || JSON.stringify(existing.value) !== JSON.stringify(value);
@@ -78,7 +78,7 @@ export function HookDebugger({
       
       return prev;
     });
-  };
+  }, [maxHistoryItems]);
 
   // 導出 Hook 狀態
   const exportHookState = () => {
@@ -124,7 +124,7 @@ export function HookDebugger({
   };
 
   // 格式化值顯示
-  const formatValue = (value: any): string => {
+  const formatValue = (value: unknown): string => {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
     if (typeof value === 'string') return `"${value}"`;
@@ -165,7 +165,10 @@ export function HookDebugger({
   // 暴露 trackHook 到全局（開發模式下）- 必須在 early return 之前
   useEffect(() => {
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      (window as any).__trackHook = trackHook;
+      const debugWindow = window as Window & {
+        __trackHook?: (name: string, value: unknown, reason?: string) => void;
+      };
+      debugWindow.__trackHook = trackHook;
     }
   }, [trackHook]);
 

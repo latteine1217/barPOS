@@ -5,11 +5,24 @@ import {
   calculateTrends, 
   analyzeProducts, 
   analyzeSeating,
-  calculateCLV
+  calculateCLV,
+  getPeriodRange,
 } from '../utils/dataAnalysis';
-import { format, subDays, startOfDay } from 'date-fns';
+import {
+  addDays,
+  addHours,
+  addMonths,
+  addWeeks,
+  format,
+  startOfDay,
+  startOfHour,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from 'date-fns';
 import type { 
   Order, 
+  OrderStatus,
   RFMAnalysis, 
   CustomerSegment, 
   TimePeriod, 
@@ -94,12 +107,26 @@ interface TimeAnalysisResult {
   peakDays: Array<{ day: string; revenue: number }>;
 }
 
+interface AnalyticsServiceOptions {
+  cutoffHour?: number;
+  includedStatuses?: OrderStatus[];
+}
+
+const HOUR_IN_MS = 60 * 60 * 1000;
+
 // 分析服務類
 export class AnalyticsService {
   private orders: Order[];
+  private cutoffHour: number;
+  private includedStatuses: Set<OrderStatus>;
 
-  constructor(orders: Order[] = []) {
+  constructor(orders: Order[] = [], options: AnalyticsServiceOptions = {}) {
     this.orders = orders;
+    this.cutoffHour = this.normalizeCutoffHour(options.cutoffHour);
+    const statuses: OrderStatus[] = options.includedStatuses && options.includedStatuses.length > 0
+      ? options.includedStatuses
+      : ['completed', 'paid'];
+    this.includedStatuses = new Set(statuses);
   }
 
   // 更新數據
@@ -109,7 +136,7 @@ export class AnalyticsService {
 
   // 獲取基礎統計
   getBasicStats(period: TimePeriod = 'all'): BasicStats {
-    const filteredOrders = filterOrdersByPeriod(this.orders, period);
+    const filteredOrders = this.getScopedOrders(period);
     
     const totalOrders = filteredOrders.length;
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
@@ -143,30 +170,34 @@ export class AnalyticsService {
   }
 
   // 獲取營收趨勢
-  getRevenueTrends(period: TrendPeriod = 'daily', days: number = 30): Array<TrendData & { date: string; formattedDate: string }> {
+  getRevenueTrends(
+    period: TrendPeriod = 'daily',
+    days: number = 30,
+    timePeriod: TimePeriod = 'all'
+  ): Array<TrendData & { date: string; formattedDate: string }> {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
-    
-    const relevantOrders = this.orders.filter(order => {
+
+    const relevantOrders = this.getScopedOrders(timePeriod).filter(order => {
       const orderDate = new Date(order.createdAt);
       return orderDate >= startDate && orderDate <= endDate;
     });
 
-    const trends = calculateTrends(relevantOrders, period);
+    const trends = calculateTrends(relevantOrders, period, { cutoffHour: this.cutoffHour });
     
     // 填補缺失的日期
-    const filledTrends = this.fillMissingDates(trends);
+    const filledTrends = this.fillMissingDates(trends, period, startDate, endDate);
     
     return filledTrends.map(trend => ({
       ...trend,
-      date: this.formatTrendDate(trend.period),
-      formattedDate: format(new Date(trend.period), 'MM/dd')
+      date: this.formatTrendDate(trend.period, period),
+      formattedDate: this.formatTrendLabel(trend.period, period)
     }));
   }
 
   // 獲取產品分析
-  getProductAnalysis(): ProductAnalysisResult {
-    const productStats = analyzeProducts(this.orders);
+  getProductAnalysis(period: TimePeriod = 'all'): ProductAnalysisResult {
+    const productStats = analyzeProducts(this.getScopedOrders(period));
     
     return {
       topSellingProducts: productStats.slice(0, 10),
@@ -178,8 +209,8 @@ export class AnalyticsService {
   }
 
   // 獲取座位分析
-  getSeatingAnalysis(): SeatingAnalysisResult {
-    const seatStats = analyzeSeating(this.orders);
+  getSeatingAnalysis(period: TimePeriod = 'all'): SeatingAnalysisResult {
+    const seatStats = analyzeSeating(this.getScopedOrders(period));
     
     return {
       topPerformingTables: seatStats.slice(0, 10),
@@ -190,8 +221,9 @@ export class AnalyticsService {
   }
 
   // 獲取客戶分析
-  getCustomerAnalysis(): CustomerAnalysisResult {
-    const rfmData = calculateRFM(this.orders) as RFMAnalysis[];
+  getCustomerAnalysis(period: TimePeriod = 'all'): CustomerAnalysisResult {
+    const scopedOrders = this.getScopedOrders(period);
+    const rfmData = calculateRFM(scopedOrders) as RFMAnalysis[];
     const segmentedCustomers = segmentCustomers(rfmData);
     
     const segments = this.groupBySegment(segmentedCustomers);
@@ -199,20 +231,21 @@ export class AnalyticsService {
     return {
       totalCustomers: rfmData.length,
       segments,
-      averageCLV: this.calculateAverageCLV(),
-      topCustomers: this.getTopCustomers(rfmData),
-      newCustomers: this.getNewCustomers(),
-      customerRetention: this.calculateRetentionRate()
+      averageCLV: this.calculateAverageCLV(scopedOrders),
+      topCustomers: this.getTopCustomers(rfmData, scopedOrders),
+      newCustomers: this.getNewCustomers(scopedOrders),
+      customerRetention: this.calculateRetentionRate(scopedOrders)
     };
   }
 
   // 獲取時段分析
-  getTimeAnalysis(): TimeAnalysisResult {
+  getTimeAnalysis(period: TimePeriod = 'all'): TimeAnalysisResult {
+    const scopedOrders = this.getScopedOrders(period);
     const hourlyData: { [key: number]: { hour: number; orderCount: number; revenue: number } } = {};
     const dailyData: { [key: number]: { day: number; orderCount: number; revenue: number } } = {};
     
-    this.orders.forEach(order => {
-      const date = new Date(order.createdAt);
+    scopedOrders.forEach(order => {
+      const date = new Date(new Date(order.createdAt).getTime() - this.cutoffHour * HOUR_IN_MS);
       const hour = date.getHours();
       const dayOfWeek = date.getDay();
       
@@ -231,46 +264,33 @@ export class AnalyticsService {
       dailyData[dayOfWeek]!.revenue += order.total;
     });
 
+    const hourlyDistribution = Array.from({ length: 24 }, (_, hour) => {
+      const row = hourlyData[hour] || { hour, orderCount: 0, revenue: 0 };
+      return { ...row, label: `${row.hour}:00` };
+    });
+
+    const weeklyDistribution = Array.from({ length: 7 }, (_, day) => {
+      const row = dailyData[day] || { day, orderCount: 0, revenue: 0 };
+      return { ...row, label: this.getDayName(row.day) };
+    });
+
     return {
-      hourlyDistribution: Object.values(hourlyData).map(h => ({
-        ...h,
-        label: `${h.hour}:00`
-      })),
-      weeklyDistribution: Object.values(dailyData).map(d => ({
-        ...d,
-        label: this.getDayName(d.day)
-      })),
-      peakHours: this.findPeakHours(Object.values(hourlyData)),
-      peakDays: this.findPeakDays(Object.values(dailyData))
+      hourlyDistribution,
+      weeklyDistribution,
+      peakHours: this.findPeakHours(hourlyDistribution),
+      peakDays: this.findPeakDays(weeklyDistribution)
     };
   }
 
   // 私有方法
   private getPreviousPeriodOrders(period: TimePeriod): Order[] {
-    const now = new Date();
-    let startDate: Date, endDate: Date;
-    
-    switch (period) {
-      case 'today':
-        endDate = startOfDay(now);
-        startDate = subDays(endDate, 1);
-        break;
-      case 'week':
-        endDate = subDays(now, 7);
-        startDate = subDays(endDate, 7);
-        break;
-      case 'month':
-        endDate = subDays(now, 30);
-        startDate = subDays(endDate, 30);
-        break;
-      default:
-        return [];
-    }
-    
-    return this.orders.filter(order => {
-      const orderDate = new Date(order.createdAt);
-      return orderDate >= startDate && orderDate < endDate;
-    });
+    const currentRange = getPeriodRange(period, { cutoffHour: this.cutoffHour });
+    if (!currentRange) return [];
+
+    const duration = currentRange.end.getTime() - currentRange.start.getTime();
+    const previousStart = new Date(currentRange.start.getTime() - duration);
+    const previousEnd = new Date(currentRange.start.getTime());
+    return this.getOrdersInRange(previousStart, previousEnd);
   }
 
   private calculateChange(current: number, previous: number): number | null {
@@ -278,15 +298,54 @@ export class AnalyticsService {
     return ((current - previous) / previous) * 100;
   }
 
-  private fillMissingDates(trends: TrendData[]): TrendData[] {
-    // 為簡化，這裡返回原始趨勢數據
-    // 實際應用中可以填補缺失的日期數據
-    return trends;
+  private fillMissingDates(
+    trends: TrendData[],
+    period: TrendPeriod,
+    rangeStart: Date,
+    rangeEnd: Date
+  ): TrendData[] {
+    const shiftedStart = new Date(rangeStart.getTime() - this.cutoffHour * HOUR_IN_MS);
+    const shiftedEnd = new Date(rangeEnd.getTime() - this.cutoffHour * HOUR_IN_MS);
+    let cursor = this.normalizeTrendCursor(shiftedStart, period);
+    const endCursor = this.normalizeTrendCursor(shiftedEnd, period);
+    const trendMap = new Map(trends.map((trend) => [trend.period, trend]));
+    const filled: TrendData[] = [];
+
+    while (cursor.getTime() <= endCursor.getTime()) {
+      const key = this.formatTrendKey(cursor, period);
+      const existing = trendMap.get(key);
+      filled.push(existing ?? {
+        period: key,
+        orderCount: 0,
+        revenue: 0,
+        averageOrderValue: 0,
+        customerCount: 0
+      });
+      cursor = this.stepTrendCursor(cursor, period);
+    }
+
+    return filled;
   }
 
-  private formatTrendDate(period: string): string {
-    // 格式化趨勢日期用於圖表顯示
-    return period;
+  private formatTrendDate(periodKey: string, trendPeriod: TrendPeriod): string {
+    const parsedDate = this.parseTrendPeriod(periodKey, trendPeriod);
+    return parsedDate ? parsedDate.toISOString() : periodKey;
+  }
+
+  private formatTrendLabel(periodKey: string, trendPeriod: TrendPeriod): string {
+    const parsedDate = this.parseTrendPeriod(periodKey, trendPeriod);
+    if (!parsedDate) return periodKey;
+
+    switch (trendPeriod) {
+      case 'hourly':
+        return format(parsedDate, 'MM/dd HH:00');
+      case 'monthly':
+        return format(parsedDate, 'yyyy/MM');
+      case 'weekly':
+      case 'daily':
+      default:
+        return format(parsedDate, 'MM/dd');
+    }
   }
 
   private getProductCategories(productStats: ProductAnalysis[]): Array<{
@@ -380,11 +439,11 @@ export class AnalyticsService {
     }>;
   }
 
-  private calculateAverageCLV(): number {
-    if (this.orders.length === 0) return 0;
+  private calculateAverageCLV(orders: Order[]): number {
+    if (orders.length === 0) return 0;
     
     const customerGroups: { [key: string]: Order[] } = {};
-    this.orders.forEach(order => {
+    orders.forEach(order => {
       if (order.customerId) {
         if (!customerGroups[order.customerId]) {
           customerGroups[order.customerId] = [];
@@ -400,23 +459,23 @@ export class AnalyticsService {
     return clvValues.length > 0 ? clvValues.reduce((sum, clv) => sum + clv, 0) / clvValues.length : 0;
   }
 
-  private getTopCustomers(rfmData: RFMAnalysis[]): Array<RFMAnalysis & { clv: number }> {
+  private getTopCustomers(rfmData: RFMAnalysis[], orders: Order[]): Array<RFMAnalysis & { clv: number }> {
     return rfmData
       .sort((a, b) => b.monetary - a.monetary)
       .slice(0, 10)
       .map(customer => ({
         ...customer,
-        clv: calculateCLV(this.orders.filter(o => o.customerId === customer.customerId))
+        clv: calculateCLV(orders.filter(o => o.customerId === customer.customerId))
       }));
   }
 
-  private getNewCustomers(): number {
+  private getNewCustomers(orders: Order[]): number {
     const thirtyDaysAgo = subDays(new Date(), 30);
     const newCustomerIds = new Set<string>();
     
-    this.orders.forEach(order => {
+    orders.forEach(order => {
       if (order.customerId && new Date(order.createdAt) >= thirtyDaysAgo) {
-        const earliestOrder = this.orders
+        const earliestOrder = orders
           .filter(o => o.customerId === order.customerId)
           .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
         
@@ -429,12 +488,12 @@ export class AnalyticsService {
     return newCustomerIds.size;
   }
 
-  private calculateRetentionRate(): number {
+  private calculateRetentionRate(orders: Order[]): number {
     // 簡化的留存率計算
     const customerFirstOrders: { [key: string]: string } = {};
     const customerLastOrders: { [key: string]: string } = {};
 
-    this.orders.forEach(order => {
+    orders.forEach(order => {
       if (order.customerId) {
         const orderDate = new Date(order.createdAt);
         
@@ -468,6 +527,7 @@ export class AnalyticsService {
 
   private findPeakHours(hourlyData: Array<{ hour: number; revenue: number }>): Array<{ hour: number; revenue: number }> {
     return hourlyData
+      .filter((hour) => hour.revenue > 0)
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 3)
       .map(h => ({ hour: h.hour, revenue: h.revenue }));
@@ -475,9 +535,106 @@ export class AnalyticsService {
 
   private findPeakDays(dailyData: Array<{ day: number; revenue: number }>): Array<{ day: string; revenue: number }> {
     return dailyData
+      .filter((day) => day.revenue > 0)
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 3)
       .map(d => ({ day: this.getDayName(d.day), revenue: d.revenue }));
+  }
+
+  private normalizeCutoffHour(hour: number | undefined): number {
+    const value = Number.isFinite(hour) ? Math.floor(hour as number) : 3;
+    return Math.max(0, Math.min(23, value));
+  }
+
+  private getScopedOrders(period: TimePeriod = 'all'): Order[] {
+    return filterOrdersByPeriod(this.orders, period, {
+      cutoffHour: this.cutoffHour,
+      includedStatuses: Array.from(this.includedStatuses),
+    });
+  }
+
+  private getOrdersInRange(start: Date, end: Date): Order[] {
+    return this.orders.filter((order) => {
+      if (!this.includedStatuses.has(order.status)) return false;
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= start && orderDate < end;
+    });
+  }
+
+  private normalizeTrendCursor(date: Date, period: TrendPeriod): Date {
+    switch (period) {
+      case 'hourly':
+        return startOfHour(date);
+      case 'weekly':
+        return startOfWeek(date, { weekStartsOn: 1 });
+      case 'monthly':
+        return startOfMonth(date);
+      case 'daily':
+      default:
+        return startOfDay(date);
+    }
+  }
+
+  private stepTrendCursor(date: Date, period: TrendPeriod): Date {
+    switch (period) {
+      case 'hourly':
+        return addHours(date, 1);
+      case 'weekly':
+        return addWeeks(date, 1);
+      case 'monthly':
+        return addMonths(date, 1);
+      case 'daily':
+      default:
+        return addDays(date, 1);
+    }
+  }
+
+  private formatTrendKey(date: Date, period: TrendPeriod): string {
+    switch (period) {
+      case 'hourly':
+        return format(date, 'yyyy-MM-dd-HH');
+      case 'weekly':
+      case 'daily':
+        return format(date, 'yyyy-MM-dd');
+      case 'monthly':
+        return format(date, 'yyyy-MM');
+      default:
+        return format(date, 'yyyy-MM-dd');
+    }
+  }
+
+  private parseTrendPeriod(periodKey: string, trendPeriod: TrendPeriod): Date | null {
+    if (trendPeriod === 'hourly') {
+      const parts = periodKey.split('-');
+      if (parts.length !== 4) return null;
+      const datePart = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      const hourPart = parts[3];
+      if (!datePart || !hourPart) return null;
+      const dateParts = datePart.split('-').map(Number);
+      const year = dateParts[0] ?? NaN;
+      const month = dateParts[1] ?? NaN;
+      const day = dateParts[2] ?? NaN;
+      const hour = Number(hourPart);
+      if (![year, month, day, hour].every((value) => Number.isFinite(value))) return null;
+      return new Date(year, month - 1, day, hour, 0, 0, 0);
+    }
+
+    if (trendPeriod === 'monthly') {
+      const parts = periodKey.split('-').map(Number);
+      if (parts.length !== 2) return null;
+      const year = parts[0] ?? NaN;
+      const month = parts[1] ?? NaN;
+      if (![year, month].every((value) => Number.isFinite(value))) return null;
+      return new Date(year, month - 1, 1, 0, 0, 0, 0);
+    }
+
+    const parts = periodKey.split('-').map(Number);
+    if (parts.length !== 3) return null;
+    const year = parts[0] ?? NaN;
+    const month = parts[1] ?? NaN;
+    const day = parts[2] ?? NaN;
+    if (![year, month, day].every((value) => Number.isFinite(value))) return null;
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
   }
 }
 

@@ -10,13 +10,8 @@ import {
 import { chartTheme, chartColors, formatters } from '../../utils/chartHelpers';
 import CustomTooltip from './CustomTooltip';
 
-// 定義圓餅圖數據的基本結構
-interface PieChartDataItem {
-  [key: string]: string | number | boolean | null | undefined;
-}
-
 interface CustomPieChartProps {
-  data?: PieChartDataItem[];
+  data?: object[];
   height?: number;
   showLegend?: boolean;
   valueKey?: string;
@@ -54,8 +49,11 @@ const CustomPieChart: React.FC<CustomPieChartProps> = ({
   // 創建統一的 labelFormatter 函數來處理類型安全
   const createLabelFormatter = (formatter?: (value: number | undefined) => string) => {
     if (!formatter) return (value: number | undefined) => `${(value || 0).toFixed(1)}%`;
-    return (value: any): string => {
-      return formatter(value);
+    return (value: unknown): string => {
+      if (typeof value === 'number') {
+        return formatter(value);
+      }
+      return formatter(undefined);
     };
   };
 

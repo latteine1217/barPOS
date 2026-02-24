@@ -38,7 +38,7 @@ export interface OptimisticUpdatesReturn<T, R> {
   getPendingChanges: () => Partial<T> | null;
 }
 
-export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
+export function useOptimisticUpdates<T extends Record<string, unknown>, R = void>(
   options: UseOptimisticUpdatesOptions<T, R>
 ): OptimisticUpdatesReturn<T, R> {
   const {
@@ -58,10 +58,29 @@ export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
   const [error, setError] = useState<Error | null>(null);
   
   // 引用數據
+  const dataRef = useRef<T>(initialData);
   const baseDataRef = useRef<T>(initialData); // 服務器確認的數據
   const optimisticDataRef = useRef<T | null>(null); // 樂觀更新的數據
   const pendingChangesRef = useRef<Partial<T> | null>(null); // 待提交的變更
   const retryCountRef = useRef(0);
+
+  // 回滾樂觀更新
+  const rollback = useCallback(() => {
+    const rollbackData = baseDataRef.current;
+    dataRef.current = rollbackData;
+    setData(rollbackData);
+    optimisticDataRef.current = null;
+    pendingChangesRef.current = null;
+    
+    setIsOptimistic(false);
+    setIsPending(false);
+    setError(null);
+    retryCountRef.current = 0;
+    
+    logger.debug('Rolled back optimistic update', {
+      component: 'useOptimisticUpdates'
+    });
+  }, []);
 
   // 樂觀更新操作
   const optimisticUpdate = useCallback(async (newData: Partial<T>): Promise<R> => {
@@ -70,10 +89,12 @@ export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
       setIsPending(true);
       
       // 應用樂觀更新
-      const optimisticData = { ...data, ...newData } as T;
+      const sourceData = optimisticDataRef.current ?? dataRef.current;
+      const optimisticData = { ...sourceData, ...newData } as T;
       optimisticDataRef.current = optimisticData;
       pendingChangesRef.current = { ...(pendingChangesRef.current || {}), ...newData };
       
+      dataRef.current = optimisticData;
       setData(optimisticData);
       setIsOptimistic(true);
       
@@ -130,31 +151,14 @@ export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
         throw error;
       }
     }
-  }, [data, updateFn, onError, onSuccess, maxRetries, retryDelay]);
-
-  // 回滾樂觀更新
-  const rollback = useCallback(() => {
-    if (!isOptimistic) return;
-    
-    setData(baseDataRef.current);
-    optimisticDataRef.current = null;
-    pendingChangesRef.current = null;
-    
-    setIsOptimistic(false);
-    setIsPending(false);
-    setError(null);
-    retryCountRef.current = 0;
-    
-    logger.debug('Rolled back optimistic update', {
-      component: 'useOptimisticUpdates'
-    });
-  }, [isOptimistic]);
+  }, [updateFn, onError, onSuccess, maxRetries, retryDelay, rollback]);
 
   // 提交服務器數據（處理衝突）
   const commit = useCallback((serverData: T) => {
     if (!isOptimistic) {
       // 沒有樂觀更新，直接使用服務器數據
       baseDataRef.current = serverData;
+      dataRef.current = serverData;
       setData(serverData);
       return;
     }
@@ -174,6 +178,7 @@ export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
     optimisticDataRef.current = null;
     pendingChangesRef.current = null;
     
+    dataRef.current = finalData;
     setData(finalData);
     setIsOptimistic(false);
     setIsPending(false);
@@ -202,7 +207,7 @@ export function useOptimisticUpdates<T extends Record<string, any>, R = void>(
 }
 
 // 樂觀批量更新 Hook
-export function useOptimisticBatch<T extends Record<string, any>, K extends keyof T>(
+export function useOptimisticBatch<T extends Record<string, unknown>, K extends keyof T>(
   options: {
     initialItems: Record<K, T>;
     updateFn: (key: K, data: T) => Promise<T>;

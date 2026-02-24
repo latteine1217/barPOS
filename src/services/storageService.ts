@@ -55,6 +55,23 @@ export const STORAGE_KEYS = {
   THEME: 'restaurant_pos_theme'
 } as const;
 
+// Zustand persist keys（實際主要資料來源）
+export const PERSIST_STORE_KEYS = {
+  ORDERS: 'order-store',
+  TABLES: 'table-store',
+  MENU_ITEMS: 'menu-store',
+  MEMBERS: 'members-store',
+  SETTINGS: 'restaurant-pos-settings'
+} as const;
+
+const ALL_BACKUP_KEYS = [
+  ...Object.values(STORAGE_KEYS),
+  ...Object.values(PERSIST_STORE_KEYS)
+] as const;
+
+const PERSIST_KEY_SET = new Set<string>(Object.values(PERSIST_STORE_KEYS));
+const BACKUP_KEY_SET = new Set<string>(ALL_BACKUP_KEYS);
+
 // 平台檢測
 const detectPlatform = (): Platform => {
   // 檢查是否為 Capacitor 環境（行動端）
@@ -192,6 +209,55 @@ class StorageService {
     }
   }
 
+  private readPersistRawFromLocalStorage(key: string): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      return window.localStorage.getItem(key);
+    } catch (error) {
+      logger.warn('Failed to read localStorage persist key', {
+        component: 'StorageService',
+        action: 'readPersistRawFromLocalStorage',
+        key,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return null;
+    }
+  }
+
+  private writePersistRawToLocalStorage(key: string, value: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (error) {
+      logger.warn('Failed to write localStorage persist key', {
+        component: 'StorageService',
+        action: 'writePersistRawToLocalStorage',
+        key,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  private removePersistRawFromLocalStorage(key: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      window.localStorage.removeItem(key);
+    } catch (error) {
+      logger.warn('Failed to remove localStorage persist key', {
+        component: 'StorageService',
+        action: 'removePersistRawFromLocalStorage',
+        key,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
   // 統一的讀取介面
   async getItem<T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> {
     try {
@@ -259,7 +325,7 @@ class StorageService {
   async clear(): Promise<void> {
     try {
       await this.initializationPromise;
-      const keys = Object.values(STORAGE_KEYS);
+      const keys = [...ALL_BACKUP_KEYS];
       
       switch (this.platform) {
         case 'mobile':
@@ -281,6 +347,11 @@ class StorageService {
             localStorage.removeItem(key);
           }
           break;
+      }
+
+      // 防守：persist 快照主要在 localStorage，跨平台都補一次清理
+      for (const key of Object.values(PERSIST_STORE_KEYS)) {
+        this.removePersistRawFromLocalStorage(key);
       }
     } catch (error) {
       logger.error('Failed to clear storage', { component: 'StorageService', action: 'clear', platform: this.platform }, error instanceof Error ? error : new Error(String(error)));
@@ -320,7 +391,7 @@ class StorageService {
     try {
       const keys = await this.getAllKeys();
       const appKeys = keys.filter(key => 
-        (Object.values(STORAGE_KEYS) as readonly string[]).includes(key)
+        (ALL_BACKUP_KEYS as readonly string[]).includes(key)
       );
       
       const info: StorageInfo = {
@@ -358,10 +429,22 @@ class StorageService {
   async exportData(): Promise<ExportData> {
     try {
       const data: Record<string, unknown> = {};
-      const keys = Object.values(STORAGE_KEYS);
+      const keys = [...ALL_BACKUP_KEYS];
       
       for (const key of keys) {
-        const value = await this.getItem(key);
+        let value: unknown = null;
+        if (PERSIST_KEY_SET.has(key)) {
+          const raw = this.readPersistRawFromLocalStorage(key);
+          if (raw !== null) {
+            try {
+              value = JSON.parse(raw);
+            } catch {
+              value = raw;
+            }
+          }
+        } else {
+          value = await this.getItem(key);
+        }
         if (value !== null) {
           data[key] = value;
         }
@@ -389,7 +472,14 @@ class StorageService {
       const { data } = exportedData;
       
       for (const [key, value] of Object.entries(data)) {
-        if ((Object.values(STORAGE_KEYS) as readonly string[]).includes(key)) {
+        if (!BACKUP_KEY_SET.has(key)) {
+          continue;
+        }
+
+        if (PERSIST_KEY_SET.has(key)) {
+          const raw = typeof value === 'string' ? value : JSON.stringify(value);
+          this.writePersistRawToLocalStorage(key, raw);
+        } else {
           await this.setItem(key, value);
         }
       }

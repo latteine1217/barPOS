@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useOrderStore } from '@/stores';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Order } from '@/types';
@@ -13,109 +13,70 @@ interface DashboardData {
   recentOrders: Order[];
 }
 
-// 緩存計算結果避免重複計算
-let lastOrdersRef: Order[] | null = null;
-let lastTodayStatsCache: {
-  todayOrderCount: number;
-  todayRevenue: number;
-  pendingCount: number;
-  completedCount: number;
-} | null = null;
-
-let lastRecentOrdersRef: Order[] | null = null;
-let lastRecentOrdersCache: Order[] | null = null;
-
 export const useDashboard = (): DashboardData => {
   const cutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
-  // ✅ 正確的時間更新機制
-  const [currentTime, setCurrentTime] = useState(() => 
-    new Date().toLocaleTimeString('zh-TW', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  );
+  const orders = useOrderStore((state) => state.orders);
+  const [now, setNow] = useState(() => new Date());
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+  const hour = now.getHours();
 
-  // ✅ 每秒更新時間
+  // 每秒刷新時間，讓日期/時間在跨日與跨 cutoff 時可以更新
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('zh-TW', {
-        hour: '2-digit',
-        minute: '2-digit', 
-        second: '2-digit'
-      }));
+      setNow(new Date());
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ 使用穩定的 selector 避免新引用
-  const todayStats = useOrderStore(useCallback((state) => {
-    const orders = state.orders;
-    
-    // 如果訂單引用沒變，返回緩存結果
-    if (orders === lastOrdersRef && lastTodayStatsCache) {
-      return lastTodayStatsCache;
-    }
-    
-    // 業務「營業日」區間：從 cutoffHour 當天到 +1 天的 cutoffHour
-    const now = new Date();
-    const end = new Date(now);
-    // 若現在時間 >= 截止小時，結束時間應該是「明天的 cutoffHour」；
-    // 否則為「今天的 cutoffHour」。
-    if (now.getHours() >= cutoffHour) {
+  const todayStats = useMemo(() => {
+    const end = new Date(year, month, day, hour, 0, 0, 0);
+    if (hour >= cutoffHour) {
       end.setDate(end.getDate() + 1);
     }
     end.setHours(cutoffHour, 0, 0, 0);
     const start = new Date(end);
     start.setDate(start.getDate() - 1);
 
-    const todayOrders = orders.filter(order => {
-      const t = new Date(order.createdAt).getTime();
-      return t >= start.getTime() && t < end.getTime();
+    const todayOrders = orders.filter((order) => {
+      const time = new Date(order.createdAt).getTime();
+      return time >= start.getTime() && time < end.getTime();
     });
-    
-    const result = {
+
+    return {
       todayOrderCount: todayOrders.length,
       todayRevenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
-      pendingCount: todayOrders.filter(o => o.status === 'pending').length,
-      completedCount: todayOrders.filter(o => o.status === 'completed').length,
+      pendingCount: todayOrders.filter((order) => order.status === 'pending').length,
+      completedCount: todayOrders.filter((order) => order.status === 'completed').length
     };
-    
-    lastOrdersRef = orders;
-    lastTodayStatsCache = result;
-    
-    return result;
-  }, []));
+  }, [orders, cutoffHour, year, month, day, hour]);
 
-  // ✅ 使用穩定的 selector 避免新引用
-  const recentOrders = useOrderStore(useCallback((state) => {
-    const orders = state.orders;
-    
-    // 如果訂單引用沒變，返回緩存結果
-    if (orders === lastRecentOrdersRef && lastRecentOrdersCache) {
-      return lastRecentOrdersCache;
-    }
-    
-    const result = orders
+  const recentOrders = useMemo(() => {
+    return orders
       .slice()
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
-    
-    lastRecentOrdersRef = orders;
-    lastRecentOrdersCache = result;
-    
-    return result;
-  }, []));
+  }, [orders]);
 
-  // ✅ 靜態數據不需要記憶化
-  const currentDate = useMemo(() => 
-    new Date().toLocaleDateString('zh-TW', {
+  const currentTime = useMemo(() =>
+    now.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }), [now]
+  );
+
+  const currentDateSource = useMemo(() => new Date(year, month, day, 0, 0, 0, 0), [year, month, day]);
+  const currentDate = useMemo(() =>
+    currentDateSource.toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       weekday: 'long'
-    }), []); // 只在組件首次渲染時計算一次
+    }), [currentDateSource]
+  );
 
   return {
     currentTime,

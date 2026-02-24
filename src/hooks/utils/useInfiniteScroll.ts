@@ -67,6 +67,7 @@ export function useInfiniteScroll<T>({
   const loadingRef = useRef<HTMLElement>(null);
   const isLoadingRef = useRef(false);
   const isMountedRef = useRef(true);
+  const initialLoadTriggeredRef = useRef(false);
 
   // 加載更多數據
   const loadMore = useCallback(async () => {
@@ -129,6 +130,7 @@ export function useInfiniteScroll<T>({
     setHasMore(true);
     setError(null);
     isLoadingRef.current = false;
+    initialLoadTriggeredRef.current = false;
     
     // 等待狀態更新後再加載
     setTimeout(() => {
@@ -145,6 +147,7 @@ export function useInfiniteScroll<T>({
     setCurrentPage(initialPage);
     setHasMore(true);
     isLoadingRef.current = false;
+    initialLoadTriggeredRef.current = false;
   }, [initialPage]);
 
   // 滾動事件處理
@@ -208,10 +211,16 @@ export function useInfiniteScroll<T>({
 
   // 初始加載
   useEffect(() => {
-    if (enabled && items.length === 0) {
-      loadMore();
+    if (!enabled) {
+      initialLoadTriggeredRef.current = false;
+      return;
     }
-  }, [enabled]); // 只依賴 enabled，避免無限循環
+    if (items.length > 0 || isLoadingRef.current || initialLoadTriggeredRef.current) {
+      return;
+    }
+    initialLoadTriggeredRef.current = true;
+    void loadMore();
+  }, [enabled, items.length, loadMore]);
 
   // 組件卸載清理
   useEffect(() => {

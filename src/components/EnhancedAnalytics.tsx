@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useOrders } from '@/stores';
+import { useOrders, useSettingsStore } from '@/stores';
 import AnalyticsService from '@/services/analyticsService';
 import { LineChart, BarChart, PieChart, MetricCard } from './Charts';
 import { chartColors, formatters } from '@/utils/chartHelpers';
 import OrderDetailsModal from './OrderDetailsModal';
-import type { Order, TimePeriod } from '@/types';
+import type { Order, TimePeriod, TrendPeriod } from '@/types';
 
 type ViewType = 'overview' | 'revenue' | 'products' | 'customers' | 'time';
 
@@ -14,11 +14,28 @@ const EnhancedAnalytics: React.FC = () => {
   const [selectedView, setSelectedView] = useState<ViewType>('overview');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
+  const businessDayCutoffHour = useSettingsStore((state) => state.businessDayCutoffHour ?? 3);
+
+  const trendConfig = useMemo<{ period: TrendPeriod; days: number }>(() => {
+    if (selectedPeriod === 'today') {
+      return { period: 'hourly', days: 1 };
+    }
+    if (selectedPeriod === 'week') {
+      return { period: 'daily', days: 7 };
+    }
+    if (selectedPeriod === 'month') {
+      return { period: 'daily', days: 30 };
+    }
+    return { period: 'daily', days: 90 };
+  }, [selectedPeriod]);
 
   // 初始化分析服務
   const analyticsService = useMemo(() => {
-    return new AnalyticsService(orders || []);
-  }, [orders]);
+    return new AnalyticsService(orders || [], {
+      cutoffHour: businessDayCutoffHour,
+      includedStatuses: ['completed', 'paid']
+    });
+  }, [orders, businessDayCutoffHour]);
 
   // 計算基礎統計數據
   const basicStats = useMemo(() => {
@@ -27,23 +44,22 @@ const EnhancedAnalytics: React.FC = () => {
 
   // 計算營收趨勢
   const revenueTrends = useMemo(() => {
-    const days = selectedPeriod === 'today' ? 7 : selectedPeriod === 'week' ? 30 : 90;
-    return analyticsService.getRevenueTrends('daily', days);
-  }, [analyticsService, selectedPeriod]);
+    return analyticsService.getRevenueTrends(trendConfig.period, trendConfig.days, selectedPeriod);
+  }, [analyticsService, trendConfig, selectedPeriod]);
 
   // 計算產品分析
   const productAnalysis = useMemo(() => {
-    return analyticsService.getProductAnalysis();
-  }, [analyticsService]);
+    return analyticsService.getProductAnalysis(selectedPeriod);
+  }, [analyticsService, selectedPeriod]);
 
   // 計算客戶分析
   const customerAnalysis = useMemo(() => {
-    return analyticsService.getCustomerAnalysis();
-  }, [analyticsService]);
+    return analyticsService.getCustomerAnalysis(selectedPeriod);
+  }, [analyticsService, selectedPeriod]);
 
   const timeAnalysis = useMemo(() => {
-    return analyticsService.getTimeAnalysis();
-  }, [analyticsService]);
+    return analyticsService.getTimeAnalysis(selectedPeriod);
+  }, [analyticsService, selectedPeriod]);
 
   const handleCloseModal = (): void => {
     setShowDetailsModal(false);
@@ -113,7 +129,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">營收趨勢</h3>
         <LineChart
-          data={revenueTrends as any}
+          data={revenueTrends}
           height={300}
           lines={[
             {
@@ -141,7 +157,7 @@ const EnhancedAnalytics: React.FC = () => {
         <div className="card p-6">
           <h3 className="text-xl font-semibold text-white mb-6">熱門調酒 Top 5</h3>
           <BarChart
-            data={productAnalysis.topSellingProducts.slice(0, 5) as any}
+            data={productAnalysis.topSellingProducts.slice(0, 5)}
             height={250}
             layout="vertical"
             bars={[
@@ -181,7 +197,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">營收詳細分析</h3>
         <LineChart
-          data={revenueTrends as any}
+          data={revenueTrends}
           height={400}
           lines={[
             {
@@ -237,7 +253,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-xl font-semibold text-white mb-6">產品銷售排行</h3>
         <BarChart
-          data={productAnalysis.topSellingProducts as any}
+          data={productAnalysis.topSellingProducts}
           height={400}
           layout="vertical"
           bars={[

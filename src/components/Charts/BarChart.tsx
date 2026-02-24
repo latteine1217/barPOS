@@ -12,11 +12,6 @@ import {
 import { chartTheme, chartColors, formatters } from '../../utils/chartHelpers';
 import CustomTooltip from './CustomTooltip';
 
-// 定義圖表數據的基本結構
-interface ChartDataItem {
-  [key: string]: string | number | boolean | null | undefined;
-}
-
 interface BarConfig {
   dataKey: string;
   name?: string;
@@ -26,7 +21,7 @@ interface BarConfig {
 }
 
 interface CustomBarChartProps {
-  data?: ChartDataItem[];
+  data?: object[];
   bars?: BarConfig[];
   height?: number;
   showGrid?: boolean;
@@ -55,8 +50,11 @@ const CustomBarChart: React.FC<CustomBarChartProps> = ({
   // 創建統一的 tickFormatter 函數來處理類型安全
   const createTickFormatter = (formatter?: (value: string | number | undefined) => string) => {
     if (!formatter) return undefined;
-    return (value: any): string => {
-      return formatter(value);
+    return (value: unknown): string => {
+      if (typeof value === 'string' || typeof value === 'number') {
+        return formatter(value);
+      }
+      return formatter(undefined);
     };
   };
 

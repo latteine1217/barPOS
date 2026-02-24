@@ -268,32 +268,103 @@
   /* Table node styles for layout editor */
   .table-node {
     @apply glass-elevated;
+    --table-accent: #8bc4ff;
     display: flex;
-    flex-direction: column; /* 垂直堆疊名稱與人數 */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 0.14rem;
+    padding: 0.42rem 0.45rem 0.58rem;
     text-align: center;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,.35);
-    border-width: 2px;
-    border-style: solid;
-    border-color: rgba(255,255,255,0.2);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2);
-    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    color: rgba(246, 248, 252, 0.94);
+    text-shadow: 0 1px 1px rgba(3, 7, 18, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.11) 45%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(120% 115% at 0% 0%, color-mix(in srgb, var(--table-accent), transparent 93%) 0%, transparent 66%);
+    box-shadow:
+      0 6px 14px rgba(8, 15, 34, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.09) inset;
+    transition: transform 0.13s ease, box-shadow 0.13s ease, border-color 0.13s ease;
     will-change: left, top, transform;
+    overflow: hidden;
   }
-  .table-node:hover { filter: brightness(1.05); }
-  .table-node--available { border-color: rgba(16,185,129,.45); box-shadow: 0 8px 24px rgba(16,185,129,.25), inset 0 1px 0 rgba(255,255,255,.2); }
-  .table-node--occupied { border-color: rgba(245,158,11,.5); box-shadow: 0 8px 24px rgba(245,158,11,.25), inset 0 1px 0 rgba(255,255,255,.2); }
-  .table-node--reserved { border-color: rgba(139,92,246,.5); box-shadow: 0 8px 24px rgba(139,92,246,.25), inset 0 1px 0 rgba(255,255,255,.2); }
-  .table-node--cleaning { border-color: rgba(59,130,246,.5); box-shadow: 0 8px 24px rgba(59,130,246,.25), inset 0 1px 0 rgba(255,255,255,.2); }
-  .table-node--selected { outline: 2px solid transparent; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent), transparent 30%), 0 16px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25); }
-  .table-node__dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 9999px; box-shadow: 0 0 0 2px rgba(255,255,255,.3), 0 0 10px currentColor; }
+  .table-node::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(170deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.01) 54%);
+    opacity: 0.48;
+  }
+  .table-node::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 6px;
+    height: 2px;
+    border-radius: 9999px;
+    pointer-events: none;
+    border: none;
+    background: color-mix(in srgb, var(--table-accent), white 34%);
+    opacity: 0.72;
+  }
+  .table-node:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 9px 16px rgba(8, 15, 34, 0.22),
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  }
+  .table-node__name {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.015em;
+  }
+  .table-node__meta {
+    position: relative;
+    z-index: 1;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgba(248, 250, 252, 0.74);
+    letter-spacing: 0.01em;
+  }
+  .table-node--available { --table-accent: #79c4b3; }
+  .table-node--occupied { --table-accent: #d3ae85; }
+  .table-node--reserved { --table-accent: #b09fd5; }
+  .table-node--cleaning { --table-accent: #9db2d6; }
+  .table-node--selected {
+    border-color: color-mix(in srgb, var(--table-accent), white 30%);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--table-accent), transparent 64%),
+      0 11px 20px rgba(8, 15, 34, 0.22);
+  }
+  .table-node__dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: currentColor;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.82);
+  }
   .table-node--dragging {
     transition: none !important;
-    filter: none;
+    cursor: grabbing !important;
+    transform: none;
+    box-shadow:
+      0 10px 18px rgba(8, 15, 34, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   }
   /* 主背景容器 - 調酒酒吧風格漸變泡泡背景 */
   .app-background {

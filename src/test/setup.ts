@@ -39,22 +39,42 @@ beforeAll(() => {
   })
 
   // Mock localStorage with proper JSON handling
+  const storageMap = new Map<string, string>()
   const localStorageMock = {
-    getItem: vi.fn(() => {
-      // Return null for unknown keys to prevent JSON parse errors
-      return null
+    getItem: vi.fn((key: string) => {
+      return storageMap.has(key) ? storageMap.get(key)! : null
     }),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
+    setItem: vi.fn((key: string, value: string) => {
+      storageMap.set(key, String(value))
+    }),
+    removeItem: vi.fn((key: string) => {
+      storageMap.delete(key)
+    }),
+    clear: vi.fn(() => {
+      storageMap.clear()
+    }),
   }
   Object.defineProperty(window, 'localStorage', {
-    value: localStorageMock
+    value: localStorageMock,
+    configurable: true,
+    writable: true
+  })
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: localStorageMock,
+    configurable: true,
+    writable: true
   })
 
   // Mock sessionStorage
   Object.defineProperty(window, 'sessionStorage', {
-    value: localStorageMock
+    value: localStorageMock,
+    configurable: true,
+    writable: true
+  })
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    value: localStorageMock,
+    configurable: true,
+    writable: true
   })
 
   // Mock navigator.onLine
@@ -65,12 +85,37 @@ beforeAll(() => {
 
   // Suppress console warnings in tests
   const originalConsoleWarn = console.warn
-  console.warn = (...args: any[]) => {
-    if (args[0]?.includes?.('Warning:')) {
+  console.warn = (...args: unknown[]) => {
+    const firstArg = args[0]
+    if (typeof firstArg === 'string' && firstArg.includes('Warning:')) {
       return
     }
     originalConsoleWarn(...args)
   }
+})
+
+beforeAll(async () => {
+  // 重新綁定 persist storage，避免測試環境中的原生 localStorage shim 缺少 setItem
+  const { createJSONStorage } = await import('zustand/middleware')
+  const jsonStorage = createJSONStorage(() => window.localStorage)
+  const { useOrderStore } = await import('@/stores/orderStore')
+  const { useTableStore } = await import('@/stores/tableStore')
+  const { useMenuStore } = await import('@/stores/menuStore')
+  const { useMembersStore } = await import('@/stores/membersStore')
+  const { useSettingsStore } = await import('@/stores/settingsStore')
+
+  const bindPersistStorage = (store: unknown) => {
+    const persistApi = (store as { persist?: { setOptions?: (options: { storage: unknown }) => void } }).persist
+    if (persistApi?.setOptions) {
+      persistApi.setOptions({ storage: jsonStorage })
+    }
+  }
+
+  bindPersistStorage(useOrderStore)
+  bindPersistStorage(useTableStore)
+  bindPersistStorage(useMenuStore)
+  bindPersistStorage(useMembersStore)
+  bindPersistStorage(useSettingsStore)
 })
 
 // 測試用的工具函數

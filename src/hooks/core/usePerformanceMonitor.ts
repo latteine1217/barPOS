@@ -34,7 +34,7 @@ export interface PerformanceMonitorReturn {
   stopMonitoring: () => void;
   resetMetrics: () => void;
   exportMetrics: () => string;
-  trackRenderReason?: (props?: any, state?: any) => void;
+  trackRenderReason?: (props?: Record<string, unknown>, state?: Record<string, unknown>) => void;
 }
 
 export function usePerformanceMonitor(
@@ -84,9 +84,24 @@ export function usePerformanceMonitor(
   const lastCommitTsRef = useRef<number>(0);
   const maxUpdatesPerSec = 10; // 防止高頻 UI 更新（可調）
   const commitIntervalMs = 250; // 批次提交間隔（可調）
-  const previousPropsRef = useRef<any>(null);
-  const previousStateRef = useRef<any>(null);
+  const previousPropsRef = useRef<Record<string, unknown> | null>(null);
+  const previousStateRef = useRef<Record<string, unknown> | null>(null);
   const renderReasonsRef = useRef<string[]>([]);
+
+  // 獲取內存使用情況
+  const getMemoryUsage = useCallback((): number => {
+    if (typeof window === 'undefined' || !('performance' in window)) {
+      return 0;
+    }
+    const perfWithMemory = window.performance as Performance & {
+      memory?: { usedJSHeapSize?: number };
+    };
+    const usedHeap = perfWithMemory.memory?.usedJSHeapSize;
+    if (typeof usedHeap !== 'number') {
+      return 0;
+    }
+    return usedHeap / 1024 / 1024; // MB
+  }, []);
   
   // 開始渲染測量
   const startRenderMeasurement = useCallback(() => {
@@ -119,15 +134,7 @@ export function usePerformanceMonitor(
     if (trackMemory) {
       p.mem = getMemoryUsage();
     }
-  }, [isMonitoring, trackMemory]);
-
-  // 獲取內存使用情況
-  const getMemoryUsage = useCallback((): number => {
-    if (typeof window !== 'undefined' && 'performance' in window && 'memory' in window.performance) {
-      return (window.performance as any).memory.usedJSHeapSize / 1024 / 1024; // MB
-    }
-    return 0;
-  }, []);
+  }, [isMonitoring, trackMemory, getMemoryUsage]);
 
   // 檢查性能閾值
   const checkPerformanceThresholds = useCallback((currentMetrics: PerformanceMetrics) => {
@@ -156,15 +163,17 @@ export function usePerformanceMonitor(
   }, [onPerformanceIssue, thresholds, componentName]);
 
   // 追蹤渲染原因
-  const trackRenderReason = useCallback((props?: any, state?: any) => {
+  const trackRenderReason = useCallback((props?: Record<string, unknown>, state?: Record<string, unknown>) => {
     if (!trackRenderReasons || !isMonitoring) return;
 
     const reasons: string[] = [];
+    const previousProps = previousPropsRef.current;
+    const previousState = previousStateRef.current;
 
     // 檢查 props 變化
-    if (props && previousPropsRef.current) {
+    if (props && previousProps) {
       const changedProps = Object.keys(props).filter(
-        key => props[key] !== previousPropsRef.current[key]
+        key => props[key] !== previousProps[key]
       );
       if (changedProps.length > 0) {
         reasons.push(`Props changed: ${changedProps.join(', ')}`);
@@ -172,22 +181,22 @@ export function usePerformanceMonitor(
     }
 
     // 檢查 state 變化
-    if (state && previousStateRef.current) {
+    if (state && previousState) {
       const changedState = Object.keys(state).filter(
-        key => state[key] !== previousStateRef.current[key]
+        key => state[key] !== previousState[key]
       );
       if (changedState.length > 0) {
         reasons.push(`State changed: ${changedState.join(', ')}`);
       }
     }
 
-    if (reasons.length === 0 && (previousPropsRef.current || previousStateRef.current)) {
+    if (reasons.length === 0 && (previousProps || previousState)) {
       reasons.push('Unknown reason');
     }
 
     renderReasonsRef.current = reasons;
-    previousPropsRef.current = props;
-    previousStateRef.current = state;
+    previousPropsRef.current = props ?? null;
+    previousStateRef.current = state ?? null;
 
     if (reasons.length > 0) {
       logger.debug(`${componentName} re-rendered: ${reasons.join(', ')}`, {
@@ -317,14 +326,14 @@ export function usePerformanceMonitor(
     resetMetrics,
     exportMetrics,
     // 內部方法暴露給高級用戶
-    trackRenderReason: trackRenderReason as any
+    trackRenderReason
   };
 }
 
 // 渲染追蹤 Hook
-export function useRenderTracker(componentName: string, dependencies: any[] = []) {
+export function useRenderTracker(componentName: string, dependencies: unknown[] = []) {
   const renderCountRef = useRef(0);
-  const previousDependenciesRef = useRef<any[]>(dependencies);
+  const previousDependenciesRef = useRef<unknown[]>(dependencies);
   
   useEffect(() => {
     renderCountRef.current++;

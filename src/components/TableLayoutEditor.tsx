@@ -57,12 +57,49 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
     bar: '吧台'
   }), []);
 
+  const tableStatusLabels = useMemo(() => ({
+    available: '空桌',
+    occupied: '使用中',
+    reserved: '已預約',
+    cleaning: '清潔中'
+  }), []);
+
+  const tableStatusDotColors = useMemo(() => ({
+    available: '#6ecfb9',
+    occupied: '#ddb58a',
+    reserved: '#b9a7e5',
+    cleaning: '#9fb6e2'
+  }), []);
+
+  const tableStats = useMemo(() => {
+    const occupiedCount = tables.filter((table) => table.status === 'occupied').length;
+    const availableCount = tables.filter((table) => table.status === 'available').length;
+    const reservedCount = tables.filter((table) => table.status === 'reserved').length;
+    const cleaningCount = tables.filter((table) => table.status === 'cleaning').length;
+    const totalSeats = tables.reduce((sum, table) => sum + (table.capacity || 4), 0);
+    return {
+      totalTables: tables.length,
+      occupiedCount,
+      availableCount,
+      reservedCount,
+      cleaningCount,
+      totalSeats
+    };
+  }, [tables]);
+
+  const statusLegend = useMemo(() => ([
+    { key: 'available', label: tableStatusLabels.available, color: tableStatusDotColors.available, count: tableStats.availableCount },
+    { key: 'occupied', label: tableStatusLabels.occupied, color: tableStatusDotColors.occupied, count: tableStats.occupiedCount },
+    { key: 'reserved', label: tableStatusLabels.reserved, color: tableStatusDotColors.reserved, count: tableStats.reservedCount },
+    { key: 'cleaning', label: tableStatusLabels.cleaning, color: tableStatusDotColors.cleaning, count: tableStats.cleaningCount }
+  ]), [tableStats, tableStatusLabels, tableStatusDotColors]);
+
   // 計算不同形狀對應的寬高與圓角
   const getTableDims = useCallback((table: Table) => {
     const size = tableSizes[table.size as keyof typeof tableSizes] || tableSizes.medium;
     let width = size.width;
     let height = size.height;
-    let radius = '16px';
+    let radius = '18px';
     switch (table.shape) {
       case 'round':
         width = height = size.width; // 使用寬作為直徑
@@ -70,20 +107,21 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
         break;
       case 'square':
         width = height = size.width;
-        radius = '12px';
+        radius = '18px';
         break;
       case 'rectangular':
-        width = Math.round(size.width * 1.6);
-        height = size.height;
-        radius = '14px';
+        width = Math.round(size.width * 1.55);
+        height = Math.round(size.height * 0.95);
+        radius = '20px';
         break;
       case 'bar':
-        // 依需求：吧檯桌以圓形呈現
-        width = height = size.width;
+        // 吧檯用膠囊形，視覺上更像長吧檯
+        width = Math.round(size.width * 1.85);
+        height = Math.max(44, Math.round(size.height * 0.62));
         radius = '9999px';
         break;
       default:
-        radius = '16px';
+        radius = '18px';
     }
     return { width, height, radius };
   }, [tableSizes]);
@@ -97,10 +135,10 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
       top: `${table.position.y}px`,
       width: `${dims.width}px`,
       height: `${dims.height}px`,
-      cursor: isEditing ? 'grabbing' : 'pointer',
+      cursor: isEditing ? 'grab' : 'pointer',
       fontSize: '12px',
       userSelect: 'none',
-      transition: selectedTable?.id === table.id ? 'none' : 'transform .12s ease',
+      transition: selectedTable?.id === table.id ? 'none' : 'transform .16s ease, box-shadow .16s ease',
       borderRadius: dims.radius,
     };
     return style;
@@ -254,16 +292,27 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
       {/* 標題和工具列 - Glassmorphism 設計 */}
-      <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 mb-6 shadow-lg">
+      <div className="bg-white/8 backdrop-blur-xl rounded-2xl border border-white/20 p-5 mb-5 shadow-[0_10px_24px_rgba(2,6,23,0.16)]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-             <h1 className="text-2xl font-bold text-white drop-shadow-lg">{readOnly ? '桌位佈局' : '桌位佈局編輯器'}</h1>            <p className="text-white/80 mt-1 drop-shadow-md">
-               {readOnly ? '點擊桌位即可開始點餐' : (isEditing ? '拖拽桌位調整位置，點選桌位編輯詳細資訊' : '預覽模式 - 點擊右上角編輯按鈕開始編輯')}            </p>
+             <h1 className="text-2xl font-semibold text-white">{readOnly ? '桌位佈局' : '桌位佈局編輯器'}</h1>
+            <p className="text-white/80 mt-1 text-sm">
+               {readOnly ? '點擊桌位即可開始點餐' : (isEditing ? '拖拽桌位調整位置，點選桌位編輯詳細資訊' : '預覽模式 - 點擊右上角編輯按鈕開始編輯')}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {statusLegend.map((item) => (
+                <div key={item.key} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/8 text-xs text-white/85">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span>{item.label}</span>
+                  <span className="text-white/60">{item.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         
         <div className="flex flex-wrap gap-2">
           {isEditing && selectedTable && (
-            <div className="text-sm text-white/90 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 shadow-lg">
+            <div className="text-sm text-white/90 bg-white/12 backdrop-blur-sm px-4 py-2 rounded-full border border-white/25">
               已選擇: {selectedTable.name}
             </div>
           )}
@@ -271,10 +320,10 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
            {!readOnly && (
              <button
                onClick={handleEditToggle}
-               className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border ${isEditing 
-                 ? 'bg-red-500/80 hover:bg-red-500 text-white border-red-400/50 shadow-lg shadow-red-500/25' 
-                 : 'bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25'
-               } hover:scale-105`}
+               className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border ${isEditing 
+                 ? 'bg-white/18 hover:bg-white/24 text-white border-white/35' 
+                 : 'bg-white/10 hover:bg-white/16 text-white/90 border-white/25'
+               }`}
              >
                {isEditing ? '完成編輯' : '編輯佈局'}
              </button>
@@ -283,14 +332,14 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
              <>
                <button
                  onClick={handleShowAddModal}
-                 className="px-6 py-2 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border bg-emerald-500/80 hover:bg-emerald-500 text-white border-emerald-400/50 shadow-lg shadow-emerald-500/25 hover:scale-105"
+                 className="px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-emerald-500/18 hover:bg-emerald-500/24 text-emerald-50 border-emerald-300/35"
                >
                  新增桌位
                </button>
                {selectedTable && (
                  <button
                    onClick={handleDeleteTable}
-                   className="px-6 py-2 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border bg-rose-500/80 hover:bg-rose-500 text-white border-rose-400/50 shadow-lg shadow-rose-500/25 hover:scale-105"
+                   className="px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-rose-500/16 hover:bg-rose-500/22 text-rose-50 border-rose-300/35"
                  >
                    刪除桌位
                  </button>
@@ -303,10 +352,10 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
       <div className="flex-1 flex flex-col lg:flex-row gap-6">
         {/* 主要編輯區域 - Glassmorphism 容器 */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 h-full shadow-2xl shadow-black/10">
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 h-full shadow-[0_14px_32px_rgba(2,6,23,0.16)]">
              <div
                ref={canvasRef}
-               className="relative bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border-2 border-dashed border-white/30 overflow-hidden rounded-xl"
+               className="relative overflow-hidden rounded-2xl border border-white/20 bg-[radial-gradient(130%_120%_at_0%_0%,rgba(255,255,255,0.16),rgba(255,255,255,0.04)_40%,rgba(255,255,255,0.02)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-40px_60px_rgba(3,8,20,0.16)]"
                style={{
                  width: `${layoutConfig.canvasWidth}px`,
                  height: `${layoutConfig.canvasHeight}px`,
@@ -321,17 +370,30 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                }}
              >              {/* 網格背景 - 微調透明度 */}
               {layoutConfig.showGrid && (
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)
-                    `,
-                    backgroundSize: `${layoutConfig.gridSize}px ${layoutConfig.gridSize}px`
-                  }}
-                />
+                <>
+                  <div
+                    className="absolute inset-0 opacity-100"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px)
+                      `,
+                      backgroundSize: `${layoutConfig.gridSize}px ${layoutConfig.gridSize}px`
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 opacity-100"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)
+                      `,
+                      backgroundSize: `${layoutConfig.gridSize * 5}px ${layoutConfig.gridSize * 5}px`
+                    }}
+                  />
+                </>
               )}
+              <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,rgba(2,6,23,0.04),rgba(2,6,23,0.18))]" />
 
               {/* 桌位 - 增強的 glassmorphism 效果 */}
               {tables.map(table => {
@@ -339,6 +401,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   : table.status === 'occupied' ? 'table-node--occupied'
                   : table.status === 'reserved' ? 'table-node--reserved'
                   : 'table-node--cleaning';
+                const sizeLabel = tableSizes[table.size as keyof typeof tableSizes]?.label ?? '4人桌';
                 const isSelected = selectedTable?.id === table.id;
                 const selectedClass = isSelected ? 'table-node--selected' : '';
                 const draggingClass = isSelected && dragState.isDragging ? 'table-node--dragging' : '';
@@ -348,20 +411,17 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   style={getTableStyle(table)}
                   onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }}
                   onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}
+                  title={`${table.name} (${table.status})`}
                   className={`table-node ${statusClass} ${selectedClass} ${draggingClass}`}
                 >
-                  <div className="font-bold text-xs truncate max-w-full">
+                  <div className="table-node__name">
                     {table.name}
                   </div>
-                  {table.status === 'occupied' && (
-                    <div className="text-[11px] font-normal opacity-90">
-                      {table.customers}人
-                    </div>
-                  )}
+                  <div className="table-node__meta">
+                    {table.status === 'occupied' ? `${table.customers}人` : sizeLabel}
+                  </div>
                   <div className="table-node__dot" style={{ color: (
-                    table.status === 'available' ? '#34d399' :
-                    table.status === 'occupied' ? '#f59e0b' :
-                    table.status === 'reserved' ? '#8b5cf6' : '#3b82f6'
+                    tableStatusDotColors[table.status]
                   ) }} />
                 </div>
                 );
@@ -372,14 +432,15 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
         {/* 側邊欄設定 - Glassmorphism 設計 */}
          {isEditing && !readOnly && (
-           <div className="w-full lg:w-80 lg:flex-shrink-0">            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 max-h-screen lg:max-h-full overflow-y-auto shadow-2xl shadow-black/10">
-              <h3 className="text-lg font-semibold mb-4 text-white drop-shadow-lg">編輯設定</h3>
+        <div className="w-full lg:w-80 lg:flex-shrink-0">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 max-h-screen lg:max-h-full overflow-y-auto shadow-[0_14px_32px_rgba(2,6,23,0.16)]">
+              <h3 className="text-lg font-semibold mb-4 text-white">編輯設定</h3>
               
               {selectedTable ? (
                 /* 桌位編輯 - 美化表單樣式 */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-white drop-shadow-md">桌位: {selectedTable.name}</h4>
+                    <h4 className="font-medium text-white">桌位: {selectedTable.name}</h4>
                     <button
                       onClick={() => setSelectedTable(null)}
                       className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all duration-200"
@@ -388,99 +449,118 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                       ✕
                     </button>
                   </div>
+
+                  <div className="rounded-xl border border-white/20 bg-white/8 p-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-lg border border-white/15 bg-white/8 px-2 py-2 text-center">
+                      <div className="text-white/60">狀態</div>
+                      <div className="mt-1 text-white font-medium">{tableStatusLabels[selectedTable.status]}</div>
+                    </div>
+                    <div className="rounded-lg border border-white/15 bg-white/8 px-2 py-2 text-center">
+                      <div className="text-white/60">桌位 ID</div>
+                      <div className="mt-1 text-white font-medium">{selectedTable.id}</div>
+                    </div>
+                    <div className="rounded-lg border border-white/15 bg-white/8 px-2 py-2 text-center">
+                      <div className="text-white/60">座標</div>
+                      <div className="mt-1 text-white font-medium">
+                        {Math.round(selectedTable.position.x)}, {Math.round(selectedTable.position.y)}
+                      </div>
+                    </div>
+                  </div>
                   
                   {/* 桌位名稱 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+                  <div className="space-y-2 rounded-xl border border-white/16 bg-white/8 p-3">
+                    <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                       桌位名稱
                     </label>
                     <input
                       type="text"
                       value={selectedTable.name}
                       onChange={(e) => updateSelectedTable({ name: e.target.value })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
+                      className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-2"
                     />
                   </div>
 
                   {/* 桌位編號 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+                  <div className="space-y-2 rounded-xl border border-white/16 bg-white/8 p-3">
+                    <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                       桌位編號
                     </label>
                     <input
                       type="number"
                       value={selectedTable.number}
                       onChange={(e) => updateSelectedTable({ number: parseInt(e.target.value) || 0 })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
+                      className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-2"
                     />
                   </div>
 
-                  {/* 桌位類型 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
-                      桌位類型
-                    </label>
-                    <select
-                      value={selectedTable.type}
-                      onChange={(e) => updateSelectedTable({ type: e.target.value as TableType })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
-                    >
-                      {Object.entries(tableTypes).map(([value, label]) => (
-                        <option key={value} value={value} className="bg-gray-800 text-white">{label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-2 gap-3 rounded-xl border border-white/16 bg-white/8 p-3">
+                    {/* 桌位類型 */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                        類型
+                      </label>
+                      <select
+                        value={selectedTable.type}
+                        onChange={(e) => updateSelectedTable({ type: e.target.value as TableType })}
+                        className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
+                      >
+                        {Object.entries(tableTypes).map(([value, label]) => (
+                          <option key={value} value={value} className="bg-white text-slate-900">{label}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* 桌位形狀 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
-                      桌位形狀
-                    </label>
-                    <select
-                      value={selectedTable.shape}
-                      onChange={(e) => updateSelectedTable({ shape: e.target.value as TableShape })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
-                    >
-                      {Object.entries(tableShapes).map(([value, label]) => (
-                        <option key={value} value={value} className="bg-gray-800 text-white">{label}</option>
-                      ))}
-                    </select>
-                  </div>
+                    {/* 桌位形狀 */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                        形狀
+                      </label>
+                      <select
+                        value={selectedTable.shape}
+                        onChange={(e) => updateSelectedTable({ shape: e.target.value as TableShape })}
+                        className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
+                      >
+                        {Object.entries(tableShapes).map(([value, label]) => (
+                          <option key={value} value={value} className="bg-white text-slate-900">{label}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* 桌位大小 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
-                      桌位大小
-                    </label>
-                    <select
-                      value={selectedTable.size}
-                      onChange={(e) => updateSelectedTable({ size: e.target.value as TableSize })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
-                    >
-                      {Object.entries(tableSizes).map(([value, data]) => (
-                        <option key={value} value={value} className="bg-gray-800 text-white">{data.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                    {/* 桌位大小 */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                        大小
+                      </label>
+                      <select
+                        value={selectedTable.size}
+                        onChange={(e) => updateSelectedTable({ size: e.target.value as TableSize })}
+                        className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
+                      >
+                        {Object.entries(tableSizes).map(([value, data]) => (
+                          <option key={value} value={value} className="bg-white text-slate-900">{data.label}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* 座位數 */}
-                  <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
-                      座位數
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={selectedTable.capacity}
-                      onChange={(e) => updateSelectedTable({ capacity: parseInt(e.target.value) || 0 })}
-                      className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-2"
-                    />
+                    {/* 座位數 */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                        座位數
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={selectedTable.capacity}
+                        onChange={(e) => updateSelectedTable({ capacity: parseInt(e.target.value) || 0 })}
+                        className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
+                      />
+                    </div>
                   </div>
 
                   {/* 位置資訊 */}
-                  <div className="pt-4 border-t border-white/20">
-                    <p className="text-sm text-white/70 drop-shadow-sm">
+                  <div className="pt-3 border-t border-white/18">
+                    <p className="text-xs text-white/70">
                       位置: X: {Math.round(selectedTable.position.x)}, Y: {Math.round(selectedTable.position.y)}
                     </p>
                   </div>
@@ -488,12 +568,12 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
               ) : (
                 /* 全域設定 - 美化設計 */
                 <div className="space-y-4">
-                  <p className="text-sm text-white/70 drop-shadow-sm">
+                  <p className="text-sm text-white/72">
                     點選桌位以編輯其設定，或拖拽桌位調整位置。
                   </p>
                   
                   {/* 顯示網格 */}
-                  <div className="flex items-center">
+                  <div className="flex items-center rounded-xl border border-white/16 bg-white/8 px-3 py-2">
                     <input
                       type="checkbox"
                       id="showGrid"
@@ -507,24 +587,32 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   </div>
 
                   {/* 統計資訊 */}
-                  <div className="pt-4 border-t border-white/20">
-                    <h5 className="font-medium text-white mb-3 drop-shadow-md">統計資訊</h5>
-                    <div className="text-sm text-white/70 space-y-2 drop-shadow-sm">
-                      <div className="flex justify-between">
-                        <span>總桌數:</span>
-                        <span className="text-white font-medium">{tables.length}</span>
+                  <div className="pt-2">
+                    <h5 className="text-xs font-medium tracking-wide text-white/65 uppercase mb-2">統計資訊</h5>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">總桌數</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.totalTables}</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>使用中:</span>
-                        <span className="text-amber-300 font-medium">{tables.filter(t => t.status === 'occupied').length}</span>
+                      <div className="rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">使用中</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.occupiedCount}</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>空桌:</span>
-                        <span className="text-emerald-300 font-medium">{tables.filter(t => t.status === 'available').length}</span>
+                      <div className="rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">空桌</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.availableCount}</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>總座位數:</span>
-                        <span className="text-white font-medium">{tables.reduce((sum, t) => sum + (t.capacity || 4), 0)}</span>
+                      <div className="rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">已預約</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.reservedCount}</div>
+                      </div>
+                      <div className="rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">清潔中</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.cleaningCount}</div>
+                      </div>
+                      <div className="col-span-2 rounded-lg border border-white/16 bg-white/8 px-3 py-2">
+                        <div className="text-white/60 text-xs">總座位數</div>
+                        <div className="text-white font-semibold mt-1">{tableStats.totalSeats}</div>
                       </div>
                     </div>
                   </div>
@@ -602,8 +690,8 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/20">
-        <h3 className="text-lg font-semibold mb-6 text-white drop-shadow-lg">新增桌位</h3>
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/22 p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_16px_36px_rgba(2,6,23,0.2)]">
+        <h3 className="text-lg font-semibold mb-6 text-white">新增桌位</h3>
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -615,7 +703,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder={`桌 ${formData.number}`}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
           </div>
 
@@ -627,7 +715,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
               type="number"
               value={formData.number}
               onChange={(e) => setFormData({ ...formData, number: parseInt(e.target.value) || 0 })}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
           </div>
 
@@ -638,10 +726,10 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as TableType })}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableTypes).map(([value, label]) => (
-                <option key={value} value={value} className="bg-gray-800 text-white">{label}</option>
+                <option key={value} value={value} className="bg-white text-slate-900">{label}</option>
               ))}
             </select>
           </div>
@@ -653,10 +741,10 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <select
               value={formData.shape}
               onChange={(e) => setFormData({ ...formData, shape: e.target.value as TableShape })}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableShapes).map(([value, label]) => (
-                <option key={value} value={value} className="bg-gray-800 text-white">{label}</option>
+                <option key={value} value={value} className="bg-white text-slate-900">{label}</option>
               ))}
             </select>
           </div>
@@ -668,10 +756,10 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <select
               value={formData.size}
               onChange={(e) => setFormData({ ...formData, size: e.target.value as TableSize })}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableSizes).map(([value, data]) => (
-                <option key={value} value={value} className="bg-gray-800 text-white">{data.label}</option>
+                <option key={value} value={value} className="bg-white text-slate-900">{data.label}</option>
               ))}
             </select>
           </div>
@@ -686,21 +774,21 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
               max="20"
               value={formData.capacity}
               onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
-              className="w-full rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 shadow-lg focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all duration-200 px-4 py-3"
+              className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
           </div>
 
           <div className="flex gap-3 pt-6">
             <button
               type="submit"
-              className="flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 hover:scale-105"
+              className="flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-white/14 hover:bg-white/20 text-white border-white/28"
             >
               新增桌位
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border bg-white/10 hover:bg-white/20 text-white border-white/30 shadow-lg hover:scale-105"
+              className="flex-1 px-6 py-3 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-white/10 hover:bg-white/16 text-white border-white/24"
             >
               取消
             </button>
