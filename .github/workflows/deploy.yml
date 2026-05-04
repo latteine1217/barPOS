@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 # 不允許同時兩個 release 部署互相覆蓋
 concurrency:
   group: deploy-${{ github.workflow }}-${{ github.ref }}
@@ -44,6 +47,8 @@ jobs:
     name: Build Electron (${{ matrix.os }})
     needs: deploy-web
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
