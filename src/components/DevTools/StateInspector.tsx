@@ -252,7 +252,7 @@ export function StateInspector({
               <div className="text-xs text-gray-400 mb-2">選擇要比較的 Store:</div>
               <div className="flex flex-wrap gap-1">
                 {storesList.map(store => (
-                  <button
+                  <button type="button"
                     key={store.storeName}
                     onClick={() => setSelectedStore(store.storeName)}
                     className={`px-2 py-1 text-xs rounded transition-colors ${

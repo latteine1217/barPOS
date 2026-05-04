@@ -34,12 +34,14 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
       {/* Search input takes available width */}
       <div className="flex-1 relative">
         <input
+          type="search"
+          aria-label="搜尋品項"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="搜尋品項..."
           className="w-full pl-10 pr-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔎</span>
       </div>
       {/* Table and People to the right of search */}
       <div className="flex items-center gap-3">
@@ -49,16 +51,17 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
             桌位 {selectedTable.number}
           </div>
         ) : !initialTableNumber ? (
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 dark:text-gray-300">桌號</label>
+          <label className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-300">桌號</span>
             <input
               type="number"
+              aria-label="桌號"
               value={orderDetails.tableNumber}
               onChange={(e) => updateOrderDetails({ tableNumber: e.target.value })}
               className="w-20 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
               placeholder="桌號"
             />
-          </div>
+          </label>
         ) : (
           <div className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
             桌位 {initialTableNumber}
@@ -70,23 +73,26 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
-            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            aria-label={`減少人數（目前 ${orderDetails.customers}）`}
           >
-            -
+            −
           </button>
           <input
             type="number"
             min={1}
+            aria-label="客人數"
             value={orderDetails.customers}
             onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
-            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700"
+            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
           />
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
-            className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            aria-label={`增加人數（目前 ${orderDetails.customers}）`}
           >
-            +
+            ＋
           </button>
         </div>
       </div>

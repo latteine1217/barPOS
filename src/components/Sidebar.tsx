@@ -36,7 +36,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
           <ul className="space-y-3">
             {items.map((item) => (
               <li key={item.id}>
-                <button
+                <button type="button"
                   onClick={() => handleNavClick(item.id)}
                   className={`w-full text-left ${collapsed ? 'px-3 justify-center' : 'px-5'} py-3 rounded-xl font-medium transition-all duration-200 flex items-center border ${
                     activeTab === item.id
@@ -100,7 +100,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between border-b border-gray-200 bg-white">
             <h1 className="text-xl font-bold text-slate-900">調酒酒吧POS</h1>
-            <button 
+            <button type="button" 
               onClick={() => setSidebarOpen(false)} 
               aria-label="關閉側邊欄" 
               className="p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 text-slate-600 hover:text-slate-900"
@@ -114,7 +114,7 @@ const Sidebar = memo<SidebarProps>(({ activeTab, setActiveTab, sidebarOpen, setS
             <ul className="space-y-3">
               {items.map((item) => (
                 <li key={item.id}>
-                  <button
+                  <button type="button"
                     onClick={() => handleNavClick(item.id)}
                     className={`w-full text-left px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center border ${
                       activeTab === item.id

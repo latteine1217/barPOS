@@ -150,7 +150,7 @@ const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   };
 
   return (
-    <button
+    <button type="button"
       className={`
         ${baseClasses}
         ${variantClasses[variant]}

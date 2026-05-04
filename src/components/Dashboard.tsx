@@ -162,7 +162,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
       <div className="card p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">最近訂單</h2>
-          <button onClick={() => onNavigate?.('history')} className="text-[var(--color-accent)] hover:opacity-90 text-sm font-medium">
+          <button type="button" onClick={() => onNavigate?.('history')} className="text-[var(--color-accent)] hover:opacity-90 text-sm font-medium">
             查看全部
           </button>
         </div>

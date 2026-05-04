@@ -389,7 +389,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({
           
           {enableSearch && (
             <input
-              type="text"
+              type="search"
+              aria-label="搜尋日誌"
               placeholder="搜尋日誌..."
               value={filters.searchTerm}
               onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
@@ -416,7 +417,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
                 {!isActive ? '攔截器未啟動' : '尚無日誌訊息'}
               </div>
               {!isActive && (
-                <button
+                <button type="button"
                   onClick={toggleInterceptor}
                   className="mt-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
                 >
@@ -441,14 +442,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({
       {/* 底部控制列 */}
       <div className="flex items-center justify-between p-2 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={autoScroll}
               onChange={(e) => setAutoScroll(e.target.checked)}
               className="w-3 h-3"
             />
-            自動滾動
+            <span>自動滾動</span>
           </label>
           {import.meta.env.DEV && (
             <span className="text-green-600 font-medium">
@@ -458,7 +459,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
         </div>
         
         {isPaused && (
-          <button
+          <button type="button"
             onClick={resumeLogs}
             className="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600"
           >

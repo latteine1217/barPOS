@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useUIStore } from '@/stores/uiStore';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const ConfirmDialog = () => {
   const confirm = useUIStore((s) => s.confirm);
   const resolveConfirm = useUIStore((s) => s.resolveConfirm);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>({
+    active: !!confirm,
+    autoFocusFirst: false, // 我們自己 focus confirmBtn 以保 default action 顯眼
+  });
 
   // Esc 關閉、Enter 確認、開啟時 focus 主要按鈕
   useEffect(() => {
@@ -48,7 +53,10 @@ const ConfirmDialog = () => {
         onClick={() => resolveConfirm(false)}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95">
+      <div
+        ref={trapRef}
+        className="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95"
+      >
         <div className="flex items-start gap-3">
           {isDanger && (
             <div className="flex-none w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center" aria-hidden="true">

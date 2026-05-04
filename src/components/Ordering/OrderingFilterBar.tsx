@@ -52,7 +52,7 @@ export const OrderingFilterBar: React.FC<OrderingFilterBarProps> = ({
     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
       <div className="flex flex-wrap gap-2 mb-3">
         {categories.map((category) => (
-          <button
+          <button type="button"
             key={category}
             onClick={() => setSelectedCategory(category)}
             className={`px-3 py-1 rounded-full text-sm font-medium border ${
@@ -69,7 +69,7 @@ export const OrderingFilterBar: React.FC<OrderingFilterBarProps> = ({
       {availableBaseSpirits.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {availableBaseSpirits.map((spirit) => (
-            <button
+            <button type="button"
               key={spirit}
               onClick={() => setSelectedBaseSpirit(spirit)}
               className={`px-3 py-1 rounded-full text-xs font-medium border ${

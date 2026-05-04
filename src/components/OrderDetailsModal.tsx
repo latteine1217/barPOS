@@ -1,7 +1,8 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import type { Order, OrderStatus } from '@/types';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useToast } from '@/hooks/useToast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -62,16 +63,47 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
     onClose();
   }, [order, confirm, onReleaseTable, onClose, toast]);
 
+  // Esc 關閉 + body scroll lock + focus trap
+  useEffect(() => {
+    if (!order) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [order, onClose]);
+
+  const trapRef = useFocusTrap<HTMLDivElement>({ active: !!order });
+
   if (!order) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-details-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        ref={trapRef}
+        className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">訂單詳情</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+          <h2 id="order-details-title" className="text-2xl font-bold">訂單詳情</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300 rounded"
+            aria-label="關閉訂單詳情"
           >
             ✕
           </button>
@@ -140,6 +172,7 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
             <h3 className="text-lg font-semibold mb-3">更新狀態</h3>
             <div className="flex flex-wrap gap-2">
               <button
+                type="button"
                 onClick={() => handleStatusChange('pending')}
                 disabled={order.status === 'pending'}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -151,6 +184,7 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
                 待處理
               </button>
               <button
+                type="button"
                 onClick={() => handleStatusChange('preparing')}
                 disabled={order.status === 'preparing'}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -162,6 +196,7 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
                 製作中
               </button>
               <button
+                type="button"
                 onClick={() => handleStatusChange('completed')}
                 disabled={order.status === 'completed'}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -173,6 +208,7 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
                 已完成
               </button>
               <button
+                type="button"
                 onClick={() => handleStatusChange('paid')}
                 disabled={order.status === 'paid'}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -191,15 +227,17 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
         <div className={`flex ${isHistoryMode ? 'justify-end' : 'justify-between'}`}>
           {!isHistoryMode && (
             <button
+              type="button"
               onClick={handleDeleteOrder}
-              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
             >
               釋放桌位
             </button>
           )}
           <button
+            type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             關閉
           </button>

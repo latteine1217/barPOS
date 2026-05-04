@@ -82,20 +82,20 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
                 <p className="text-xs text-gray-500">${item.price}</p>
               </div>
               <div className="flex items-center space-x-2">
-                <button
+                <button type="button"
                   onClick={() => updateQuantity(index, item.quantity - 1)}
                   className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded"
                 >
                   -
                 </button>
                 <span className="w-8 text-center text-sm">{item.quantity}</span>
-                <button
+                <button type="button"
                   onClick={() => updateQuantity(index, item.quantity + 1)}
                   className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded"
                 >
                   +
                 </button>
-                <button
+                <button type="button"
                   onClick={() => removeFromOrder(index)}
                   className="w-6 h-6 flex items-center justify-center bg-red-200 text-red-600 rounded"
                 >
@@ -134,7 +134,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
           {existingOrder ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-              <button
+              <button type="button"
                 onClick={() => handleStatusChange('pending')}
               className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
                 currentStatus === 'pending'
@@ -144,7 +144,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
             >
               待處理
             </button>
-            <button
+            <button type="button"
               onClick={() => handleStatusChange('completed')}
               className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
                 currentStatus === 'completed'
@@ -181,7 +181,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
         )}
         {existingOrder && (currentStatus === 'completed' || currentStatus === 'paid') && (
           <div className="mt-4">
-            <button
+            <button type="button"
               onClick={handleReleaseTable}
               className={`w-full py-2 px-4 rounded-lg font-medium text-white ${
                 currentStatus === 'paid'
@@ -199,17 +199,28 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">加價 / 折價</h4>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) - 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">-</button>
+            <button
+              type="button"
+              onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) - 10)}
+              className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+              aria-label="減少 10 元"
+            >−</button>
             <input
               type="number"
-            step={10}
-            value={adjustment}
-            onChange={(e) => setAdjustment(Number(e.target.value) || 0)}
-            className="w-24 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
-          />
-          <button type="button" onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) + 10)} className="w-8 h-8 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">+</button>
-          <span className="text-xs text-gray-500 dark:text-gray-400">先於服務費計算</span>
-        </div>
+              step={10}
+              aria-label="加價或折價金額"
+              value={adjustment}
+              onChange={(e) => setAdjustment(Number(e.target.value) || 0)}
+              className="w-24 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            />
+            <button
+              type="button"
+              onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) + 10)}
+              className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+              aria-label="增加 10 元"
+            >＋</button>
+            <span className="text-xs text-gray-500 dark:text-gray-400">先於服務費計算</span>
+          </div>
         </div>
 
         {/* Service fee toggle */}
@@ -257,7 +268,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
           <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${(totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) + (tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0)}</span></div>
         </div>
         <div className="flex flex-col space-y-2">
-          <button
+          <button type="button"
             onClick={handleConfirmOrder}
             disabled={!validation.isValid}
             className={`w-full py-3 px-4 rounded-lg font-medium ${
@@ -270,7 +281,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
           </button>
 
           {orderItems.length > 0 && (
-            <button
+            <button type="button"
               onClick={clearOrder}
               className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
             >
@@ -278,7 +289,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
             </button>
           )}
 
-          <button
+          <button type="button"
             onClick={onCancel}
             className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >

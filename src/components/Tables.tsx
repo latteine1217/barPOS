@@ -82,9 +82,15 @@ const getDotColor = (table: TableWithOrder): string => {
 
 const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (t: Table) => void; }> = memo(({ table, selected, onClick }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onClick(table)}
-      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+      aria-label={`桌位 ${table.number}，狀態：${StatusText[table.status]}${
+        table.status === 'occupied' && table.currentOrder
+          ? `，訂單狀態：${OrderStatusText[table.currentOrder.status]}，金額 NT$${table.currentOrder.total}`
+          : ''
+      }`}
+      className={`relative w-full text-left p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 ${
         table.status === 'occupied' ? getOccupiedColorByOrderStatus(table.currentOrder?.status) : StatusColor[table.status]
       } ${selected ? 'ring-4 ring-blue-400' : ''}`}
     >
@@ -104,8 +110,8 @@ const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (
           <div className="text-xs">${table.currentOrder.total}</div>
         )}
       </div>
-      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} />
-    </div>
+      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} aria-hidden="true" />
+    </button>
   );
 });
 
@@ -203,27 +209,31 @@ const Tables: React.FC = memo(() => {
             <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">座位管理</h1>
             <p className="text-white/80 drop-shadow-md">管理餐廳座位狀態和客人需求</p>
           </div>
-          <div className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+          <div role="tablist" aria-label="座位檢視模式" className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'custom'}
               aria-pressed={viewMode === 'custom'}
               onClick={() => { setSelectedTable(null); setViewMode('custom'); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-0 ${
                 viewMode === 'custom'
-                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
+                  ? 'bg-white/25 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/85 hover:text-white hover:bg-white/15'
               }`}
             >
               佈局模式
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'grid'}
               aria-pressed={viewMode === 'grid'}
               onClick={() => { setSelectedTable(null); setViewMode('grid'); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-0 ${
                 viewMode === 'grid'
-                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
+                  ? 'bg-white/25 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/85 hover:text-white hover:bg-white/15'
               }`}
             >
               格狀檢視
@@ -252,20 +262,20 @@ const Tables: React.FC = memo(() => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">總座位數</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">總座位數</div>
           <div className="text-2xl font-bold text-white drop-shadow-md">{tableStats.total}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">空位</div>
-          <div className="text-2xl font-bold text-emerald-400 drop-shadow-md">{tableStats.available}</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">空位</div>
+          <div className="text-2xl font-bold text-emerald-300 drop-shadow-md">{tableStats.available}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">使用中</div>
-          <div className="text-2xl font-bold text-amber-400 drop-shadow-md">{tableStats.occupied}</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">使用中</div>
+          <div className="text-2xl font-bold text-amber-300 drop-shadow-md">{tableStats.occupied}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">使用率</div>
-          <div className="text-2xl font-bold text-blue-400 drop-shadow-md">{tableStats.utilizationRate}%</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">使用率</div>
+          <div className="text-2xl font-bold text-sky-300 drop-shadow-md">{tableStats.utilizationRate}%</div>
         </div>
       </div>
     </div>
