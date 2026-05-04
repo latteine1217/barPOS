@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -19,6 +19,26 @@ export const Modal: React.FC<ModalProps> = ({
   closable = true,
   className = '',
 }) => {
+  // Esc 關閉 + 開啟時鎖定 body 捲動
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && closable) {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handler, true);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, closable, onClose]);
+
   if (!isOpen) return null;
 
   const sizeClasses = {

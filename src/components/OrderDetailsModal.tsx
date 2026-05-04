@@ -1,5 +1,7 @@
 import { memo, useCallback } from 'react';
 import type { Order, OrderStatus } from '@/types';
+import { useConfirm } from '@/hooks/useConfirm';
+import { useToast } from '@/hooks/useToast';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -42,12 +44,23 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
     }
   }, [order, onUpdateStatus]);
 
-  const handleDeleteOrder = useCallback(() => {
-    if (order && window.confirm('確認要釋放此訂單的桌位嗎？訂單資料將保留以供統計使用。')) {
-      onReleaseTable(order.id);
-      onClose();
-    }
-  }, [order, onReleaseTable, onClose]);
+  const confirm = useConfirm();
+  const toast = useToast();
+
+  const handleDeleteOrder = useCallback(async () => {
+    if (!order) return;
+    const ok = await confirm({
+      title: '釋放此訂單的桌位？',
+      description: '訂單資料將保留以供統計使用，但桌位會立即標記為可用。',
+      confirmText: '釋放桌位',
+      cancelText: '取消',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    onReleaseTable(order.id);
+    toast.success('已釋放桌位');
+    onClose();
+  }, [order, confirm, onReleaseTable, onClose, toast]);
 
   if (!order) return null;
 

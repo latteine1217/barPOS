@@ -1,4 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { logger } from '@/services/loggerService';
+
+const LS_CTX = { component: 'useLocalStorage' } as const;
+const toError = (e: unknown): Error => (e instanceof Error ? e : new Error(String(e)));
 
 export interface UseLocalStorageReturn<T> {
   value: T;
@@ -22,7 +26,7 @@ export const useLocalStorage = <T>(
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      logger.warn(`讀取 localStorage 失敗：${key}`, { ...LS_CTX, key, error: toError(error).message });
       return defaultValue;
     }
   }, [defaultValue, key]);
@@ -38,9 +42,8 @@ export const useLocalStorage = <T>(
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       if (typeof window === 'undefined') {
-        console.warn(
-          `Tried setting localStorage key "${key}" even though environment is not a client`
-        );
+        logger.warn(`試圖在非瀏覽器環境寫入 localStorage：${key}`, { ...LS_CTX, key });
+        return;
       }
 
       try {
@@ -63,7 +66,7 @@ export const useLocalStorage = <T>(
           })
         );
       } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
+        logger.warn(`寫入 localStorage 失敗：${key}`, { ...LS_CTX, key, error: toError(error).message });
       }
     },
     [key, storedValue]
@@ -74,7 +77,7 @@ export const useLocalStorage = <T>(
       window.localStorage.removeItem(key);
       setStoredValue(defaultValue);
     } catch (error) {
-      console.warn(`Error removing localStorage key "${key}":`, error);
+      logger.warn(`移除 localStorage 失敗：${key}`, { ...LS_CTX, key, error: toError(error).message });
     }
   }, [defaultValue, key]);
 

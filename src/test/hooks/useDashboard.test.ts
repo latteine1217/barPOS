@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Order } from '@/types';
-import { useDashboard } from '@/hooks/business/useDashboardFixed';
+import { useDashboard } from '@/hooks/business/useDashboard';
 
 let mockOrders: Order[] = [];
 let mockCutoffHour = 3;
@@ -16,7 +16,7 @@ vi.mock('@/stores/settingsStore', () => ({
     selector({ businessDayCutoffHour: mockCutoffHour })
 }));
 
-describe('useDashboardFixed', () => {
+describe('useDashboard', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 1, 23, 2, 30, 0));

@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { useTables, useOrders, useOrderStore, useAppStore } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
+import { logger } from '@/services/loggerService';
 import type { Table, Order, OrderStatus } from '@/types';
-import TableLayoutEditor from './TableLayoutEditor';
 import { useVisualOrderingModalOpen } from './visualOrderingModalStore';
+
+const TableLayoutEditor = lazy(() => import('./TableLayoutEditor'));
 
 type ViewMode = 'custom' | 'grid';
 
@@ -119,7 +121,7 @@ const Tables: React.FC = memo(() => {
   const [viewMode, setViewMode] = useState<ViewMode>('custom');
 
   const ordersById = useMemo(() => {
-    const m = new Map<string | number, Order>();
+    const m = new Map<string, Order>();
     for (const o of orders) m.set(o.id, o);
     return m;
   }, [orders]);
@@ -139,7 +141,7 @@ const Tables: React.FC = memo(() => {
   const tablesWithOrders = useMemo(() => {
     return tables.map((table: Table): TableWithOrder => ({
       ...table,
-      currentOrder: table.orderId ? ordersById.get(table.orderId as any) || null : null,
+      currentOrder: table.orderId ? ordersById.get(table.orderId) ?? null : null,
     }));
   }, [tables, ordersById]);
 
@@ -164,7 +166,11 @@ const Tables: React.FC = memo(() => {
         addOrderWithTableUpdate(order);
       }
     } catch (error) {
-      console.error('Error in onComplete callback:', error);
+      logger.error(
+        'Error in onComplete callback',
+        { component: 'Tables', action: 'onComplete' },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, [addOrderWithTableUpdate, updateOrder]);
 
@@ -174,7 +180,7 @@ const Tables: React.FC = memo(() => {
 
   const handleTableClick = useCallback((table: Table) => {
     if (!table || !table.id) return;
-    const currentOrder = table.orderId ? ordersById.get(table.orderId as any) || null : null;
+    const currentOrder = table.orderId ? ordersById.get(table.orderId) ?? null : null;
     // 已結帳也允許開啟視窗，讓使用者釋放桌位或檢視訂單
     const isAddOnMode = !!currentOrder && table.status === 'occupied' && currentOrder.status !== 'paid';
     const initialCustomers = table.customers || currentOrder?.customers || 1;
@@ -234,7 +240,13 @@ const Tables: React.FC = memo(() => {
         </div>
       ) : (
         <div style={{ minHeight: '600px' }}>
-          <TableLayoutEditor readOnly onTableClick={handleTableClick} />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/70" />
+            </div>
+          }>
+            <TableLayoutEditor readOnly onTableClick={handleTableClick} />
+          </Suspense>
         </div>
       )}
 

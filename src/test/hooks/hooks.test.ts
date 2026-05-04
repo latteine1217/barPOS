@@ -1,44 +1,41 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock navigator.onLine
+import { useNetworkStatus } from '@/hooks/core/useNetworkStatus'
+
 Object.defineProperty(navigator, 'onLine', {
   writable: true,
   value: true,
 })
 
-
-
-// Import hooks after mocking
-import { useOnline } from '@/hooks/useOnline'
-
-describe('useOnline Hook', () => {
+describe('useNetworkStatus Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    Object.defineProperty(navigator, 'onLine', {
+      writable: true,
+      value: true,
+    })
   })
 
   it('should return initial online status', () => {
-    const { result } = renderHook(() => useOnline())
-    
+    const { result } = renderHook(() => useNetworkStatus())
+
     expect(result.current.isOnline).toBe(true)
     expect(typeof result.current.connectionType).toBe('string')
   })
 
-  it('should handle offline status', () => {
-    // 模擬離線狀態
+  it('should reflect offline event', () => {
     Object.defineProperty(navigator, 'onLine', {
       writable: true,
       value: false,
     })
-    
-    const { result } = renderHook(() => useOnline())
-    
-    // 觸發 online/offline 事件
+
+    const { result } = renderHook(() => useNetworkStatus())
+
     act(() => {
       window.dispatchEvent(new Event('offline'))
     })
-    
-    // 注意：實際狀態可能需要等待 effect 執行
+
     expect(result.current.isOnline).toBe(false)
   })
 })

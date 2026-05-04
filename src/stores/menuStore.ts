@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 import type { MenuItem, MenuCategory, BaseSpirit, ID } from '@/types';
+import { logger } from '@/services/loggerService';
 
 interface MenuState {
   menuItems: MenuItem[];
@@ -136,7 +137,7 @@ export const useMenuStore = create<MenuStore>()(
         // 檢查 ID 是否衝突（雙重保險）
         const idExists = state.menuItems.some(i => i.id === newId);
         if (idExists) {
-          console.error(`ID 衝突: ${newId} 已存在`);
+          logger.error(`菜單 ID 衝突`, { component: 'menuStore', action: 'addMenuItem', id: newId });
           return;
         }
 
