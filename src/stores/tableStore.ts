@@ -139,7 +139,7 @@ export const useTableStore = create<TableStore>()(
           state.tables.forEach(t => {
             if (t.orderId === orderId) {
               t.status = 'available';
-              delete (t as any).orderId;
+              delete (t as { orderId?: ID }).orderId;
               t.customers = 0;
               t.updatedAt = new Date().toISOString();
               changed = true;
@@ -160,14 +160,14 @@ export const useTableStore = create<TableStore>()(
           }
           // 允許更新多數版面屬性（名稱、編號、形狀、大小、容量、型別、位置）
           if (layoutData.name !== undefined) table.name = layoutData.name;
-          if (layoutData.number !== undefined) table.number = layoutData.number as any;
-          if ((layoutData as any).type !== undefined) (table as any).type = (layoutData as any).type;
-          if ((layoutData as any).shape !== undefined) (table as any).shape = (layoutData as any).shape;
-          if ((layoutData as any).size !== undefined) (table as any).size = (layoutData as any).size;
+          if (layoutData.number !== undefined) table.number = Number(layoutData.number);
+          if (layoutData.type !== undefined) table.type = layoutData.type;
+          if (layoutData.shape !== undefined) table.shape = layoutData.shape;
+          if (layoutData.size !== undefined) table.size = layoutData.size;
           if (layoutData.maxCapacity !== undefined) table.maxCapacity = layoutData.maxCapacity;
-          if ((layoutData as any).capacity !== undefined) (table as any).capacity = (layoutData as any).capacity;
+          if (layoutData.capacity !== undefined) table.capacity = layoutData.capacity;
           if (layoutData.position) {
-            table.position = { ...table.position, ...layoutData.position } as any;
+            table.position = { ...table.position, ...layoutData.position };
           }
           table.updatedAt = new Date().toISOString();
         });
@@ -241,7 +241,7 @@ export const useTableStore = create<TableStore>()(
       getTableByNumber: (number: number) => {
         const n = Number(number);
         // 寬鬆處理持久化資料中的型別偏差（可能為字串）
-        return get().tables.find(table => Number((table as any).number) === n);
+        return get().tables.find(table => Number(table.number) === n);
       },
 
       getTablesByStatus: (status: TableStatus) => {

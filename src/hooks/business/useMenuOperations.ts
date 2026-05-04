@@ -13,7 +13,7 @@ export interface UseMenuOperationsOptions {
   // 錯誤回調
   onError?: (error: Error, context: string) => void;
   // 成功回調
-  onSuccess?: (action: string, data: any) => void;
+  onSuccess?: (action: string, data: unknown) => void;
 }
 
 // 創建菜單項目數據接口
@@ -100,7 +100,7 @@ export const useMenuOperations = (options: UseMenuOperationsOptions = {}) => {
     id: string;
     action: string;
     timestamp: Date;
-    data: any;
+    data: unknown;
   }>>([]);
 
   // 錯誤處理輔助函數
@@ -110,13 +110,14 @@ export const useMenuOperations = (options: UseMenuOperationsOptions = {}) => {
   }, [onError]);
 
   // 成功處理輔助函數
-  const handleSuccess = useCallback((action: string, data: any) => {
-    logger.info(`MenuOperations: ${action} successful`, { action, itemId: data?.id });
+  const handleSuccess = useCallback((action: string, data: unknown) => {
+    const itemId = (data as { id?: string } | null | undefined)?.id;
+    logger.info(`MenuOperations: ${action} successful`, { action, ...(itemId ? { itemId } : {}) });
     onSuccess?.(action, data);
   }, [onSuccess]);
 
   // 記錄操作歷史
-  const recordOperation = useCallback((action: string, data: any) => {
+  const recordOperation = useCallback((action: string, data: unknown) => {
     operationHistory.current.push({
       id: `op-${Date.now()}`,
       action,
@@ -194,7 +195,7 @@ export const useMenuOperations = (options: UseMenuOperationsOptions = {}) => {
       await withOptimisticUpdate(
         async () => {
           if (isOnline && autoSync) {
-            addToOfflineQueue('menu', 'create', newItem as any);
+            addToOfflineQueue('menu', 'create', newItem as unknown as Record<string, unknown>);
           }
           return { success: true, data: newItem };
         },

@@ -154,7 +154,7 @@ const Analytics: React.FC = memo(() => {
         {/* Period Selector */}
         <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
           {periodOptions.map((option) => (
-            <button
+            <button type="button"
               key={option.value}
               onClick={() => setSelectedPeriod(option.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${

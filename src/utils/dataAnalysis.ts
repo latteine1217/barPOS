@@ -7,7 +7,10 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { groupBy, sumBy, meanBy, orderBy } from 'lodash';
+import groupBy from 'lodash/groupBy';
+import sumBy from 'lodash/sumBy';
+import meanBy from 'lodash/meanBy';
+import orderBy from 'lodash/orderBy';
 import type { 
   Order, 
   OrderStatus,

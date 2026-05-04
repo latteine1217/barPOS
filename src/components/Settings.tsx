@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useOrders, useTables, useMembers, useSetMembers, useOrderActions, useTableActions, useMenuActions } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
@@ -29,6 +29,12 @@ const Settings: React.FC = () => {
   const accent = useSettingsStore((s) => s.accent);
   const supabaseConfig = useSettingsStore((s) => s.supabaseConfig);
   const businessDayCutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
+
+  // 表單欄位 ID（label htmlFor 對應）
+  const supabaseUrlId = useId();
+  const supabaseKeyId = useId();
+  const cutoffId = useId();
+  const cutoffHintId = useId();
   
   // Actions
   const updateSupabaseConfig = useSettingsStore((s) => s.updateSupabaseConfig);
@@ -274,11 +280,13 @@ const Settings: React.FC = () => {
 
               <div className="mt-6 grid grid-cols-1 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                  <label htmlFor={supabaseUrlId} className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                     Project URL
                   </label>
                   <input
+                    id={supabaseUrlId}
                     type="url"
+                    autoComplete="url"
                     value={supabaseConfig.url || ''}
                     onChange={(e) => handleSupabaseConfigChange('url', e.target.value)}
                     placeholder="https://your-project-ref.supabase.co"
@@ -287,11 +295,13 @@ const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                  <label htmlFor={supabaseKeyId} className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                     API Key (anon public)
                   </label>
                   <input
+                    id={supabaseKeyId}
                     type="password"
+                    autoComplete="off"
                     value={supabaseConfig.key || ''}
                     onChange={(e) => handleSupabaseConfigChange('key', e.target.value)}
                     placeholder="輸入 anon public API key"
@@ -310,7 +320,7 @@ const Settings: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <button
+                  <button type="button"
                     onClick={handleSupabaseTest}
                     disabled={testing}
                     className="btn btn-primary justify-center"
@@ -318,14 +328,14 @@ const Settings: React.FC = () => {
                     {testing ? '測試中...' : '測試連接'}
                   </button>
 
-                  <button
+                  <button type="button"
                     onClick={handleSupabaseSave}
                     className="btn btn-secondary justify-center"
                   >
                     保存設定
                   </button>
 
-                  <button
+                  <button type="button"
                     onClick={syncToSupabase}
                     disabled={syncing}
                     className="btn btn-success justify-center"
@@ -333,7 +343,7 @@ const Settings: React.FC = () => {
                     {syncing ? '同步中...' : '上傳到雲端'}
                   </button>
 
-                  <button
+                  <button type="button"
                     onClick={syncFromSupabase}
                     disabled={syncing}
                     className="btn btn-info justify-center"
@@ -469,7 +479,7 @@ const Settings: React.FC = () => {
                     主題模式
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button
+                    <button type="button"
                       onClick={() => setTheme?.('light')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'light'
@@ -479,7 +489,7 @@ const Settings: React.FC = () => {
                     >
                       淺色模式
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => setTheme?.('dark')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'dark'
@@ -489,7 +499,7 @@ const Settings: React.FC = () => {
                     >
                       深色模式
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => setTheme?.('auto')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'auto'
@@ -534,17 +544,19 @@ const Settings: React.FC = () => {
                 設定跨日統計分界時間（business day cutoff）。
               </p>
               <div className="mt-5">
-                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                <label htmlFor={cutoffId} className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   營業結算截止時間（小時）
                 </label>
-                <p className="text-xs text-[var(--text-muted)] mb-3">
+                <p id={cutoffHintId} className="text-xs text-[var(--text-muted)] mb-3">
                   範圍 0–23，例如 3 代表凌晨 3:00 才切換到新的一天。
                 </p>
                 <input
+                  id={cutoffId}
                   type="number"
                   min={0}
                   max={23}
                   value={businessDayCutoffHour}
+                  aria-describedby={cutoffHintId}
                   onChange={(e) => setBusinessDayCutoff?.(Number(e.target.value) || 0)}
                   className="w-full max-w-[160px] rounded-xl border border-[var(--glass-elevated-border)] bg-[var(--glass-elevated)] px-3 py-2.5 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 />

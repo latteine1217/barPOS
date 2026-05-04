@@ -13,7 +13,7 @@ export interface UseTableOperationsOptions {
   // 錯誤回調
   onError?: (error: Error, context: string) => void;
   // 成功回調
-  onSuccess?: (action: string, data: any) => void;
+  onSuccess?: (action: string, data: unknown) => void;
 }
 
 // 桌位操作結果接口
@@ -85,7 +85,7 @@ export const useTableOperations = (options: UseTableOperationsOptions = {}) => {
     id: string;
     action: string;
     timestamp: Date;
-    data: any;
+    data: unknown;
   }>>([]);
 
   // 錯誤處理輔助函數
@@ -95,13 +95,14 @@ export const useTableOperations = (options: UseTableOperationsOptions = {}) => {
   }, [onError]);
 
   // 成功處理輔助函數
-  const handleSuccess = useCallback((action: string, data: any) => {
-    logger.info(`TableOperations: ${action} successful`, { action, tableId: data?.id });
+  const handleSuccess = useCallback((action: string, data: unknown) => {
+    const tableId = (data as { id?: string | number } | null | undefined)?.id;
+    logger.info(`TableOperations: ${action} successful`, { action, ...(tableId !== undefined ? { tableId } : {}) });
     onSuccess?.(action, data);
   }, [onSuccess]);
 
   // 記錄操作歷史
-  const recordOperation = useCallback((action: string, data: any) => {
+  const recordOperation = useCallback((action: string, data: unknown) => {
     operationHistory.current.push({
       id: `op-${Date.now()}`,
       action,
@@ -340,17 +341,11 @@ export const useTableOperations = (options: UseTableOperationsOptions = {}) => {
         customers: 0
       };
 
-      // 移除 orderId（如果存在）
-      const updateResult = await updateTableInfo(tableId, updates);
-      
-      if (updateResult.success && table.orderId) {
-        // 手動移除 orderId
-        const tableState = useTableStore.getState();
-        const currentTable = tableState.tables.find(t => t.id === tableId);
-        if (currentTable && 'orderId' in currentTable) {
-          delete (currentTable as any).orderId;
-        }
-      }
+      // 透過 store action 設定 orderId 為 null（觸發 immer draft 內的 delete，並產生 reactive 更新）
+      const updateResult = await updateTableInfo(tableId, {
+        ...updates,
+        ...(table.orderId ? { orderId: null as unknown as ID } : {}),
+      });
 
       return updateResult;
     } catch (error) {

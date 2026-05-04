@@ -1,3 +1,8 @@
+import { logger } from './loggerService';
+import { confirmDialog, toast } from '@/stores/uiStore';
+
+const SW_CTX = { component: 'ServiceWorkerManager' } as const;
+
 // Service Worker 註冊與管理
 export class ServiceWorkerManager {
   private static instance: ServiceWorkerManager;
@@ -5,7 +10,7 @@ export class ServiceWorkerManager {
   private isSupported: boolean = false;
 
   constructor() {
-    this.isSupported = 'serviceWorker' in navigator;
+    this.isSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
   }
 
   public static getInstance(): ServiceWorkerManager {
@@ -18,34 +23,36 @@ export class ServiceWorkerManager {
   // 註冊 Service Worker
   public async register(): Promise<boolean> {
     if (!this.isSupported) {
-      console.warn('[SW] Service Worker is not supported in this browser');
+      logger.warn('Service Worker is not supported in this browser', SW_CTX);
       return false;
     }
 
     try {
-      console.log('[SW] Registering Service Worker...');
-      
+      logger.info('Registering Service Worker', SW_CTX);
+
       this.registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/'
       });
 
-      console.log('[SW] Service Worker registered successfully:', this.registration);
+      logger.info('Service Worker registered', SW_CTX);
 
-      // 監聽更新
       this.registration.addEventListener('updatefound', () => {
-        console.log('[SW] New Service Worker found, installing...');
+        logger.info('New Service Worker found, installing', SW_CTX);
         this.handleUpdate();
       });
 
-      // 監聽控制變化
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[SW] Service Worker controller changed');
+        logger.info('Service Worker controller changed; reloading', SW_CTX);
         window.location.reload();
       });
 
       return true;
     } catch (error) {
-      console.error('[SW] Service Worker registration failed:', error);
+      logger.error(
+        'Service Worker registration failed',
+        SW_CTX,
+        error instanceof Error ? error : new Error(String(error))
+      );
       return false;
     }
   }
@@ -65,9 +72,16 @@ export class ServiceWorkerManager {
     });
   }
 
-  // 顯示更新通知
-  private showUpdateNotification(): void {
-    if (confirm('發現新版本，是否立即更新？')) {
+  // 顯示更新通知（改用 app 內建 ConfirmDialog 取代 window.confirm）
+  private async showUpdateNotification(): Promise<void> {
+    const ok = await confirmDialog({
+      title: '發現新版本',
+      description: '可立即更新至最新版本，更新將於下次重新整理頁面後生效。',
+      confirmText: '立即更新',
+      cancelText: '稍後',
+    });
+    if (ok) {
+      toast.info('正在套用更新…');
       this.activateUpdate();
     }
   }
@@ -85,7 +99,7 @@ export class ServiceWorkerManager {
     if (!this.registration || !this.registration.active) return;
 
     this.registration.active.postMessage({ type: 'CACHE_CLEAR' });
-    console.log('[SW] Cache clear requested');
+    logger.info('Cache clear requested', SW_CTX);
   }
 
   // 檢查是否已安裝
@@ -99,10 +113,14 @@ export class ServiceWorkerManager {
 
     try {
       const result = await this.registration.unregister();
-      console.log('[SW] Service Worker unregistered:', result);
+      logger.info('Service Worker unregistered', { ...SW_CTX, result });
       return result;
     } catch (error) {
-      console.error('[SW] Failed to unregister Service Worker:', error);
+      logger.error(
+        'Failed to unregister Service Worker',
+        SW_CTX,
+        error instanceof Error ? error : new Error(String(error))
+      );
       return false;
     }
   }

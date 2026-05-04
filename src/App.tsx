@@ -1,24 +1,34 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useAppStore, useOrderStore, useTableStore, useMenuStore, useSettingsStore } from './stores';
 import { logger } from '@/services/loggerService';
 
-import ErrorBoundary from './components/ErrorBoundary';
 import GlobalErrorBoundary from './components/ErrorBoundary/GlobalErrorBoundary';
 import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import Members from './components/Members';
-import Menu from './components/Menu';
 import Tables from './components/Tables';
-import History from './components/History';
-import Analytics from './components/EnhancedAnalytics';
-import Settings from './components/Settings';
-import TableLayoutEditor from './components/TableLayoutEditor';
 import BubbleBackground from './components/BubbleBackground';
-import LogViewer from './components/LogViewer';
 import VisualOrderingModal from './components/VisualOrderingModal';
+import ToastViewport from './components/ui/ToastViewport';
+import ConfirmDialog from './components/ui/ConfirmDialog';
+import OfflineBanner from './components/ui/OfflineBanner';
 import './index.css';
 
+// 大型/低頻分頁採用 lazy loading，減少首屏 JS。
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Members = lazy(() => import('./components/Members'));
+const MenuPage = lazy(() => import('./components/Menu'));
+const History = lazy(() => import('./components/History'));
+const Analytics = lazy(() => import('./components/EnhancedAnalytics'));
+const Settings = lazy(() => import('./components/Settings'));
+const TableLayoutEditor = lazy(() => import('./components/TableLayoutEditor'));
+const LogViewer = lazy(() => import('./components/LogViewer'));
+
 type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout' | 'members';
+
+const TabFallback = () => (
+  <div className="flex items-center justify-center h-full py-16">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
+  </div>
+);
 
 function AppContent() {
   // 直接使用個別 store hooks 避免組合選擇器的循環依賴
@@ -26,18 +36,14 @@ function AppContent() {
   const orderLoaded = useOrderStore((state) => state.isLoaded);
   const tableLoaded = useTableStore((state) => state.isLoaded);
   const menuLoaded = useMenuStore((state) => state.isLoaded);
-  
-  // 暫時移除 settingsStore 依賴以快速恢復功能
   const settingsLoaded = useSettingsStore((state) => state.isLoaded);
-  
-  // 計算載入狀態 - 簡化條件
-  const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
-  
-  const [activeTab, setActiveTab] = useState<TabType>(() => 'tables');
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => false);
 
-  // ✅ 使用 useCallback 穩定狀態更新函數引用
+  const isLoaded = orderLoaded && tableLoaded && menuLoaded && settingsLoaded;
+
+  const [activeTab, setActiveTab] = useState<TabType>('tables');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+
   const handleSetActiveTab = useCallback((tab: TabType) => {
     setActiveTab(tab);
   }, []);
@@ -46,37 +52,36 @@ function AppContent() {
     setSidebarOpen(open);
   }, []);
 
-  // 初始化所有 stores - 僅執行一次
+  // 初始化所有 stores - 僅執行一次（防 StrictMode 雙重執行）
   const initStartedRef = useRef(false);
   useEffect(() => {
     if (!isInitialized && !initStartedRef.current) {
       initStartedRef.current = true;
       logger.info('Starting app store initialization', { component: 'App' });
       useAppStore.getState().initialize();
-      logger.info('App store initialization triggered', { component: 'App' });
     }
   }, [isInitialized]);
 
-const renderActiveTab = () => {
+  const renderActiveTab = () => {
     switch (activeTab) {
       case 'tables':
-        return <div className="page-transition active"><Tables /></div>;
+        return <Tables />;
       case 'dashboard':
-        return <div className="page-transition active"><Dashboard onNavigate={handleSetActiveTab} /></div>;
+        return <Dashboard onNavigate={handleSetActiveTab} />;
       case 'menu':
-        return <div className="page-transition active"><Menu /></div>;
+        return <MenuPage />;
       case 'members':
-        return <div className="page-transition active"><Members /></div>;
+        return <Members />;
       case 'history':
-        return <div className="page-transition active"><History /></div>;
+        return <History />;
       case 'analytics':
-        return <div className="page-transition active"><Analytics /></div>;
+        return <Analytics />;
       case 'settings':
-        return <div className="page-transition active"><Settings /></div>;
+        return <Settings />;
       case 'layout':
-        return <div className="page-transition active"><TableLayoutEditor /></div>;
+        return <TableLayoutEditor />;
       default:
-        return <div className="page-transition active"><Tables /></div>;
+        return <Tables />;
     }
   };
 
@@ -102,34 +107,35 @@ const renderActiveTab = () => {
     <div className="flex h-screen transition-colors duration-200">
       {/* 泡泡漸變背景 */}
       <BubbleBackground />
-      
+
       {/* 移動端遮罩 */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => handleSetSidebarOpen(false)}
         />
       )}
-      
-      <Sidebar 
-          activeTab={activeTab} 
-          setActiveTab={handleSetActiveTab}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={handleSetSidebarOpen}
-          collapsed={sidebarCollapsed}
-        />
-      
+
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={handleSetActiveTab}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={handleSetSidebarOpen}
+        collapsed={sidebarCollapsed}
+      />
+
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* 桌面頂部工具列：收合側邊欄按鈕 + 標題 */}
         <div className="hidden lg:flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white/60 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setSidebarCollapsed((c) => !c)}
               className="w-9 h-9 rounded-lg hover:bg-gray-100 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 flex items-center justify-center"
               aria-label={`切換側邊欄（${sidebarCollapsed ? '展開' : '收合'}）`}
               title="切換側邊欄"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -137,32 +143,44 @@ const renderActiveTab = () => {
           </div>
         </div>
 
-        {/* 移動端頂部導航欄 - 玻璃風格 */}
+        {/* 移動端頂部導航欄 */}
         <div className="lg:hidden card border-0 border-b border-white/20 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
           <button
+            type="button"
             onClick={() => handleSetSidebarOpen(true)}
             className="btn btn-secondary p-2"
+            aria-label="開啟側邊欄"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
           <h1 className="text-lg font-bold text-white">調酒酒吧 POS</h1>
-          <div className="w-10"></div> {/* 佔位符保持平衡 */}
+          <div className="w-10" aria-hidden="true" />
         </div>
 
-       <main className="flex-1 overflow-auto">
-            {renderActiveTab()}
-         </main>
-         
-         {/* 以環境變數控制是否顯示日誌查看器 */}
-         {import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOG_VIEWER === 'true' && (
-           <LogViewer />
-         )}
-       </div>
-       <VisualOrderingModal />
-     </div>
-   );}
+        <main className="flex-1 overflow-auto">
+          <div className="page-transition active h-full">
+            <Suspense fallback={<TabFallback />}>
+              {renderActiveTab()}
+            </Suspense>
+          </div>
+        </main>
+
+        {/* 以環境變數控制是否顯示日誌查看器 */}
+        {import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOG_VIEWER === 'true' && (
+          <Suspense fallback={null}>
+            <LogViewer />
+          </Suspense>
+        )}
+      </div>
+      <VisualOrderingModal />
+      <ToastViewport />
+      <ConfirmDialog />
+      <OfflineBanner />
+    </div>
+  );
+}
 
 function App() {
   const theme = useSettingsStore((s) => s.theme);
@@ -188,9 +206,7 @@ function App() {
   return (
     <div className={`${themeClass} ${accentClass}`}>
       <GlobalErrorBoundary>
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
+        <AppContent />
       </GlobalErrorBoundary>
     </div>
   );

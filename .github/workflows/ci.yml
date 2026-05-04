@@ -1,17 +1,37 @@
 name: CI/CD Pipeline
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+
+# 同一 ref 上有新推送時，取消尚未完成的舊執行，省 runner 時間
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
 
     steps:
       - name: Checkout code
@@ -32,75 +52,33 @@ jobs:
       - name: Run type checking
         run: npm run type-check
 
-      - name: Run tests
-        run: npm run test:run
-
-      - name: Generate coverage report
+      # test:coverage 內部會跑全部測試，所以不必再先跑一次 test:run
+      - name: Run tests with coverage
         run: npm run test:coverage
 
       - name: Upload coverage reports to Codecov
+        if: matrix.node-version == 20
         uses: codecov/codecov-action@v4
         with:
-          file: ./coverage/coverage-final.json
+          files: ./coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
+        continue-on-error: true # 缺 token 不該擋 CI
 
       - name: Build project
         run: npm run build
 
       - name: Upload build artifacts
+        if: matrix.node-version == 20
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.node-version }}
+          name: web-build
           path: dist/
+          retention-days: 7
 
-  build-desktop:
-    needs: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Electron app
-        run: npm run dist
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Electron artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: electron-${{ matrix.os }}
-          path: dist-electron/
-
-  # 快速品質檢查 job（只在 PR 中執行）
-  quick-check:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Quick lint and test
-        run: |
-          npm run lint
-          npm run test:run
-          npm run build
+  # Electron 打包成本高（每個 OS 約 1–2 分鐘 + 數百 MB 產出），
+  # 已由 deploy.yml 在 release.published 時統一處理，不需要在 PR/push 時重複跑。
+  # 若日後想在 PR 階段做 electron 冒煙測試，建議：
+  #   1) 只跑 ubuntu-latest 一個 OS
+  #   2) 設 continue-on-error: true 不阻擋 merge
+  #   3) 加 needs: test 跟 path filter

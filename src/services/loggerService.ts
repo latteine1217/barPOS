@@ -1,7 +1,11 @@
 import FileLoggerService from './fileLoggerService';
 import AgentLoggerService from './agentLoggerService';
+import type { LogEntry as InterceptorLogEntry } from './consoleInterceptorService';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+let __logSeq = 0;
+const nextLogId = (): string => `log-${Date.now().toString(36)}-${(__logSeq++).toString(36)}`;
 
 export interface LogContext {
   component?: string;
@@ -35,28 +39,12 @@ class LoggerService {
     // 開發環境：輸出到控制台和代理日誌
     if (this.isDevelopment) {
       this.logToConsole(level, message, context, error);
-      
-      // 使用現有的 agent logger 格式
-      const agentLogEntry = {
-        timestamp,
-        level,
-        type: 'application',
-        component: context?.component || 'Unknown',
-        message: this.formatMessage(message, context),
-      };
-      agentLoggerInstance.addLog(agentLogEntry as any);
+      agentLoggerInstance.addLog(this.toInterceptorEntry(level, timestamp, message, context));
     }
 
-    // 生產環境：只輸出到文件
+    // 生產環境：寫入檔案日誌
     if (this.isProduction) {
-      const fileLogEntry = {
-        timestamp,
-        level,
-        type: 'application',
-        component: context?.component || 'Unknown',
-        message: this.formatMessage(message, context, error),
-      };
-      fileLoggerInstance.addLog(fileLogEntry as any);
+      fileLoggerInstance.addLog(this.toInterceptorEntry(level, timestamp, message, context, error));
     }
 
     // 錯誤等級始終輸出到控制台
@@ -83,6 +71,24 @@ class LoggerService {
         console.error(prefix, formatted, error);
         break;
     }
+  }
+
+  private toInterceptorEntry(
+    level: LogLevel,
+    timestamp: string,
+    message: string,
+    context?: LogContext,
+    error?: Error,
+  ): InterceptorLogEntry {
+    return {
+      id: nextLogId(),
+      timestamp,
+      level,
+      type: level === 'debug' ? 'debug' : level,
+      message: [this.formatMessage(message, context, error)],
+      ...(context?.component ? { component: context.component } : {}),
+      ...(typeof window !== 'undefined' ? { url: window.location.href } : {}),
+    };
   }
 
   private formatMessage(message: string, context?: LogContext, error?: Error): string {
@@ -168,13 +174,5 @@ class LoggerService {
 
 // 導出單例實例
 export const logger = new LoggerService();
-
-// 向後兼容的方法（漸進式遷移用）
-export const createLogger = (component: string) => ({
-  debug: (message: string, context?: LogContext) => logger.debug(message, { component, ...context }),
-  info: (message: string, context?: LogContext) => logger.info(message, { component, ...context }),
-  warn: (message: string, context?: LogContext) => logger.warn(message, { component, ...context }),
-  error: (message: string, context?: LogContext, error?: Error) => logger.error(message, { component, ...context }, error),
-});
 
 export default logger;

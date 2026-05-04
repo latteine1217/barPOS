@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { useTables, useOrders, useOrderStore, useAppStore } from '@/stores';
 import { useMenuItems } from '@/stores/menuStore';
+import { logger } from '@/services/loggerService';
 import type { Table, Order, OrderStatus } from '@/types';
-import TableLayoutEditor from './TableLayoutEditor';
 import { useVisualOrderingModalOpen } from './visualOrderingModalStore';
+
+const TableLayoutEditor = lazy(() => import('./TableLayoutEditor'));
 
 type ViewMode = 'custom' | 'grid';
 
@@ -80,9 +82,15 @@ const getDotColor = (table: TableWithOrder): string => {
 
 const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (t: Table) => void; }> = memo(({ table, selected, onClick }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onClick(table)}
-      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+      aria-label={`桌位 ${table.number}，狀態：${StatusText[table.status]}${
+        table.status === 'occupied' && table.currentOrder
+          ? `，訂單狀態：${OrderStatusText[table.currentOrder.status]}，金額 NT$${table.currentOrder.total}`
+          : ''
+      }`}
+      className={`relative w-full text-left p-6 rounded-xl border-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 ${
         table.status === 'occupied' ? getOccupiedColorByOrderStatus(table.currentOrder?.status) : StatusColor[table.status]
       } ${selected ? 'ring-4 ring-blue-400' : ''}`}
     >
@@ -102,8 +110,8 @@ const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (
           <div className="text-xs">${table.currentOrder.total}</div>
         )}
       </div>
-      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} />
-    </div>
+      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} aria-hidden="true" />
+    </button>
   );
 });
 
@@ -119,7 +127,7 @@ const Tables: React.FC = memo(() => {
   const [viewMode, setViewMode] = useState<ViewMode>('custom');
 
   const ordersById = useMemo(() => {
-    const m = new Map<string | number, Order>();
+    const m = new Map<string, Order>();
     for (const o of orders) m.set(o.id, o);
     return m;
   }, [orders]);
@@ -139,7 +147,7 @@ const Tables: React.FC = memo(() => {
   const tablesWithOrders = useMemo(() => {
     return tables.map((table: Table): TableWithOrder => ({
       ...table,
-      currentOrder: table.orderId ? ordersById.get(table.orderId as any) || null : null,
+      currentOrder: table.orderId ? ordersById.get(table.orderId) ?? null : null,
     }));
   }, [tables, ordersById]);
 
@@ -164,7 +172,11 @@ const Tables: React.FC = memo(() => {
         addOrderWithTableUpdate(order);
       }
     } catch (error) {
-      console.error('Error in onComplete callback:', error);
+      logger.error(
+        'Error in onComplete callback',
+        { component: 'Tables', action: 'onComplete' },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, [addOrderWithTableUpdate, updateOrder]);
 
@@ -174,7 +186,7 @@ const Tables: React.FC = memo(() => {
 
   const handleTableClick = useCallback((table: Table) => {
     if (!table || !table.id) return;
-    const currentOrder = table.orderId ? ordersById.get(table.orderId as any) || null : null;
+    const currentOrder = table.orderId ? ordersById.get(table.orderId) ?? null : null;
     // 已結帳也允許開啟視窗，讓使用者釋放桌位或檢視訂單
     const isAddOnMode = !!currentOrder && table.status === 'occupied' && currentOrder.status !== 'paid';
     const initialCustomers = table.customers || currentOrder?.customers || 1;
@@ -197,27 +209,31 @@ const Tables: React.FC = memo(() => {
             <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">座位管理</h1>
             <p className="text-white/80 drop-shadow-md">管理餐廳座位狀態和客人需求</p>
           </div>
-          <div className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+          <div role="tablist" aria-label="座位檢視模式" className="flex rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'custom'}
               aria-pressed={viewMode === 'custom'}
               onClick={() => { setSelectedTable(null); setViewMode('custom'); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-0 ${
                 viewMode === 'custom'
-                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
+                  ? 'bg-white/25 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/85 hover:text-white hover:bg-white/15'
               }`}
             >
               佈局模式
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'grid'}
               aria-pressed={viewMode === 'grid'}
               onClick={() => { setSelectedTable(null); setViewMode('grid'); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-0 ${
                 viewMode === 'grid'
-                  ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
+                  ? 'bg-white/25 text-white shadow-lg backdrop-blur-sm'
+                  : 'text-white/85 hover:text-white hover:bg-white/15'
               }`}
             >
               格狀檢視
@@ -234,26 +250,32 @@ const Tables: React.FC = memo(() => {
         </div>
       ) : (
         <div style={{ minHeight: '600px' }}>
-          <TableLayoutEditor readOnly onTableClick={handleTableClick} />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/70" />
+            </div>
+          }>
+            <TableLayoutEditor readOnly onTableClick={handleTableClick} />
+          </Suspense>
         </div>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">總座位數</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">總座位數</div>
           <div className="text-2xl font-bold text-white drop-shadow-md">{tableStats.total}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">空位</div>
-          <div className="text-2xl font-bold text-emerald-400 drop-shadow-md">{tableStats.available}</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">空位</div>
+          <div className="text-2xl font-bold text-emerald-300 drop-shadow-md">{tableStats.available}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">使用中</div>
-          <div className="text-2xl font-bold text-amber-400 drop-shadow-md">{tableStats.occupied}</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">使用中</div>
+          <div className="text-2xl font-bold text-amber-300 drop-shadow-md">{tableStats.occupied}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
-          <div className="text-sm text-white/70 drop-shadow-sm">使用率</div>
-          <div className="text-2xl font-bold text-blue-400 drop-shadow-md">{tableStats.utilizationRate}%</div>
+          <div className="text-sm text-white/85 drop-shadow-sm">使用率</div>
+          <div className="text-2xl font-bold text-sky-300 drop-shadow-md">{tableStats.utilizationRate}%</div>
         </div>
       </div>
     </div>

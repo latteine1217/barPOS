@@ -512,7 +512,7 @@ const EnhancedAnalytics: React.FC = () => {
           {/* 時間篩選 */}
           <div className="flex flex-wrap gap-2">
             {(['today', 'week', 'month', 'all'] as const).map(period => (
-              <button
+              <button type="button"
                 key={period}
                 onClick={() => setSelectedPeriod(period)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
@@ -529,7 +529,7 @@ const EnhancedAnalytics: React.FC = () => {
           {/* 視圖切換 */}
           <div className="flex flex-wrap gap-2">
             {(['overview', 'revenue', 'products', 'customers', 'time'] as const).map(view => (
-              <button
+              <button type="button"
                 key={view}
                 onClick={() => setSelectedView(view)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${

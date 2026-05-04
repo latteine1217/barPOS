@@ -23,5 +23,4 @@ export { default as Analytics } from './components/Analytics';
 export { default as History } from './components/History';
 export { default as Sidebar } from './components/Sidebar';
 export { default as TableLayoutEditor } from './components/TableLayoutEditor';
-export { default as ErrorBoundary } from './components/ErrorBoundary';
 export { default as GlobalErrorBoundary } from './components/ErrorBoundary/GlobalErrorBoundary';

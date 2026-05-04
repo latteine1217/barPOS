@@ -10,23 +10,15 @@ export default defineConfig({
     // Bundle 分析工具 - 只在建置時生成
     visualizer({
       filename: 'dist/stats.html',
-      open: false, // 不自動開啟瀏覽器
+      open: false,
       gzipSize: true,
       brotliSize: true,
     }),
-    // 暫時停用 TypeScript 檢查，漸進式遷移中
-    // checker({
-    //   typescript: true,
-    //   eslint: {
-    //     lintCommand: 'eslint "./src/**/*.{ts,tsx,js,jsx}"',
-    //   },
-    // }),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@/components': path.resolve(__dirname, './src/components'),
-      
       '@/hooks': path.resolve(__dirname, './src/hooks'),
       '@/services': path.resolve(__dirname, './src/services'),
       '@/types': path.resolve(__dirname, './src/types'),
@@ -36,24 +28,60 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    target: 'es2020',
+    cssCodeSplit: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
-      // Externalize deps that shouldn't be bundled
       external: ['electron'],
       output: {
-        // 簡化分包配置
-        manualChunks: {
-          // React 相關
-          vendor: ['react', 'react-dom'],
-          // 第三方庫
-          supabase: ['@supabase/supabase-js'],
-        }
-      }
-    }
+        // 進階分包：將大型第三方庫獨立成 chunk，便於快取與並行載入
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+
+          // React 與 ReactDOM 一定要同一個 chunk
+          if (id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/scheduler/')) {
+            return 'react';
+          }
+
+          if (id.includes('node_modules/@supabase/')) {
+            return 'supabase';
+          }
+
+          if (id.includes('node_modules/recharts/') ||
+              id.includes('node_modules/d3-') ||
+              id.includes('node_modules/victory-vendor/')) {
+            return 'charts';
+          }
+
+          if (id.includes('node_modules/date-fns/')) {
+            return 'date-fns';
+          }
+
+          if (id.includes('node_modules/lodash/') ||
+              id.includes('node_modules/lodash-es/')) {
+            return 'lodash';
+          }
+
+          if (id.includes('node_modules/zustand/') ||
+              id.includes('node_modules/immer/')) {
+            return 'state';
+          }
+
+          if (id.includes('node_modules/@capacitor/')) {
+            return 'capacitor';
+          }
+
+          return 'vendor';
+        },
+      },
+    },
   },
   server: {
     port: 5173,
-    strictPort: true, // Prevent Vite from choosing a different port
-    host: true, // Allow access from Electron
-    middlewareMode: false // Run dev server normally
+    strictPort: true,
+    host: true,
   },
 })

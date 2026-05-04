@@ -318,7 +318,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
           )}
           
            {!readOnly && (
-             <button
+             <button type="button"
                onClick={handleEditToggle}
                className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border ${isEditing 
                  ? 'bg-white/18 hover:bg-white/24 text-white border-white/35' 
@@ -330,14 +330,14 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
            )}          
            {!readOnly && isEditing && (
              <>
-               <button
+               <button type="button"
                  onClick={handleShowAddModal}
                  className="px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-emerald-500/18 hover:bg-emerald-500/24 text-emerald-50 border-emerald-300/35"
                >
                  新增桌位
                </button>
                {selectedTable && (
-                 <button
+                 <button type="button"
                    onClick={handleDeleteTable}
                    className="px-5 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm border bg-rose-500/16 hover:bg-rose-500/22 text-rose-50 border-rose-300/35"
                  >
@@ -441,7 +441,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium text-white">桌位: {selectedTable.name}</h4>
-                    <button
+                    <button type="button"
                       onClick={() => setSelectedTable(null)}
                       className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all duration-200"
                       title="取消選擇"

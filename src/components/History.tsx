@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useId, useState, useMemo, useCallback, memo } from 'react';
 import { useOrders } from '@/stores';
 import OrderDetailsModal from './OrderDetailsModal';
 import type { Order, OrderStatus } from '@/types';
@@ -13,6 +13,8 @@ interface Filters {
 
 const History = memo(() => {
   const orders = useOrders();
+  const startDateId = useId();
+  const endDateId = useId();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
   const [filters, setFilters] = useState<Filters>({
@@ -206,7 +208,7 @@ const History = memo(() => {
 
           <div>
             <label className="form-label">操作</label>
-            <button
+            <button type="button"
               onClick={handleResetFilters}
               className="btn btn-secondary w-full text-sm"
             >
@@ -219,8 +221,9 @@ const History = memo(() => {
         {filters.dateRange === 'custom' && (
           <div className="grid grid-cols-2 gap-6 mt-6">
             <div>
-              <label className="form-label">開始日期</label>
+              <label htmlFor={startDateId} className="form-label">開始日期</label>
               <input
+                id={startDateId}
                 type="date"
                 value={filters.startDate}
                 onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
@@ -228,8 +231,9 @@ const History = memo(() => {
               />
             </div>
             <div>
-              <label className="form-label">結束日期</label>
+              <label htmlFor={endDateId} className="form-label">結束日期</label>
               <input
+                id={endDateId}
                 type="date"
                 value={filters.endDate}
                 onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
@@ -327,7 +331,7 @@ const History = memo(() => {
                       {new Date(order.createdAt).toLocaleString('zh-TW')}
                     </td>
                     <td className="px-6 py-5 text-sm">
-                      <button
+                      <button type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOrderClick(order);

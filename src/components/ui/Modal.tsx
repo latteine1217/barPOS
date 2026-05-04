@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -19,6 +20,28 @@ export const Modal: React.FC<ModalProps> = ({
   closable = true,
   className = '',
 }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>({ active: isOpen });
+
+  // Esc 關閉 + 開啟時鎖定 body 捲動
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && closable) {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handler, true);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, closable, onClose]);
+
   if (!isOpen) return null;
 
   const sizeClasses = {
@@ -57,6 +80,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* 模態框容器 */}
         <div
+          ref={trapRef}
           className={`inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full sm:p-6 ${sizeClasses[size]} ${className}`}
         >
           {/* 標題和關閉按鈕 */}
