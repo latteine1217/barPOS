@@ -3,7 +3,11 @@
   "productName": "barPOS",
   "version": "4.3.0",
   "description": "專為調酒酒吧設計的現代化 POS 系統",
-  "author": "Cocktail Bar POS Team",
+  "author": {
+    "name": "Cocktail Bar POS Team",
+    "email": "noreply@latteine1217.dev",
+    "url": "https://github.com/latteine1217/barPOS"
+  },
   "homepage": "https://github.com/latteine1217/barPOS",
   "main": "electron/main.cjs",
   "private": true,

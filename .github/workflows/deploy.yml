@@ -4,8 +4,14 @@ on:
   release:
     types: [published]
 
+# 不允許同時兩個 release 部署互相覆蓋
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy-web:
+    name: Deploy web to Vercel
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -14,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -35,11 +41,14 @@ jobs:
           working-directory: ./
 
   release-desktop:
+    name: Build Electron (${{ matrix.os }})
+    needs: deploy-web
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,7 +56,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -59,7 +68,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist-electron/*
         env:
