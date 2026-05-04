@@ -1,5 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUIStore, type ToastItem, type ToastVariant } from '@/stores/uiStore';
+
+// Toast 退場動畫時長（ms），與 className 的 duration-200 對齊
+const EXIT_DURATION_MS = 200;
 
 const variantStyles: Record<ToastVariant, { container: string; iconBg: string; icon: string; ariaRole: 'status' | 'alert' }> = {
   success: {
@@ -35,19 +38,35 @@ interface ToastCardProps {
 const ToastCard = ({ toast }: ToastCardProps) => {
   const style = variantStyles[toast.variant];
   const dismiss = useUIStore((s) => s.dismissToast);
+  const [exiting, setExiting] = useState(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 自動消失（duration > 0 才啟用）
+  const triggerDismiss = () => {
+    if (exiting) return;
+    setExiting(true);
+    exitTimerRef.current = setTimeout(() => dismiss(toast.id), EXIT_DURATION_MS);
+  };
+
+  // 自動消失（duration > 0 才啟用）—— 觸發退場動畫，再從 store 移除
   useEffect(() => {
     if (toast.duration <= 0) return;
-    const timer = setTimeout(() => dismiss(toast.id), toast.duration);
-    return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, dismiss]);
+    const timer = setTimeout(() => triggerDismiss(), toast.duration);
+    return () => {
+      clearTimeout(timer);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast.id, toast.duration]);
+
+  const animationClasses = exiting
+    ? 'animate-out fade-out slide-out-to-right-2 duration-200 ease-in fill-mode-forwards'
+    : 'animate-in fade-in slide-in-from-right-4 duration-200 ease-out';
 
   return (
     <div
       role={style.ariaRole}
       aria-live={style.ariaRole === 'alert' ? 'assertive' : 'polite'}
-      className={`pointer-events-auto w-full max-w-sm rounded-xl border shadow-lg backdrop-blur-md ${style.container} animate-in fade-in slide-in-from-right-2`}
+      className={`pointer-events-auto w-full max-w-sm rounded-xl border shadow-lg ${style.container} ${animationClasses}`}
     >
       <div className="flex items-start gap-3 p-3">
         <div className={`flex-none w-8 h-8 rounded-full flex items-center justify-center ${style.iconBg}`} aria-hidden="true">
@@ -63,7 +82,7 @@ const ToastCard = ({ toast }: ToastCardProps) => {
         </div>
         <button
           type="button"
-          onClick={() => dismiss(toast.id)}
+          onClick={triggerDismiss}
           className="flex-none -mt-0.5 -mr-0.5 p-1.5 rounded-lg text-current/60 hover:text-current hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-current/40"
           aria-label="關閉通知"
         >

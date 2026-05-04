@@ -14,7 +14,7 @@ const OfflineBanner = memo(() => {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-0 z-[55] bg-amber-500 text-amber-950 shadow-md"
+      className="fixed inset-x-0 top-0 z-[55] bg-amber-500 text-amber-950 shadow-md animate-in slide-in-from-top duration-300 ease-out"
     >
       <div className="max-w-5xl mx-auto px-4 py-2 flex items-center gap-3 text-sm">
         <span className="flex-none inline-flex w-6 h-6 rounded-full bg-amber-600/30 items-center justify-center" aria-hidden="true">

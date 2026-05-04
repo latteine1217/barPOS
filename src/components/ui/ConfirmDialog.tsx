@@ -49,13 +49,13 @@ const ConfirmDialog = () => {
       aria-describedby={confirm.description ? `${confirm.id}-desc` : undefined}
     >
       <div
-        className="absolute inset-0 bg-black/55 backdrop-blur-sm animate-in fade-in"
+        className="absolute inset-0 bg-black/55 backdrop-blur-sm animate-in fade-in duration-150 ease-out"
         onClick={() => resolveConfirm(false)}
         aria-hidden="true"
       />
       <div
         ref={trapRef}
-        className="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95"
+        className="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200 ease-out"
       >
         <div className="flex items-start gap-3">
           {isDanger && (
