@@ -151,5 +151,3 @@ export const hydrateStoresFromBackup = (
 
   return { applied };
 };
-
-export default hydrateStoresFromBackup;

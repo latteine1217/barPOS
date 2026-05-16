@@ -496,5 +496,3 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
     })
   };
 };
-
-export default useNetworkStatus;

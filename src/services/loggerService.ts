@@ -173,5 +173,3 @@ class LoggerService {
 
 // 導出單例實例
 export const logger = new LoggerService();
-
-export default logger;

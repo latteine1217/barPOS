@@ -502,5 +502,3 @@ export const useOrderManagement = (options: UseOrderManagementOptions = {}) => {
     }
   };
 };
-
-export default useOrderManagement;

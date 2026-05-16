@@ -209,5 +209,3 @@ export const FormTextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldPr
     </div>
   );
 });
-
-export default FormField;
