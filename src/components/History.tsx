@@ -13,6 +13,7 @@ interface Filters {
 
 const History = memo(() => {
   const orders = useOrders();
+  const idBase = useId();
   const startDateId = useId();
   const endDateId = useId();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -161,8 +162,9 @@ const History = memo(() => {
         <h2 className="text-xl font-semibold text-white mb-6">篩選條件</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <label className="form-label">訂單狀態</label>
+            <label htmlFor={`${idBase}-filter-status`} className="form-label">訂單狀態</label>
             <select
+              id={`${idBase}-filter-status`}
               value={filters.status}
               onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
               className="form-input text-sm"
@@ -177,8 +179,9 @@ const History = memo(() => {
           </div>
 
           <div>
-            <label className="form-label">時間範圍</label>
+            <label htmlFor={`${idBase}-filter-range`} className="form-label">時間範圍</label>
             <select
+              id={`${idBase}-filter-range`}
               value={filters.dateRange}
               onChange={(e) => setFilters((prev) => ({ ...prev, dateRange: e.target.value }))}
               className="form-input text-sm"
@@ -193,8 +196,9 @@ const History = memo(() => {
           </div>
 
           <div>
-            <label className="form-label">桌號</label>
+            <label htmlFor={`${idBase}-filter-table`} className="form-label">桌號</label>
             <select
+              id={`${idBase}-filter-table`}
               value={filters.tableNumber}
               onChange={(e) => setFilters((prev) => ({ ...prev, tableNumber: e.target.value }))}
               className="form-input text-sm"
@@ -207,7 +211,7 @@ const History = memo(() => {
           </div>
 
           <div>
-            <label className="form-label">操作</label>
+            <span className="form-label">操作</span>
             <button type="button"
               onClick={handleResetFilters}
               className="btn btn-secondary w-full text-sm"

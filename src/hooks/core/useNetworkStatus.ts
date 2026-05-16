@@ -153,7 +153,7 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
         ...item,
         timestamp: item.timestamp.toISOString()
       }));
-      localStorage.setItem('networkOfflineQueue', JSON.stringify(serializedQueue));
+      localStorage.setItem('networkOfflineQueue:v1', JSON.stringify(serializedQueue));
       logger.debug('Offline queue saved to storage', { queueLength: queue.length });
     } catch (error) {
       handleError(error as Error, 'saveOfflineQueueToStorage');
@@ -163,7 +163,7 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
   // 從 localStorage 載入離線隊列
   const loadOfflineQueueFromStorage = useCallback(() => {
     try {
-      const stored = localStorage.getItem('networkOfflineQueue');
+      const stored = localStorage.getItem('networkOfflineQueue:v1');
       if (stored) {
         const parsedQueue = JSON.parse(stored);
         const queue: OfflineQueueItem[] = parsedQueue.map((item: any) => ({
@@ -381,7 +381,7 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
   // 清空離線隊列
   const clearOfflineQueue = useCallback(() => {
     setOfflineQueue([]);
-    localStorage.removeItem('networkOfflineQueue');
+    localStorage.removeItem('networkOfflineQueue:v1');
     logger.info('Offline queue cleared');
   }, []);
 

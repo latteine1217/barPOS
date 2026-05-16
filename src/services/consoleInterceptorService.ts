@@ -358,19 +358,19 @@ class ConsoleInterceptorService {
       };
 
       // 寫入到 localStorage 供 Agent 讀取
-      const existingLogs = JSON.parse(localStorage.getItem('opencode-agent-logs-json') || '[]');
+      const existingLogs = JSON.parse(localStorage.getItem('opencode-agent-logs-json:v1') || '[]');
       existingLogs.push(agentLogEntry);
       
       // 保持最多 500 條記錄供 Agent 讀取
       const trimmedLogs = existingLogs.slice(-500);
-      localStorage.setItem('opencode-agent-logs-json', JSON.stringify(trimmedLogs, null, 2));
+      localStorage.setItem('opencode-agent-logs-json:v1', JSON.stringify(trimmedLogs, null, 2));
       
       // 同時寫入格式化的文字版本
       const formattedLog = `[${agentLogEntry.timestamp}] ${agentLogEntry.level.toUpperCase()} (${agentLogEntry.component}) ${agentLogEntry.message}`;
-      const existingTextLogs = localStorage.getItem('opencode-agent-logs')?.split('\\n') || [];
+      const existingTextLogs = localStorage.getItem('opencode-agent-logs:v1')?.split('\\n') || [];
       existingTextLogs.push(formattedLog);
       const trimmedTextLogs = existingTextLogs.slice(-500);
-      localStorage.setItem('opencode-agent-logs', trimmedTextLogs.join('\\n'));
+      localStorage.setItem('opencode-agent-logs:v1', trimmedTextLogs.join('\\n'));
       
     } catch {
       // 安靜地處理錯誤，不干擾主要功能
@@ -468,12 +468,12 @@ class ConsoleInterceptorService {
    */
   private saveToLocalStorage(logEntry: LogEntry): void {
     try {
-      const existingLogs = JSON.parse(localStorage.getItem('vite-console-logs') || '[]');
+      const existingLogs = JSON.parse(localStorage.getItem('vite-console-logs:v1') || '[]');
       existingLogs.push(logEntry);
       
       // 保持最多 200 條記錄（增加容量用於開發調試）
       const trimmedLogs = existingLogs.slice(-200);
-      localStorage.setItem('vite-console-logs', JSON.stringify(trimmedLogs));
+      localStorage.setItem('vite-console-logs:v1', JSON.stringify(trimmedLogs));
     } catch {
       // 本地儲存失敗，靜默處理
     }
@@ -484,7 +484,7 @@ class ConsoleInterceptorService {
    */
   public getLocalLogs(): LogEntry[] {
     try {
-      return JSON.parse(localStorage.getItem('vite-console-logs') || '[]');
+      return JSON.parse(localStorage.getItem('vite-console-logs:v1') || '[]');
     } catch {
       return [];
     }
@@ -494,7 +494,7 @@ class ConsoleInterceptorService {
    * 清除本地日誌
    */
   public clearLocalLogs(): void {
-    localStorage.removeItem('vite-console-logs');
+    localStorage.removeItem('vite-console-logs:v1');
     if (this.originalConsole.info) {
       this.originalConsole.info('🗑️ 本地日誌已清除');
     }
@@ -597,7 +597,7 @@ class ConsoleInterceptorService {
    */
   public static getAgentLogs(): string {
     try {
-      return localStorage.getItem('opencode-agent-logs') || '';
+      return localStorage.getItem('opencode-agent-logs:v1') || '';
     } catch {
       return '';
     }
@@ -608,7 +608,7 @@ class ConsoleInterceptorService {
    */
   public static getAgentLogsJson(): unknown[] {
     try {
-      const logs = localStorage.getItem('opencode-agent-logs-json');
+      const logs = localStorage.getItem('opencode-agent-logs-json:v1');
       return logs ? JSON.parse(logs) : [];
     } catch {
       return [];
@@ -619,8 +619,8 @@ class ConsoleInterceptorService {
    * 清除 Agent 日誌
    */
   public static clearAgentLogs(): void {
-    localStorage.removeItem('opencode-agent-logs');
-    localStorage.removeItem('opencode-agent-logs-json');
+    localStorage.removeItem('opencode-agent-logs:v1');
+    localStorage.removeItem('opencode-agent-logs-json:v1');
   }
 }
 

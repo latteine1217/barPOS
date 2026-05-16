@@ -229,7 +229,7 @@ export const calculateTrends = (
     orderCount: periodOrders.length,
     revenue: sumBy(periodOrders, 'total'),
     averageOrderValue: meanBy(periodOrders, 'total') || 0,
-    customerCount: new Set(periodOrders.map(o => o.customerId).filter(Boolean)).size
+    customerCount: new Set(periodOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size
   })).sort((a, b) => a.period.localeCompare(b.period));
 };
 
@@ -247,7 +247,7 @@ export const analyzeProducts = (orders: Order[]): ProductAnalysis[] => {
     totalRevenue: sumBy(items, item => item.price * item.quantity),
     orderCount: new Set(items.map(item => item.orderId)).size,
     averagePrice: meanBy(items, 'price') || 0,
-    uniqueCustomers: new Set(items.map(item => item.customerId).filter(Boolean)).size
+    uniqueCustomers: new Set(items.flatMap(item => item.customerId ? [item.customerId] : [])).size
   })).sort((a, b) => b.totalRevenue - a.totalRevenue);
 };
 
@@ -260,7 +260,7 @@ export const analyzeSeating = (orders: Order[]): SeatingAnalysis[] => {
     orderCount: tableOrders.length,
     totalRevenue: sumBy(tableOrders, 'total'),
     averageOrderValue: meanBy(tableOrders, 'total') || 0,
-    uniqueCustomers: new Set(tableOrders.map(o => o.customerId).filter(Boolean)).size,
+    uniqueCustomers: new Set(tableOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size,
     utilizationRate: calculateUtilizationRate(tableOrders)
   })).sort((a, b) => b.totalRevenue - a.totalRevenue);
 };

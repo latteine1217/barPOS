@@ -17,7 +17,15 @@ export const OrderingMenuGrid: React.FC<OrderingMenuGridProps> = ({
         {displayItems.map((menuItem) => (
           <div
             key={menuItem.id}
+            role="button"
+            tabIndex={0}
             onClick={() => addToOrder(menuItem)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                addToOrder(menuItem);
+              }
+            }}
             className="relative rounded-2xl border p-4 cursor-pointer hover:shadow-lg transition-all bg-[var(--glass-elevated)] border-[var(--glass-elevated-border)] text-center"
           >
             <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: pickStripeColor(menuItem) }} />

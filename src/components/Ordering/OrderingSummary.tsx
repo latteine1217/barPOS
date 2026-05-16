@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import type { Order, OrderItem, OrderStatus } from '@/types';
 
 interface OrderDetails {
@@ -63,6 +63,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
   onCancel,
   isAddOnMode,
 }) => {
+  const idBase = useId();
   return (
     <div className="w-[360px] border-l border-gray-200 dark:border-gray-700 flex flex-col">
       {/* Scrollable content: order items + details + status + adjustments */}
@@ -115,10 +116,11 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
         {/* Order Details Form (notes only; table/people moved to header) */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor={`${idBase}-notes`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               備註
             </label>
             <textarea
+              id={`${idBase}-notes`}
               value={orderDetails.notes}
               onChange={(e) => updateOrderDetails({ notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -242,8 +244,9 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
         </div>
         {tipEnabled && (
           <div className="mt-3 flex items-center gap-2">
-            <label className="text-xs text-gray-600 dark:text-gray-400">比例</label>
+            <label htmlFor={`${idBase}-tip-percent`} className="text-xs text-gray-600 dark:text-gray-400">比例</label>
             <select
+              id={`${idBase}-tip-percent`}
               value={tipPercent}
               onChange={(e) => setTipPercent(parseInt(e.target.value) || 0)}
               className="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"

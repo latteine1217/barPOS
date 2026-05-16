@@ -60,11 +60,23 @@ const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`card p-6 transition-all duration-200 hover:scale-105 ${
         onClick ? 'cursor-pointer hover:bg-white/10' : ''
       } ${className}`}
       onClick={onClick}
+      {...(onClick
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            },
+          }
+        : {})}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">

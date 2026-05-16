@@ -141,7 +141,7 @@ export class AnalyticsService {
     const totalOrders = filteredOrders.length;
     const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const uniqueCustomers = new Set(filteredOrders.map(o => o.customerId).filter(Boolean)).size;
+    const uniqueCustomers = new Set(filteredOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size;
 
     // 計算同期比較
     const previousPeriodOrders = this.getPreviousPeriodOrders(period);

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useId, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useTables } from '@/stores';
 import { useTableStore } from '@/stores/tableStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -14,6 +14,7 @@ interface DragState {
 
 interface TableLayoutEditorProps { readOnly?: boolean; onTableClick?: (table: Table) => void }
 const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditorProps) => {
+  const idBase = useId();
   const tables = useTables();
   
   // 使用單一選擇器避免循環渲染
@@ -355,6 +356,8 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
           <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 h-full shadow-[0_14px_32px_rgba(2,6,23,0.16)]">
              <div
                ref={canvasRef}
+               role="button"
+               tabIndex={0}
                className="relative overflow-hidden rounded-2xl border border-white/20 bg-[radial-gradient(130%_120%_at_0%_0%,rgba(255,255,255,0.16),rgba(255,255,255,0.04)_40%,rgba(255,255,255,0.02)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-40px_60px_rgba(3,8,20,0.16)]"
                style={{
                  width: `${layoutConfig.canvasWidth}px`,
@@ -366,6 +369,15 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                  if (readOnly) return;
                  if (isEditing && e.target === e.currentTarget) {
                    setSelectedTable(null);
+                 }
+               }}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter' || e.key === ' ') {
+                   if (readOnly) return;
+                   if (isEditing && e.target === e.currentTarget) {
+                     e.preventDefault();
+                     setSelectedTable(null);
+                   }
                  }
                }}
              >              {/* 網格背景 - 微調透明度 */}
@@ -408,9 +420,17 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                 return (
                 <div
                   key={table.id}
+                  role="button"
+                  tabIndex={0}
                   style={getTableStyle(table)}
                   onMouseDown={(e) => { if (!readOnly) handleMouseDown(e, table); }}
                   onClick={() => { if (readOnly && onTableClick) onTableClick(table); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (readOnly && onTableClick) onTableClick(table);
+                    }
+                  }}
                   title={`${table.name} (${table.status})`}
                   className={`table-node ${statusClass} ${selectedClass} ${draggingClass}`}
                 >
@@ -469,10 +489,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   
                   {/* 桌位名稱 */}
                   <div className="space-y-2 rounded-xl border border-white/16 bg-white/8 p-3">
-                    <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                    <label htmlFor={`${idBase}-table-name`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                       桌位名稱
                     </label>
                     <input
+                      id={`${idBase}-table-name`}
                       type="text"
                       value={selectedTable.name}
                       onChange={(e) => updateSelectedTable({ name: e.target.value })}
@@ -482,10 +503,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
                   {/* 桌位編號 */}
                   <div className="space-y-2 rounded-xl border border-white/16 bg-white/8 p-3">
-                    <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                    <label htmlFor={`${idBase}-table-number`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                       桌位編號
                     </label>
                     <input
+                      id={`${idBase}-table-number`}
                       type="number"
                       value={selectedTable.number}
                       onChange={(e) => updateSelectedTable({ number: parseInt(e.target.value) || 0 })}
@@ -496,10 +518,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
                   <div className="grid grid-cols-2 gap-3 rounded-xl border border-white/16 bg-white/8 p-3">
                     {/* 桌位類型 */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                      <label htmlFor={`${idBase}-table-type`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                         類型
                       </label>
                       <select
+                        id={`${idBase}-table-type`}
                         value={selectedTable.type}
                         onChange={(e) => updateSelectedTable({ type: e.target.value as TableType })}
                         className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
@@ -512,10 +535,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
                     {/* 桌位形狀 */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                      <label htmlFor={`${idBase}-table-shape`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                         形狀
                       </label>
                       <select
+                        id={`${idBase}-table-shape`}
                         value={selectedTable.shape}
                         onChange={(e) => updateSelectedTable({ shape: e.target.value as TableShape })}
                         className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
@@ -528,10 +552,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
                     {/* 桌位大小 */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                      <label htmlFor={`${idBase}-table-size`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                         大小
                       </label>
                       <select
+                        id={`${idBase}-table-size`}
                         value={selectedTable.size}
                         onChange={(e) => updateSelectedTable({ size: e.target.value as TableSize })}
                         className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-3 py-2"
@@ -544,10 +569,11 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
 
                     {/* 座位數 */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium tracking-wide text-white/65 uppercase">
+                      <label htmlFor={`${idBase}-table-capacity`} className="block text-xs font-medium tracking-wide text-white/65 uppercase">
                         座位數
                       </label>
                       <input
+                        id={`${idBase}-table-capacity`}
                         type="number"
                         min="1"
                         max="20"
@@ -657,14 +683,15 @@ interface AddTableModalProps {
   existingTables: Table[];
 }
 
-const AddTableModal: React.FC<AddTableModalProps> = ({ 
-  onAdd, 
-  onClose, 
-  tableShapes, 
-  tableSizes, 
-  tableTypes, 
-  existingTables 
+const AddTableModal: React.FC<AddTableModalProps> = ({
+  onAdd,
+  onClose,
+  tableShapes,
+  tableSizes,
+  tableTypes,
+  existingTables
 }) => {
+  const idBase = useId();
   type NewTable = {
     name: string;
     number: number;
@@ -695,10 +722,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-name`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               桌位名稱
             </label>
             <input
+              id={`${idBase}-new-name`}
               type="text"
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
@@ -708,10 +736,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-number`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               桌位編號
             </label>
             <input
+              id={`${idBase}-new-number`}
               type="number"
               value={formData.number}
               onChange={(e) => setFormData((prev) => ({ ...prev, number: parseInt(e.target.value) || 0 }))}
@@ -720,10 +749,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-type`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               桌位類型
             </label>
             <select
+              id={`${idBase}-new-type`}
               value={formData.type}
               onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value as TableType }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
@@ -735,10 +765,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-shape`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               桌位形狀
             </label>
             <select
+              id={`${idBase}-new-shape`}
               value={formData.shape}
               onChange={(e) => setFormData((prev) => ({ ...prev, shape: e.target.value as TableShape }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
@@ -750,10 +781,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-size`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               桌位大小
             </label>
             <select
+              id={`${idBase}-new-size`}
               value={formData.size}
               onChange={(e) => setFormData((prev) => ({ ...prev, size: e.target.value as TableSize }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
@@ -765,10 +797,11 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
+            <label htmlFor={`${idBase}-new-capacity`} className="block text-sm font-medium text-white/80 mb-2 drop-shadow-sm">
               座位數
             </label>
             <input
+              id={`${idBase}-new-capacity`}
               type="number"
               min="1"
               max="20"

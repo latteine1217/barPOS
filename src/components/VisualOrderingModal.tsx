@@ -57,7 +57,19 @@ const VisualOrderingModal: React.FC = () => {
       aria-modal="true"
       aria-label="點餐視窗"
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        role="button"
+        tabIndex={0}
+        aria-label="關閉視覺點餐視窗"
+        onClick={() => close(null)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            close(null);
+          }
+        }}
+      />
       <div
         ref={trapRef}
         className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-[95vw] max-w-6xl h-[90vh] overflow-hidden"

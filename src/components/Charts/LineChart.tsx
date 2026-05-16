@@ -34,9 +34,13 @@ interface CustomLineChartProps {
   className?: string;
 }
 
-const CustomLineChart: React.FC<CustomLineChartProps> = ({ 
-  data = [], 
-  lines = [], 
+// module-level 空陣列共用 reference，避免每次 render 創建新 array 破壞 memo 比較
+const EMPTY_DATA: object[] = [];
+const EMPTY_LINES: LineConfig[] = [];
+
+const CustomLineChart: React.FC<CustomLineChartProps> = ({
+  data = EMPTY_DATA,
+  lines = EMPTY_LINES,
   height = 300,
   showGrid = true,
   showLegend = true,

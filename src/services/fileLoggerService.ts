@@ -104,15 +104,15 @@ class FileLoggerService {
    */
   private writeToLocalStorage(logs: unknown[]): void {
     try {
-      const existingLogs = JSON.parse(localStorage.getItem('agent-readable-logs') || '[]');
+      const existingLogs = JSON.parse(localStorage.getItem('agent-readable-logs:v1') || '[]');
       const allLogs = [...existingLogs, ...logs];
       
       // 保持最多 1000 條記錄供 agent 讀取
       const trimmedLogs = allLogs.slice(-1000);
-      localStorage.setItem('agent-readable-logs', JSON.stringify(trimmedLogs));
+      localStorage.setItem('agent-readable-logs:v1', JSON.stringify(trimmedLogs));
       
       // 同時寫入到 sessionStorage (即時性更好)
-      sessionStorage.setItem('latest-logs', JSON.stringify(logs));
+      sessionStorage.setItem('latest-logs:v1', JSON.stringify(logs));
     } catch {
       console.error('無法寫入本地存儲:')
     }
@@ -138,7 +138,7 @@ class FileLoggerService {
    */
   public static getLogsForAgent(): unknown[] {
     try {
-      const logs = localStorage.getItem('agent-readable-logs');
+      const logs = localStorage.getItem('agent-readable-logs:v1');
       return logs ? JSON.parse(logs) : [];
     } catch {
       return [];
@@ -150,7 +150,7 @@ class FileLoggerService {
    */
   public static getLatestLogsForAgent(): unknown[] {
     try {
-      const logs = sessionStorage.getItem('latest-logs');
+      const logs = sessionStorage.getItem('latest-logs:v1');
       return logs ? JSON.parse(logs) : [];
     } catch {
       return [];
@@ -161,8 +161,8 @@ class FileLoggerService {
    * 清除 agent 日誌
    */
   public static clearAgentLogs(): void {
-    localStorage.removeItem('agent-readable-logs');
-    sessionStorage.removeItem('latest-logs');
+    localStorage.removeItem('agent-readable-logs:v1');
+    sessionStorage.removeItem('latest-logs:v1');
   }
 }
 

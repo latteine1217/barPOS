@@ -33,8 +33,11 @@ interface LabelProps {
   percent?: number;
 }
 
-const CustomPieChart: React.FC<CustomPieChartProps> = ({ 
-  data = [], 
+// module-level 空陣列共用 reference，避免每次 render 創建新 array 破壞 memo 比較
+const EMPTY_DATA: object[] = [];
+
+const CustomPieChart: React.FC<CustomPieChartProps> = ({
+  data = EMPTY_DATA,
   height = 300,
   showLegend = true,
   valueKey = 'value',

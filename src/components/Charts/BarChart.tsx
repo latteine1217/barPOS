@@ -34,9 +34,13 @@ interface CustomBarChartProps {
   layout?: 'vertical' | 'horizontal';
 }
 
-const CustomBarChart: React.FC<CustomBarChartProps> = ({ 
-  data = [], 
-  bars = [], 
+// module-level 空陣列共用 reference，避免每次 render 創建新 array 破壞 memo 比較
+const EMPTY_DATA: object[] = [];
+const EMPTY_BARS: BarConfig[] = [];
+
+const CustomBarChart: React.FC<CustomBarChartProps> = ({
+  data = EMPTY_DATA,
+  bars = EMPTY_BARS,
   height = 300,
   showGrid = true,
   showLegend = true,

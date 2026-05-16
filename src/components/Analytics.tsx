@@ -276,7 +276,15 @@ const Analytics: React.FC = memo(() => {
               {analyticsData.filteredOrders.slice(-10).reverse().map((order) => (
                 <div
                   key={order.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleOrderClick(order)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleOrderClick(order);
+                    }
+                  }}
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <div>
