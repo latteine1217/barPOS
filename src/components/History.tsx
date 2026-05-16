@@ -164,7 +164,7 @@ const History = memo(() => {
             <label className="form-label">訂單狀態</label>
             <select
               value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
               className="form-input text-sm"
             >
               <option value="all">全部狀態</option>
@@ -180,7 +180,7 @@ const History = memo(() => {
             <label className="form-label">時間範圍</label>
             <select
               value={filters.dateRange}
-              onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
+              onChange={(e) => setFilters((prev) => ({ ...prev, dateRange: e.target.value }))}
               className="form-input text-sm"
             >
               <option value="all">全部時間</option>
@@ -196,7 +196,7 @@ const History = memo(() => {
             <label className="form-label">桌號</label>
             <select
               value={filters.tableNumber}
-              onChange={(e) => setFilters({ ...filters, tableNumber: e.target.value })}
+              onChange={(e) => setFilters((prev) => ({ ...prev, tableNumber: e.target.value }))}
               className="form-input text-sm"
             >
               <option value="all">全部桌號</option>
@@ -226,7 +226,7 @@ const History = memo(() => {
                 id={startDateId}
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
                 className="form-input text-sm"
               />
             </div>
@@ -236,7 +236,7 @@ const History = memo(() => {
                 id={endDateId}
                 type="date"
                 value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
                 className="form-input text-sm"
               />
             </div>
@@ -313,7 +313,7 @@ const History = memo(() => {
                     <td className="px-6 py-5 text-sm text-white/90">
                       <div className="max-w-xs">
                         {order.items?.map((item, index) => (
-                          <div key={index} className="text-xs text-white/70">
+                          <div key={item.id ?? `${order.id}-${index}`} className="text-xs text-white/70">
                             {item.name} x{item.quantity}
                           </div>
                         )) || '無餐點資訊'}

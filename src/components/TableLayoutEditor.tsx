@@ -701,7 +701,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder={`桌 ${formData.number}`}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
@@ -714,7 +714,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             <input
               type="number"
               value={formData.number}
-              onChange={(e) => setFormData({ ...formData, number: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, number: parseInt(e.target.value) || 0 }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
           </div>
@@ -725,7 +725,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as TableType })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value as TableType }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableTypes).map(([value, label]) => (
@@ -740,7 +740,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.shape}
-              onChange={(e) => setFormData({ ...formData, shape: e.target.value as TableShape })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, shape: e.target.value as TableShape }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableShapes).map(([value, label]) => (
@@ -755,7 +755,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
             </label>
             <select
               value={formData.size}
-              onChange={(e) => setFormData({ ...formData, size: e.target.value as TableSize })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, size: e.target.value as TableSize }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             >
               {Object.entries(tableSizes).map(([value, data]) => (
@@ -773,7 +773,7 @@ const AddTableModal: React.FC<AddTableModalProps> = ({
               min="1"
               max="20"
               value={formData.capacity}
-              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, capacity: parseInt(e.target.value) || 1 }))}
               className="w-full rounded-xl bg-white/90 backdrop-blur-sm border border-white/35 text-slate-900 placeholder-slate-500 focus:border-white/80 focus:ring-2 focus:ring-white/35 transition-colors px-4 py-3"
             />
           </div>

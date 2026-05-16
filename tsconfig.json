@@ -36,7 +36,7 @@
       "@/types/*": ["src/types/*"]
     }
   },
-  "include": ["src", "src/**/*", "clear_storage.ts", "test-agent-logs.ts"],
+  "include": ["src", "src/**/*", "clear_storage.ts"],
   "exclude": ["node_modules", "dist", "dist-electron"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
