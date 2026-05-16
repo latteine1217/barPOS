@@ -10,6 +10,7 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   retryCount: number;
+  errorId: string | null;
 }
 
 class GlobalErrorBoundary extends Component<Props, State> {
@@ -20,11 +21,13 @@ class GlobalErrorBoundary extends Component<Props, State> {
       error: null,
       errorInfo: null,
       retryCount: 0,
+      errorId: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error };
+    // 於錯誤捕捉當下一次性生成 errorId，避免每次 render 重算造成不一致
+    return { hasError: true, error, errorId: Date.now().toString(36) };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -47,6 +50,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
       error: null,
       errorInfo: null,
       retryCount: prev.retryCount + 1,
+      errorId: null,
     }));
   };
 
@@ -137,7 +141,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
               如果問題持續發生，請聯絡技術支援
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-              錯誤 ID: {Date.now().toString(36)}
+              錯誤 ID: {this.state.errorId ?? '—'}
             </p>
           </div>
         </div>

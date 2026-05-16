@@ -226,7 +226,11 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => onNavigate?.('menu')}>
+        <button
+          type="button"
+          className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group text-left w-full"
+          onClick={() => onNavigate?.('menu')}
+        >
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">🍸</span>
@@ -236,9 +240,13 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
               <p className="text-sm text-[var(--text-muted)]">建立新的調酒訂單</p>
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => onNavigate?.('tables')}>
+        <button
+          type="button"
+          className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group text-left w-full"
+          onClick={() => onNavigate?.('tables')}
+        >
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">🪑</span>
@@ -248,9 +256,13 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
               <p className="text-sm text-[var(--text-muted)]">查看座位狀態</p>
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => onNavigate?.('analytics')}>
+        <button
+          type="button"
+          className="card p-6 hover:shadow-lg transition-shadow cursor-pointer group text-left w-full"
+          onClick={() => onNavigate?.('analytics')}
+        >
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">📈</span>
@@ -260,7 +272,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
               <p className="text-sm text-[var(--text-muted)]">查看詳細報表</p>
             </div>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );

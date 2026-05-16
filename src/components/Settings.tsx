@@ -474,12 +474,15 @@ const Settings: React.FC = () => {
               <p className="mt-2 text-sm text-[var(--text-secondary)]">切換主題與強調色，不影響功能流程。</p>
 
               <div className="mt-5 space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                <fieldset>
+                  <legend className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                     主題模式
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button type="button"
+                  </legend>
+                  <div role="radiogroup" aria-label="主題模式" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === 'light'}
                       onClick={() => setTheme?.('light')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'light'
@@ -489,7 +492,10 @@ const Settings: React.FC = () => {
                     >
                       淺色模式
                     </button>
-                    <button type="button"
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === 'dark'}
                       onClick={() => setTheme?.('dark')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'dark'
@@ -499,7 +505,10 @@ const Settings: React.FC = () => {
                     >
                       深色模式
                     </button>
-                    <button type="button"
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === 'auto'}
                       onClick={() => setTheme?.('auto')}
                       className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                         theme === 'auto'
@@ -510,17 +519,19 @@ const Settings: React.FC = () => {
                       跟隨系統
                     </button>
                   </div>
-                </div>
+                </fieldset>
 
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                <fieldset>
+                  <legend className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                     強調色 (Accent)
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  </legend>
+                  <div role="radiogroup" aria-label="強調色" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {ACCENT_OPTIONS.map(({ key, color, name }) => (
                       <button
                         key={key}
                         type="button"
+                        role="radio"
+                        aria-checked={accent === key}
                         onClick={() => setAccent?.(key)}
                         className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 transition-colors ${
                           accent === key
@@ -533,7 +544,7 @@ const Settings: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                </div>
+                </fieldset>
               </div>
             </div>
 

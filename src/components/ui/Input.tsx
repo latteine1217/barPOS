@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
@@ -7,9 +7,10 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
   variant?: 'default' | 'filled' | 'outlined';
   size?: 'sm' | 'md' | 'lg';
   info?: React.ReactNode | string; // small info icon/tooltip on the right of label
+  ref?: React.Ref<HTMLInputElement>;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ 
+const Input = ({
   label,
   error,
   helperText,
@@ -17,8 +18,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   size = 'md',
   className = '',
   info,
+  ref,
   ...props
-}, ref) => {
+}: InputProps) => {
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 ring-[var(--color-accent)]';
   
   const variantStyles = {
@@ -68,8 +70,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       )}
     </div>
   );
-});
-
-Input.displayName = 'Input';
+};
 
 export default Input;

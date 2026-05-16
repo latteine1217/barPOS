@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 interface SelectOption {
   value: string | number;
@@ -15,9 +15,10 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
   variant?: 'default' | 'filled' | 'outlined';
   size?: 'sm' | 'md' | 'lg';
   info?: React.ReactNode | string;
+  ref?: React.Ref<HTMLSelectElement>;
 }
 
-const Select = forwardRef<HTMLSelectElement, SelectProps>(({ 
+const Select = ({
   label,
   error,
   helperText,
@@ -27,8 +28,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   size = 'md',
   className = '',
   info,
+  ref,
   ...props
-}, ref) => {
+}: SelectProps) => {
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 ring-[var(--color-accent)] cursor-pointer';
   
   const variantStyles = {
@@ -94,8 +96,6 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(({
       )}
     </div>
   );
-});
-
-Select.displayName = 'Select';
+};
 
 export default Select;
