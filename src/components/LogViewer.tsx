@@ -61,9 +61,9 @@ const LogItem = memo<{ log: LogEntry; searchTerm?: string }>(({ log, searchTerm 
     const regex = new RegExp(`(${searchTerm})`, 'gi');
     const parts = text.split(regex);
     
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
       regex.test(part) ? (
-        <mark key={index} className="bg-yellow-300 text-black">
+        <mark key={`mark-${index}-${part}`} className="bg-yellow-300 text-black">
           {part}
         </mark>
       ) : part
@@ -74,7 +74,7 @@ const LogItem = memo<{ log: LogEntry; searchTerm?: string }>(({ log, searchTerm 
     return message.map((item, index) => {
       if (typeof item === 'object' && item !== null) {
         return (
-          <details key={index} className="inline-block ml-2">
+          <details key={`obj-${index}`} className="inline-block ml-2">
             <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
               {item.constructor.name} {'{...}'}
             </summary>
@@ -87,7 +87,7 @@ const LogItem = memo<{ log: LogEntry; searchTerm?: string }>(({ log, searchTerm 
       
       const textContent = String(item);
       return (
-        <span key={index} className="mr-2">
+        <span key={`text-${index}`} className="mr-2">
           {highlightText(textContent, searchTerm)}
         </span>
       );

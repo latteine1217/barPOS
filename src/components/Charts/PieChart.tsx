@@ -115,12 +115,15 @@ const CustomPieChart: React.FC<CustomPieChartProps> = ({
             animationEasing="ease-out"
             isAnimationActive={true}
           >
-            {data.map((_, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={colors[index % colors.length]} 
-              />
-            ))}
+            {data.map((datum, index) => {
+              const item = datum as { name?: string; [k: string]: unknown };
+              return (
+                <Cell
+                  key={item.name ?? `cell-${index}`}
+                  fill={colors[index % colors.length]}
+                />
+              );
+            })}
           </Pie>
           
           <Tooltip content={customTooltip} />

@@ -382,12 +382,16 @@ export class AnalyticsService {
       }
     });
 
-    return Object.entries(categories).map(([name, products]) => ({
-      name,
-      count: products.length,
-      revenue: products.reduce((sum, p) => sum + p.totalRevenue, 0),
-      quantity: products.reduce((sum, p) => sum + p.totalQuantity, 0)
-    })).filter(cat => cat.count > 0);
+    return Object.entries(categories).flatMap(([name, products]) => {
+      const count = products.length;
+      if (count === 0) return [];
+      return [{
+        name,
+        count,
+        revenue: products.reduce((sum, p) => sum + p.totalRevenue, 0),
+        quantity: products.reduce((sum, p) => sum + p.totalQuantity, 0)
+      }];
+    });
   }
 
   private calculateSeatRevenueDistribution(seatStats: SeatingAnalysis[]): Array<SeatingAnalysis & { percentage: number }> {

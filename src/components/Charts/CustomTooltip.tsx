@@ -30,7 +30,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
         {labelFormatter ? labelFormatter(label ?? '') : label}
       </p>
       {payload.map((entry, index) => (
-        <p key={index} className="text-sm mb-1 flex items-center justify-between gap-3">
+        <p key={entry.name ?? `tooltip-${index}`} className="text-sm mb-1 flex items-center justify-between gap-3">
           <span className="text-white/90 font-medium flex items-center gap-2">
             <span 
               className="w-3 h-3 rounded-full inline-block" 

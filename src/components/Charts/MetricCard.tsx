@@ -64,9 +64,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
       className={`card p-6 transition-all duration-200 hover:scale-105 ${
         onClick ? 'cursor-pointer hover:bg-white/10' : ''
       } ${className}`}
-      onClick={onClick}
       {...(onClick
         ? {
+            onClick,
             role: 'button',
             tabIndex: 0,
             onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {

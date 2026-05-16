@@ -55,9 +55,7 @@ export const useVisualOrdering = (props: UseVisualOrderingProps) => {
       }
       
       const uniqueCategories = new Set(
-        menuItems
-          .filter(item => item && item.category)
-          .map(item => item.category)
+        menuItems.flatMap(item => (item && item.category ? [item.category] : []))
       );
       
       return ['all', ...Array.from(uniqueCategories)];

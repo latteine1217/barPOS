@@ -96,8 +96,7 @@ class LoggerService {
     
     if (context && Object.keys(context).length > 0) {
       const contextStr = Object.entries(context)
-        .filter(([, value]) => value !== undefined)
-        .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
+        .flatMap(([key, value]) => (value !== undefined ? [`${key}=${JSON.stringify(value)}`] : []))
         .join(' ');
       if (contextStr) parts.push(`[${contextStr}]`);
     }
