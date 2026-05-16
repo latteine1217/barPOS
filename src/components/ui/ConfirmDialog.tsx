@@ -59,8 +59,8 @@ const ConfirmDialog = () => {
       >
         <div className="flex items-start gap-3">
           {isDanger && (
-            <div className="flex-none w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center" aria-hidden="true">
-              <svg className="w-5 h-5 text-rose-600 dark:text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <div className="flex-none size-10 rounded-full bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center" aria-hidden="true">
+              <svg className="size-5 text-rose-600 dark:text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>

@@ -314,7 +314,7 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
             <div className="mt-3 flex flex-wrap gap-2">
               {statusLegend.map((item) => (
                 <div key={item.key} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/8 text-xs text-white/85">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
                   <span>{item.label}</span>
                   <span className="text-white/60">{item.count}</span>
                 </div>

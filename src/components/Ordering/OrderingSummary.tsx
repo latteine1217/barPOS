@@ -85,20 +85,20 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
               <div className="flex items-center space-x-2">
                 <button type="button"
                   onClick={() => updateQuantity(index, item.quantity - 1)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded"
+                  className="size-6 flex items-center justify-center bg-gray-200 rounded"
                 >
                   -
                 </button>
                 <span className="w-8 text-center text-sm">{item.quantity}</span>
                 <button type="button"
                   onClick={() => updateQuantity(index, item.quantity + 1)}
-                  className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded"
+                  className="size-6 flex items-center justify-center bg-gray-200 rounded"
                 >
                   +
                 </button>
                 <button type="button"
                   onClick={() => removeFromOrder(index)}
-                  className="w-6 h-6 flex items-center justify-center bg-red-200 text-red-600 rounded"
+                  className="size-6 flex items-center justify-center bg-red-200 text-red-600 rounded"
                 >
                   ×
                 </button>
@@ -169,7 +169,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
                   checked={currentStatus === 'paid'}
                   disabled={currentStatus !== 'completed' && currentStatus !== 'paid'}
                   onChange={(e) => handleStatusChange(e.target.checked ? 'paid' : 'completed')}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </label>
               {currentStatus !== 'completed' && currentStatus !== 'paid' && (
@@ -204,7 +204,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
             <button
               type="button"
               onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) - 10)}
-              className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+              className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
               aria-label="減少 10 元"
             >−</button>
             <input
@@ -218,7 +218,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
             <button
               type="button"
               onClick={() => setAdjustment((Number.isFinite(adjustment) ? adjustment : 0) + 10)}
-              className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+              className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
               aria-label="增加 10 元"
             >＋</button>
             <span className="text-xs text-gray-500 dark:text-gray-400">先於服務費計算</span>
@@ -239,7 +239,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
             onClick={() => setTipEnabled((v) => !v)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${tipEnabled ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`}
           >
-            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${tipEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+            <span className={`inline-block size-5 transform rounded-full bg-white transition-transform ${tipEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
           </button>
         </div>
         {tipEnabled && (

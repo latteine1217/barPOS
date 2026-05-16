@@ -179,7 +179,7 @@ const Analytics: React.FC = memo(() => {
                 ${formatCurrency(analyticsData.totalRevenue)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+            <div className="size-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
               <span className="text-2xl">💰</span>
             </div>
           </div>
@@ -193,7 +193,7 @@ const Analytics: React.FC = memo(() => {
                 {analyticsData.totalOrders}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <div className="size-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
               <span className="text-2xl">📋</span>
             </div>
           </div>
@@ -207,7 +207,7 @@ const Analytics: React.FC = memo(() => {
                 ${formatCurrency(analyticsData.averageOrderValue)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+            <div className="size-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
               <span className="text-2xl">📊</span>
             </div>
           </div>
@@ -221,7 +221,7 @@ const Analytics: React.FC = memo(() => {
                 {analyticsData.totalCustomers}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <div className="size-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
               <span className="text-2xl">👥</span>
             </div>
           </div>
@@ -240,7 +240,7 @@ const Analytics: React.FC = memo(() => {
               {analyticsData.popularItems.map((item, index) => (
                 <div key={item.name} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <div className="size-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
                       {index + 1}
                     </div>
                     <span className="font-medium text-gray-900 dark:text-white">

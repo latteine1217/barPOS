@@ -74,7 +74,7 @@ const MemberRow = React.memo<MemberRowProps>(({
             type="button"
             onClick={() => onDeductCups(id)}
             disabled={cups <= 0}
-            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg leading-none hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg leading-none hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`扣除 1 杯（目前 ${cups}）`}
           >
             −
@@ -90,7 +90,7 @@ const MemberRow = React.memo<MemberRowProps>(({
           <button
             type="button"
             onClick={() => onAddCups(id)}
-            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg leading-none hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg leading-none hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`增加 1 杯（目前 ${cups}）`}
           >
             ＋

@@ -82,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 +12% 較昨日
               </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="size-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               💰
             </div>
           </div>
@@ -100,7 +100,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 訂單 {todayOrderCount}，結算界線 {cutoffHour.toString().padStart(2,'0')}:00
               </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="size-16 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               🧾
             </div>
           </div>
@@ -117,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 +8% 較昨日
               </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="size-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               📋
             </div>
           </div>
@@ -134,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 需要處理
               </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="size-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               ⏳
             </div>
           </div>
@@ -151,7 +151,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 今日完成
               </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="size-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
               ✅
             </div>
           </div>
@@ -232,7 +232,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
           onClick={() => onNavigate?.('menu')}
         >
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="size-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">🍸</span>
             </div>
             <div>
@@ -248,7 +248,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
           onClick={() => onNavigate?.('tables')}
         >
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="size-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">🪑</span>
             </div>
             <div>
@@ -264,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
           onClick={() => onNavigate?.('analytics')}
         >
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="size-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-2xl">📈</span>
             </div>
             <div>

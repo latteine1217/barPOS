@@ -17,8 +17,8 @@ const OfflineBanner = memo(() => {
       className="fixed inset-x-0 top-0 z-[55] bg-amber-500 text-amber-950 shadow-md animate-in slide-in-from-top duration-300 ease-out"
     >
       <div className="max-w-5xl mx-auto px-4 py-2 flex items-center gap-3 text-sm">
-        <span className="flex-none inline-flex w-6 h-6 rounded-full bg-amber-600/30 items-center justify-center" aria-hidden="true">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <span className="flex-none inline-flex size-6 rounded-full bg-amber-600/30 items-center justify-center" aria-hidden="true">
+          <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636L5.636 18.364m0-12.728L18.364 18.364" />
           </svg>
         </span>

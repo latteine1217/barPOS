@@ -1,4 +1,4 @@
-import React, { forwardRef, useId } from 'react';
+import React, { useId } from 'react';
 
 type CommonProps = {
   label: React.ReactNode;
@@ -30,23 +30,22 @@ const labelCls = (hidden?: boolean) =>
 type InputFieldProps = CommonProps &
   Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'> & {
     inputClassName?: string;
+    ref?: React.Ref<HTMLInputElement>;
   };
 
-export const FormField = forwardRef<HTMLInputElement, InputFieldProps>(function FormField(
-  {
-    label,
-    hint,
-    error,
-    required,
-    visuallyHiddenLabel,
-    inline,
-    className,
-    inputClassName,
-    id,
-    ...inputProps
-  },
+export const FormField = ({
+  label,
+  hint,
+  error,
+  required,
+  visuallyHiddenLabel,
+  inline,
+  className,
+  inputClassName,
+  id,
   ref,
-) {
+  ...inputProps
+}: InputFieldProps) => {
   const reactId = useId();
   const inputId = id ?? reactId;
   const hintId = hint ? `${inputId}-hint` : undefined;
@@ -82,7 +81,7 @@ export const FormField = forwardRef<HTMLInputElement, InputFieldProps>(function 
       </div>
     </div>
   );
-});
+};
 
 // ----------------------------------------------------------------------------
 // FormSelectField
@@ -92,24 +91,23 @@ type SelectFieldProps = CommonProps &
   Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'className'> & {
     selectClassName?: string;
     children: React.ReactNode;
+    ref?: React.Ref<HTMLSelectElement>;
   };
 
-export const FormSelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(function FormSelectField(
-  {
-    label,
-    hint,
-    error,
-    required,
-    visuallyHiddenLabel,
-    inline,
-    className,
-    selectClassName,
-    id,
-    children,
-    ...selectProps
-  },
+export const FormSelectField = ({
+  label,
+  hint,
+  error,
+  required,
+  visuallyHiddenLabel,
+  inline,
+  className,
+  selectClassName,
+  id,
+  children,
   ref,
-) {
+  ...selectProps
+}: SelectFieldProps) => {
   const reactId = useId();
   const selectId = id ?? reactId;
   const hintId = hint ? `${selectId}-hint` : undefined;
@@ -147,7 +145,7 @@ export const FormSelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(f
       </div>
     </div>
   );
-});
+};
 
 // ----------------------------------------------------------------------------
 // FormTextareaField
@@ -156,23 +154,22 @@ export const FormSelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(f
 type TextareaFieldProps = CommonProps &
   Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> & {
     textareaClassName?: string;
+    ref?: React.Ref<HTMLTextAreaElement>;
   };
 
-export const FormTextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldProps>(function FormTextareaField(
-  {
-    label,
-    hint,
-    error,
-    required,
-    visuallyHiddenLabel,
-    inline,
-    className,
-    textareaClassName,
-    id,
-    ...textareaProps
-  },
+export const FormTextareaField = ({
+  label,
+  hint,
+  error,
+  required,
+  visuallyHiddenLabel,
+  inline,
+  className,
+  textareaClassName,
+  id,
   ref,
-) {
+  ...textareaProps
+}: TextareaFieldProps) => {
   const reactId = useId();
   const textareaId = id ?? reactId;
   const hintId = hint ? `${textareaId}-hint` : undefined;
@@ -208,4 +205,4 @@ export const FormTextareaField = forwardRef<HTMLTextAreaElement, TextareaFieldPr
       </div>
     </div>
   );
-});
+};

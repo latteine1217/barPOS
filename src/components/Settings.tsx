@@ -539,7 +539,7 @@ const Settings: React.FC = () => {
                             : 'border-[var(--glass-elevated-border)] bg-[var(--glass-elevated)]'
                         }`}
                       >
-                        <span className="inline-block h-4 w-4 rounded-full" style={{ backgroundColor: color }} />
+                        <span className="inline-block size-4 rounded-full" style={{ backgroundColor: color }} />
                         <span className="text-sm text-[var(--text-primary)]">{name}</span>
                       </button>
                     ))}

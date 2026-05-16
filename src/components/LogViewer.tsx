@@ -263,7 +263,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
           aria-label="展開日誌查看器"
         >
           📊 日誌 ({logs.length})
-          {!isActive && <span className="w-2 h-2 bg-red-500 rounded-full" aria-label="攔截器未啟動"></span>}
+          {!isActive && <span className="size-2 bg-red-500 rounded-full" aria-label="攔截器未啟動"></span>}
           {import.meta.env.DEV && <span className="text-xs bg-green-500 px-1 rounded">DEV</span>}
         </button>
       </div>
@@ -271,7 +271,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   }
 
   return (
-    <div className={`fixed bottom-4 right-4 w-96 h-96 bg-white border border-gray-300 rounded-lg shadow-xl z-50 flex flex-col ${className}`}>
+    <div className={`fixed bottom-4 right-4 size-96 bg-white border border-gray-300 rounded-lg shadow-xl z-50 flex flex-col ${className}`}>
       {/* 標題列 */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2">
@@ -279,7 +279,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
             日誌查看器 
             {import.meta.env.DEV && <span className="text-xs text-green-600">(Vite)</span>}
           </h3>
-          <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <div className={`size-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
           <span className="text-xs text-gray-500">({filteredLogs.length})</span>
           {pendingLogs.length > 0 && (
             <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">
@@ -447,7 +447,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
               type="checkbox"
               checked={autoScroll}
               onChange={(e) => setAutoScroll(e.target.checked)}
-              className="w-3 h-3"
+              className="size-3"
             />
             <span>自動滾動</span>
           </label>

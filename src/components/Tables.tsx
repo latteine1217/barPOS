@@ -110,7 +110,7 @@ const TableCard: React.FC<{ table: TableWithOrder; selected: boolean; onClick: (
           <div className="text-xs">${table.currentOrder.total}</div>
         )}
       </div>
-      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${getDotColor(table)}`} aria-hidden="true" />
+      <div className={`absolute top-2 right-2 size-3 rounded-full ${getDotColor(table)}`} aria-hidden="true" />
     </button>
   );
 });
@@ -252,7 +252,7 @@ const Tables: React.FC = memo(() => {
         <div style={{ minHeight: '600px' }}>
           <Suspense fallback={
             <div className="flex items-center justify-center h-full py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/70" />
+              <div className="animate-spin rounded-full size-8 border-b-2 border-white/70" />
             </div>
           }>
             <TableLayoutEditor readOnly onTableClick={handleTableClick} />

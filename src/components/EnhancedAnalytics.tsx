@@ -449,7 +449,7 @@ const EnhancedAnalytics: React.FC = () => {
             {timeAnalysis.peakHours.map((hour, index) => (
               <div key={hour.hour} className="flex items-center justify-between p-4 card bg-white/5">
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  <div className={`size-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-yellow-400 text-yellow-900' :
                     index === 1 ? 'bg-gray-300 text-gray-700' :
                     'bg-orange-300 text-orange-900'
@@ -472,7 +472,7 @@ const EnhancedAnalytics: React.FC = () => {
             {timeAnalysis.peakDays.map((day, index) => (
               <div key={day.day} className="flex items-center justify-between p-4 card bg-white/5">
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  <div className={`size-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-yellow-400 text-yellow-900' :
                     index === 1 ? 'bg-gray-300 text-gray-700' :
                     'bg-orange-300 text-orange-900'

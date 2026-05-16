@@ -2766,11 +2766,11 @@
   }
 
   /* 泡泡尺寸變化 */
-  .bubble-sm { @apply w-8 h-8; }
-  .bubble-md { @apply w-16 h-16; }
-  .bubble-lg { @apply w-24 h-24; }
-  .bubble-xl { @apply w-32 h-32; }
-  .bubble-2xl { @apply w-40 h-40; }
+  .bubble-sm { @apply size-8; }
+  .bubble-md { @apply size-16; }
+  .bubble-lg { @apply size-24; }
+  .bubble-xl { @apply size-32; }
+  .bubble-2xl { @apply size-40; }
 
   /* 主要內容區域 */
   .main-content {

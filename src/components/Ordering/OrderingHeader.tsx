@@ -73,7 +73,7 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
-            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`減少人數（目前 ${orderDetails.customers}）`}
           >
             −
@@ -89,7 +89,7 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
-            className="w-9 h-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`增加人數（目前 ${orderDetails.customers}）`}
           >
             ＋

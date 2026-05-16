@@ -203,7 +203,7 @@ const Menu: React.FC = () => {
             <div>
               <div className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
                 可供應
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none" title="開啟後，此品項將出現在點單與菜單列表中。">
+                <span className="inline-flex items-center justify-center size-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none" title="開啟後，此品項將出現在點單與菜單列表中。">
                   i
                 </span>
               </div>
@@ -217,7 +217,7 @@ const Menu: React.FC = () => {
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.available ? 'bg-[var(--color-accent)]' : 'bg-slate-400/50'}`}
             >
               <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${form.available ? 'translate-x-5' : 'translate-x-1'}`}
+                className={`inline-block size-5 transform rounded-full bg-white transition-transform ${form.available ? 'translate-x-5' : 'translate-x-1'}`}
               />
             </button>
           </div>
@@ -261,7 +261,7 @@ const Menu: React.FC = () => {
             <Select size="sm" placeholder="全部基酒" value={spirit ?? 'all'} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSpirit(((e.target as HTMLSelectElement).value || 'all') as SpiritFilter)} options={FILTER_SPIRIT_OPTIONS as any} />
             <Input className="col-span-2 md:col-span-1" placeholder="搜尋名稱 / 描述" value={q} onChange={(e) => setQ(((e.target as HTMLInputElement).value))} />
             <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-              <input className="h-4 w-4" type="checkbox" checked={onlyAvailable} onChange={(e) => setOnlyAvailable(((e as React.ChangeEvent<HTMLInputElement>).currentTarget.checked))} />
+              <input className="size-4" type="checkbox" checked={onlyAvailable} onChange={(e) => setOnlyAvailable(((e as React.ChangeEvent<HTMLInputElement>).currentTarget.checked))} />
               僅顯示可供應
             </label>
           </div>

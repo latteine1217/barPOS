@@ -49,7 +49,7 @@ const Input = ({
           </label>
           {info && (
             <span
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none"
+              className="inline-flex items-center justify-center size-4 rounded-full bg-[var(--text-muted)]/20 text-[10px] text-[var(--text-secondary)] cursor-help select-none"
               title={typeof info === 'string' ? info : undefined}
             >
               {typeof info === 'string' ? 'i' : info}
