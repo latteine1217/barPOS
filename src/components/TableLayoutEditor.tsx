@@ -207,18 +207,29 @@ const TableLayoutEditor = ({ readOnly = false, onTableClick }: TableLayoutEditor
     }));
   }, [dragState.isDragging, selectedTable, updateTableLayout]);
 
+  // 透過 ref 持有最新 handler，避免 handleMouseMove/Up identity 改變
+  // 導致 useEffect 重訂閱 document 全域 listener
+  const handleMouseMoveRef = useRef(handleMouseMove);
+  const handleMouseUpRef = useRef(handleMouseUp);
+  useEffect(() => {
+    handleMouseMoveRef.current = handleMouseMove;
+    handleMouseUpRef.current = handleMouseUp;
+  });
+
   // 綁定全域事件
   useEffect(() => {
     if (dragState.startPosition.x !== 0 || dragState.startPosition.y !== 0) { // 有記錄起始位置時綁定事件
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      const moveListener = (e: MouseEvent) => handleMouseMoveRef.current(e);
+      const upListener = () => handleMouseUpRef.current();
+      document.addEventListener('mousemove', moveListener);
+      document.addEventListener('mouseup', upListener);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mousemove', moveListener);
+        document.removeEventListener('mouseup', upListener);
       };
     }
     return undefined;
-  }, [dragState.startPosition, handleMouseMove, handleMouseUp]);
+  }, [dragState.startPosition.x, dragState.startPosition.y]);
 
   // ✅ 優化：只在真正需要時同步 selectedTable，避免循環依賴
   useEffect(() => {
