@@ -2079,6 +2079,25 @@
       animation: none;
       transition: none;
     }
+
+    /* 全域守則：override 所有 Tailwind hover:scale-* / group-hover:scale-* /
+       transition / animation。先前散布在 Dashboard、Tables、MetricCard 共
+       11+ 處 hover:scale-105 / scale-110，前庭功能障礙使用者會暈眩。 */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .hover\:scale-105:hover,
+    .hover\:scale-110:hover,
+    .group:hover .group-hover\:scale-105,
+    .group:hover .group-hover\:scale-110 {
+      transform: none !important;
+    }
   }
 
   /* === 第三階段：性能優化系統 === */

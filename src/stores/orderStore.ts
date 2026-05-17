@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 import { loadFromStorage, STORAGE_KEYS } from '@/services/storageService';
 import { logger } from '@/services/loggerService';
+import { sumOrderRevenue } from '@/utils/orderMath';
 import type { Order, ID } from '@/types';
 
 // 緩存今天的日期字串，避免每次重新計算
@@ -130,9 +131,20 @@ export const useOrderStore = create<OrderStore>()(
           if (updates.status !== undefined) order.status = updates.status;
           if (updates.customers !== undefined) order.customers = updates.customers;
           if (updates.tableNumber !== undefined) order.tableNumber = updates.tableNumber;
+          if (updates.tableName !== undefined) order.tableName = updates.tableName;
           if (updates.notes !== undefined) order.notes = updates.notes;
           if (updates.total !== undefined && !updates.items) order.total = updates.total;
           if (updates.createdAt !== undefined) order.createdAt = updates.createdAt;
+          // 結帳相關欄位（先前白名單漏掉，導致 UI 端設定的 tip/adjustment
+          // 從未真正寫進 store；下游 analytics 用 total - tip 算營收時
+          // tip 永遠是 undefined → 等於把小費當營收）
+          if (updates.subtotal !== undefined) order.subtotal = updates.subtotal;
+          if (updates.tax !== undefined) order.tax = updates.tax;
+          if (updates.discount !== undefined) order.discount = updates.discount;
+          if (updates.adjustment !== undefined) order.adjustment = updates.adjustment;
+          if (updates.tip !== undefined) order.tip = updates.tip;
+          if (updates.customerId !== undefined) order.customerId = updates.customerId;
+          if (updates.completedAt !== undefined) order.completedAt = updates.completedAt;
           order.updatedAt = new Date().toISOString();
         });
       },
@@ -339,7 +351,8 @@ export const useOrderSelectors = {
     
     return {
       count: todayOrders.length,
-      revenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
+      // 用 sumOrderRevenue 統一口徑（扣 tip 後的店家營收）
+      revenue: sumOrderRevenue(todayOrders),
       pending: todayOrders.filter(o => o.status === 'pending').length,
       completed: todayOrders.filter(o => o.status === 'completed').length,
     };

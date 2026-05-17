@@ -158,13 +158,22 @@ const Tables: React.FC = memo(() => {
     
     try {
       if (currentOrder) {
-        // ✅ 修復無限循環：只更新必要的字段，時間戳由 store 內部處理
+        // 更新既有訂單。納入 tip/adjustment/status/customerId 等結帳相關
+        // 欄位 — 先前只傳 items/subtotal/total/notes 會讓 UI 設定的小費
+        // 在 store 層被丟棄。updatedAt 仍由 store 內部處理。
         const updates: Partial<Order> = {
           items: order.items,
           subtotal: order.subtotal,
           total: order.total,
+          tax: order.tax,
+          discount: order.discount,
+          adjustment: order.adjustment,
+          tip: order.tip,
+          status: order.status,
+          customers: order.customers,
+          customerId: order.customerId,
+          completedAt: order.completedAt,
           notes: order.notes ?? ''
-          // ❌ 移除 updatedAt - 由 store 內部自動更新
         };
         updateOrder(order.id, updates);
       } else {

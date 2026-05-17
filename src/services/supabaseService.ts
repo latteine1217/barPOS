@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/services/loggerService';
-import type { Order, Table, MenuItem, ApiResponse, MemberRecord, TableStatus, OrderStatus } from '@/types';
+import type { Order, OrderItem, Table, MenuItem, ApiResponse, MemberRecord, TableStatus, OrderStatus, Position } from '@/types';
 
 interface SyncResult {
   success: number;
@@ -33,7 +33,11 @@ interface DatabaseOrder {
   id: string;
   table_number: number;
   table_name: string | null;
-  items: string | null; // JSON string
+  // 對應 DB orders.items JSONB（不是 TEXT）。寫入應傳 array，
+  // Supabase client 會處理 jsonb 編碼；先前用 serializeJson 預先
+  // 字串化反而會 double-encode 成 `"\"[...]\""`。讀取時 safeParseJson
+  // 仍兼容舊 string 資料。
+  items: OrderItem[] | string | null;
   total: number;
   subtotal: number;
   tax: number;
@@ -59,7 +63,9 @@ interface DatabaseTable {
   status: string;
   customers: number;
   max_capacity: number;
-  position: string | null; // JSON string
+  // 對應 DB tables.position JSONB。寫入應傳 object，讀取時 safeParseJson
+  // 兼容舊 string 資料。
+  position: Position | string | null;
   order_id: string | null;
   created_at?: string;
   updated_at?: string;
@@ -75,7 +81,11 @@ interface DatabaseMenuItem {
   description: string | null;
   available: boolean;
   image_url: string | null;
-  ingredients: string | null; // JSON string
+  // 對應 DB menu_items.ingredients TEXT[]（不是 jsonb / text）。
+  // 寫入應傳 string[] 直接讓 Supabase client 處理；先前用
+  // serializeJson 變字串會被 Postgres reject TEXT[] 欄位 → 菜單同步全失敗。
+  // 讀取時 safeParseJson 兼容舊 string 資料。
+  ingredients: string[] | string | null;
   alcohol_content: number | null;
   created_at?: string;
   updated_at?: string;
@@ -128,22 +138,10 @@ const safeParseJson = <T>(value: unknown, fallback: T): T => {
   return value as T;
 };
 
-const serializeJson = (value: unknown): string | null => {
-  if (value === undefined || value === null) {
-    return null;
-  }
-  try {
-    return JSON.stringify(value);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.warn('Failed to stringify JSON field, returning null', {
-      component: 'SupabaseService',
-      action: 'serializeJson',
-      error: errorMessage,
-    });
-    return null;
-  }
-};
+// serializeJson 已移除：先前用於把 array / object 預先 JSON.stringify 後
+// 寫入 Supabase jsonb / TEXT[] 欄位，但 Supabase client 已自動處理編碼，
+// 預先字串化反而造成 jsonb 雙重編碼或 TEXT[] 型別不匹配。讀取側仍由
+// safeParseJson 兼容舊 string 資料。
 
 class SupabaseService {
   private supabase: SupabaseClient;
@@ -219,7 +217,8 @@ class SupabaseService {
         id: order.id,
         table_number: order.tableNumber,
         table_name: order.tableName ?? null,
-        items: serializeJson(order.items ?? []),
+        // 直接傳 array；Supabase client 自動處理 jsonb 編碼
+        items: order.items ?? [],
         total: order.total ?? 0,
         subtotal: order.subtotal ?? 0,
         tax: order.tax ?? 0,
@@ -292,7 +291,8 @@ class SupabaseService {
         id: order.id,
         table_number: order.tableNumber,
         table_name: order.tableName ?? null,
-        items: serializeJson(order.items ?? []),
+        // 直接傳 array；Supabase client 自動處理 jsonb 編碼
+        items: order.items ?? [],
         total: order.total ?? 0,
         subtotal: order.subtotal ?? 0,
         tax: order.tax ?? 0,
@@ -494,7 +494,8 @@ class SupabaseService {
         status: this.mapTableStatusToDatabase(table.status),
         customers: table.customers,
         max_capacity: table.maxCapacity,
-        position: serializeJson(table.position),
+        // 直接傳 object；Supabase client 自動處理 jsonb 編碼
+        position: table.position,
         order_id: table.orderId ?? null,
         // 保留 client 的 updatedAt（若有），避免覆蓋雲端較新版本
         updated_at: table.updatedAt ?? new Date().toISOString()
@@ -535,7 +536,8 @@ class SupabaseService {
         description: menuItem.description ?? null,
         available: menuItem.available,
         image_url: menuItem.imageUrl ?? null,
-        ingredients: serializeJson(menuItem.ingredients),
+        // 直接傳 array；DB schema 是 TEXT[]，先前用 serializeJson 會被 reject
+        ingredients: menuItem.ingredients ?? [],
         alcohol_content: menuItem.alcoholContent ?? null,
         // 保留 client 的 updatedAt（若有），避免覆蓋雲端較新版本
         updated_at: menuItem.updatedAt ?? new Date().toISOString()

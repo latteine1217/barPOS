@@ -111,7 +111,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-white/90 text-sm font-semibold mb-2">{title}</p>
+          {/* 改用 CSS variable 而非 text-white/90，使 light theme 下不會白字白底 */}
+          <p className="text-[var(--text-primary)] text-sm font-semibold mb-2">{title}</p>
           <p className={`text-3xl font-bold ${COLOR_TEXT[color]} mb-1 drop-shadow-sm`}>
             {formatValue(value)}
           </p>
@@ -120,7 +121,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
               <span className={`text-sm font-semibold ${getTrendColor()} drop-shadow-sm`}>
                 {getTrendIcon()} {Math.abs(change).toFixed(1)}%
               </span>
-              <span className="text-xs text-white/70 font-medium">vs 上期</span>
+              <span className="text-xs text-[var(--text-muted)] font-medium">vs 上期</span>
             </div>
           )}
         </div>

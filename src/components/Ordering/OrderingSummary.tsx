@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 import type { Order, OrderItem, OrderStatus } from '@/types';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 interface OrderDetails {
   tableNumber: number | string;
@@ -80,7 +81,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
                 <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                   {item.name}
                 </h4>
-                <p className="text-xs text-gray-500">${item.price}</p>
+                <p className="text-xs text-gray-500">{formatCurrency(item.price)}</p>
               </div>
               <div className="flex items-center space-x-2">
                 <button type="button"
@@ -265,10 +266,10 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
       <div className="mt-auto sticky bottom-0 p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-t border-gray-200 dark:border-gray-700">
         {/* Totals */}
         <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">
-          <div className="flex justify-between"><span>小計</span><span>${totalAmount}</span></div>
-          <div className="flex justify-between"><span>加價/折價</span><span>${Number.isFinite(adjustment) ? adjustment : 0}</span></div>
-          <div className="flex justify-between"><span>服務費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>${tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0}</span></div>
-          <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>${(totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) + (tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0)}</span></div>
+          <div className="flex justify-between"><span>小計</span><span>{formatCurrency(totalAmount)}</span></div>
+          <div className="flex justify-between"><span>加價/折價</span><span>{formatCurrency(Number.isFinite(adjustment) ? adjustment : 0)}</span></div>
+          <div className="flex justify-between"><span>服務費{tipEnabled ? ` (${tipPercent}%)` : ''}</span><span>{formatCurrency(tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0)}</span></div>
+          <div className="flex justify-between font-semibold text-gray-900 dark:text-white mt-1"><span>應付金額</span><span>{formatCurrency((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) + (tipEnabled ? Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)) : 0))}</span></div>
         </div>
         <div className="flex flex-col space-y-2">
           <button type="button"

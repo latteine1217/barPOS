@@ -3,6 +3,7 @@ import type { Order, OrderStatus } from '@/types';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useToast } from '@/hooks/useToast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -135,7 +136,7 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
           </div>
           <div>
             <p className="text-gray-600 text-sm">總金額</p>
-            <p className="font-semibold text-green-600">NT$ {order.total.toLocaleString()}</p>
+            <p className="font-semibold text-green-600">{formatCurrency(order.total)}</p>
           </div>
         </div>
 
@@ -147,11 +148,11 @@ const OrderDetailsModal = memo<OrderDetailsModalProps>(({
               <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-600">單價: NT$ {item.price}</p>
+                  <p className="text-sm text-gray-600">單價: {formatCurrency(item.price)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">x {item.quantity}</p>
-                  <p className="text-green-600">NT$ {(item.price * item.quantity).toLocaleString()}</p>
+                  <p className="text-green-600">{formatCurrency(item.price * item.quantity)}</p>
                 </div>
               </div>
             ))}

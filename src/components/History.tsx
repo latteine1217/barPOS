@@ -1,5 +1,7 @@
 import { useId, useState, useMemo, useCallback, memo } from 'react';
 import { useOrders } from '@/stores';
+import { sumOrderRevenue } from '@/utils/orderMath';
+import { formatCurrency } from '@/utils/formatCurrency';
 import OrderDetailsModal from './OrderDetailsModal';
 import type { Order, OrderStatus } from '@/types';
 
@@ -109,7 +111,8 @@ const History = memo(() => {
   // 統計數據
   const statistics = useMemo(() => {
     const totalOrders = filteredOrders.length;
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    // 用 sumOrderRevenue 統一口徑（扣 tip 後的店家營收）
+    const totalRevenue = sumOrderRevenue(filteredOrders);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
     const statusCounts = filteredOrders.reduce((counts, order) => {
@@ -255,11 +258,11 @@ const History = memo(() => {
           <div className="text-sm text-white/80">總訂單數</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
-          <div className="text-2xl font-bold text-green-400">${statistics.totalRevenue}</div>
+          <div className="text-2xl font-bold text-green-400">{formatCurrency(statistics.totalRevenue)}</div>
           <div className="text-sm text-white/80">總營收</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
-          <div className="text-2xl font-bold text-purple-400">${Math.round(statistics.avgOrderValue)}</div>
+          <div className="text-2xl font-bold text-purple-400">{formatCurrency(Math.round(statistics.avgOrderValue))}</div>
           <div className="text-sm text-white/80">平均客單價</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
@@ -324,7 +327,7 @@ const History = memo(() => {
                       </div>
                     </td>
                     <td className="px-6 py-5 text-sm font-semibold text-white">
-                      ${order.total}
+                      {formatCurrency(order.total)}
                     </td>
                     <td className="px-6 py-5 text-sm">
                       <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>

@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import { useDashboard } from '@/hooks/business/useDashboard';
 import type { OrderStatus, Order } from '@/types';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { formatAmount } from '@/utils/formatCurrency';
 
 type TabNav = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
 
@@ -44,9 +45,8 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
     return statusTexts[status] || status;
   }, []);
 
-  const formatCurrency = useCallback((amount: number): string => {
-    return amount.toLocaleString();
-  }, []);
+  // 沿用 $ 字面前綴語義（JSX 已包含 `$`），純千分位數字交給 utils.formatAmount
+  const formatCurrency = useCallback((amount: number): string => formatAmount(amount), []);
 
   const cutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
 
