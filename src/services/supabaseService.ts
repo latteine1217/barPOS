@@ -292,7 +292,10 @@ class SupabaseService {
         customers: order.customers,
         notes: order.notes ?? null,
         created_at: order.createdAt,
-        updated_at: new Date().toISOString(),
+        // 保留 client 的 updatedAt 而非覆寫為現在時間；雲端那側若有
+        // 較新版本可比對 updated_at 做衝突解決。這避免「離線一週後上傳
+        // 的舊版本反而比雲端 fresh 版本看起來更新」的覆蓋問題。
+        updated_at: order.updatedAt ?? new Date().toISOString(),
         completed_at: order.completedAt ?? null
       };
 
@@ -477,7 +480,8 @@ class SupabaseService {
         max_capacity: table.maxCapacity,
         position: serializeJson(table.position),
         order_id: table.orderId ?? null,
-        updated_at: new Date().toISOString()
+        // 保留 client 的 updatedAt（若有），避免覆蓋雲端較新版本
+        updated_at: table.updatedAt ?? new Date().toISOString()
       };
 
       const { data, error } = await this.supabase
@@ -517,7 +521,8 @@ class SupabaseService {
         image_url: menuItem.imageUrl ?? null,
         ingredients: serializeJson(menuItem.ingredients),
         alcohol_content: menuItem.alcoholContent ?? null,
-        updated_at: new Date().toISOString()
+        // 保留 client 的 updatedAt（若有），避免覆蓋雲端較新版本
+        updated_at: menuItem.updatedAt ?? new Date().toISOString()
       };
 
       const { data, error } = await this.supabase
@@ -580,7 +585,8 @@ class SupabaseService {
         cups: member.cups,
         notes: member.notes ?? null,
         created_at: member.createdAt,
-        updated_at: new Date().toISOString()
+        // 保留 client 的 updatedAt，避免覆蓋雲端較新版本
+        updated_at: member.updatedAt ?? new Date().toISOString()
       };
       const { data, error } = await this.supabase
         .from('members')

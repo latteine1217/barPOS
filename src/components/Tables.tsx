@@ -169,7 +169,18 @@ const Tables: React.FC = memo(() => {
         updateOrder(order.id, updates);
       } else {
         // 使用組合動作，確保新增訂單與桌位狀態一體化更新
-        addOrderWithTableUpdate(order);
+        const success = addOrderWithTableUpdate(order);
+        if (!success) {
+          logger.error(
+            'addOrderWithTableUpdate failed (order rolled back, table unchanged)',
+            {
+              component: 'Tables',
+              action: 'onComplete',
+              tableNumber: order.tableNumber,
+              orderId: order.id,
+            }
+          );
+        }
       }
     } catch (error) {
       logger.error(

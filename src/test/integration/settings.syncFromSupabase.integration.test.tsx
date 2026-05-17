@@ -1,5 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// 同步流程現在會先彈出 confirm dialog，測試環境自動 resolve(true) 跳過互動。
+vi.mock('@/hooks/useConfirm', () => ({
+  useConfirm: () => () => Promise.resolve(true),
+}));
+
 import Settings from '@/components/Settings';
 import SupabaseService from '@/services/supabaseService';
 import { useOrderStore } from '@/stores/orderStore';
@@ -92,11 +98,18 @@ describe('Settings syncFromSupabase integration', () => {
     render(<Settings />);
     fireEvent.click(screen.getByRole('button', { name: '從雲端下載' }));
 
+    // 同步策略改為 merge by updatedAt：不同 id 兩邊都保留，避免吞掉本地離線單。
     await waitFor(() => {
-      expect(useOrderStore.getState().orders[0]?.id).toBe('cloud-order');
-      expect(useTableStore.getState().tables[0]?.id).toBe(9);
-      expect(useMenuStore.getState().menuItems[0]?.id).toBe('cloud-menu');
-      expect(useMembersStore.getState().members[0]?.id).toBe('cloud-member');
+      const orderIds = useOrderStore.getState().orders.map(o => o.id);
+      expect(orderIds).toContain('cloud-order');
+      expect(orderIds).toContain('local-order');
+
+      const tableIds = useTableStore.getState().tables.map(t => t.id);
+      expect(tableIds).toContain(9);
+      expect(tableIds).toContain(1);
+
+      expect(useMenuStore.getState().menuItems.some(m => m.id === 'cloud-menu')).toBe(true);
+      expect(useMembersStore.getState().members.some(m => m.id === 'cloud-member')).toBe(true);
     });
   });
 
@@ -133,10 +146,12 @@ describe('Settings syncFromSupabase integration', () => {
     fireEvent.click(screen.getByRole('button', { name: '從雲端下載' }));
 
     await waitFor(() => {
-      expect(useOrderStore.getState().orders[0]?.id).toBe('local-order');
-      expect(useTableStore.getState().tables[0]?.id).toBe(2);
-      expect(useMenuStore.getState().menuItems[0]?.id).toBe('menu-2');
-      expect(useMembersStore.getState().members[0]?.id).toBe('member-2');
+      // orders fetch 失敗，local-order 維持
+      expect(useOrderStore.getState().orders.map(o => o.id)).toEqual(['local-order']);
+      // tables / menu / members 成功 → 被 merge 進現有 store
+      expect(useTableStore.getState().tables.some(t => t.id === 2)).toBe(true);
+      expect(useMenuStore.getState().menuItems.some(m => m.id === 'menu-2')).toBe(true);
+      expect(useMembersStore.getState().members.some(m => m.id === 'member-2')).toBe(true);
     });
   });
 });

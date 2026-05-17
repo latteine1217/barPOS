@@ -24,8 +24,8 @@ interface AppActions {
   // 離線狀態
   setOffline: (offline: boolean) => void;
   
-  // 跨 store 操作
-  addOrderWithTableUpdate: (order: Order) => void;
+  // 跨 store 操作（回傳布林表示整個複合操作是否成功）
+  addOrderWithTableUpdate: (order: Order) => boolean;
   deleteOrderWithTableRelease: (orderId: ID) => void;
   clearAllData: () => Promise<void>;
   
@@ -101,18 +101,51 @@ export const useAppStore = create<AppStore>()(
       });
     },
 
-    // 跨 store 操作 - 添加訂單並更新桌位
-    addOrderWithTableUpdate: (order: Order) => {
-      useOrderStore.getState().addOrder(order);
-      if (!order.tableNumber) return;
-      const tableNumber = Number(order.tableNumber);
+    // 跨 store 操作 - 添加訂單並更新桌位（原子化：失敗時 rollback）
+    addOrderWithTableUpdate: (order: Order): boolean => {
+      const created = useOrderStore.getState().addOrder(order);
+      if (!created) {
+        // 訂單驗證失敗，整個複合操作中止；不佔桌
+        logger.warn('addOrderWithTableUpdate aborted: order validation failed', {
+          component: 'appStore',
+          tableNumber: order.tableNumber,
+        });
+        return false;
+      }
+
+      // 訂單沒指定桌號 — 訂單建立成功但不需佔桌（外帶/吧台等情境）
+      if (!created.tableNumber) return true;
+
+      const tableNumber = Number(created.tableNumber);
       const table = useTableStore.getState().getTableByNumber(tableNumber);
-      if (!table) return;
-      useTableStore.getState().updateTable(table.id, {
-        status: 'occupied',
-        orderId: order.id,
-        customers: order.customers || 0,
-      });
+      if (!table) {
+        // 桌位不存在：rollback 已建立的訂單，避免孤兒訂單
+        useOrderStore.getState().deleteOrder(created.id);
+        logger.error('addOrderWithTableUpdate rollback: table not found', {
+          component: 'appStore',
+          orderId: created.id,
+          tableNumber,
+        });
+        return false;
+      }
+
+      try {
+        useTableStore.getState().updateTable(table.id, {
+          status: 'occupied',
+          orderId: created.id,
+          customers: created.customers || 0,
+        });
+        return true;
+      } catch (err) {
+        // 桌位更新失敗：rollback 訂單以維持兩 store 一致
+        useOrderStore.getState().deleteOrder(created.id);
+        logger.error(
+          'addOrderWithTableUpdate rollback: table update threw',
+          { component: 'appStore', orderId: created.id, tableId: table.id },
+          err instanceof Error ? err : new Error(String(err))
+        );
+        return false;
+      }
     },
 
     // 跨 store 操作 - 刪除訂單並釋放桌位

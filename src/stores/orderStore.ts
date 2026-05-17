@@ -27,8 +27,8 @@ interface OrderState {
 
 // Order Store 行為接口
 interface OrderActions {
-  // 基本 CRUD 操作
-  addOrder: (order: Order) => void;
+  // 基本 CRUD 操作（回傳建立成功的 Order，驗證失敗時為 null）
+  addOrder: (order: Order) => Order | null;
   updateOrder: (id: ID, updates: Partial<Order>) => void;
   deleteOrder: (id: ID) => void;
   setOrders: (orders: Order[]) => void;
@@ -64,7 +64,11 @@ export const useOrderStore = create<OrderStore>()(
       isLoaded: false,
 
       // 基本 CRUD 操作
-      addOrder: (order: Order) => {
+      addOrder: (order: Order): Order | null => {
+        // 在 immer set 外捕獲建立成功的訂單；驗證失敗時保持 null，呼叫端
+        // 即可判斷是否該推進後續流程（如佔桌）。先前版本是 silent return，
+        // 會導致跨 store 操作建出「孤兒桌位」。
+        let created: Order | null = null;
         set((state) => {
           const now = new Date().toISOString();
           const id = order.id || Date.now().toString();
@@ -72,19 +76,19 @@ export const useOrderStore = create<OrderStore>()(
             logger.orderLog.error(id, new Error('Invalid order data'), { tableNumber: order.tableNumber, itemsLength: order.items?.length });
             return;
           }
-          const itemsValid = order.items.every((item) => 
-            item && 
-            typeof item.id !== 'undefined' && 
-            typeof item.price === 'number' && 
-            item.price >= 0 && 
-            typeof item.quantity === 'number' && 
+          const itemsValid = order.items.every((item) =>
+            item &&
+            typeof item.id !== 'undefined' &&
+            typeof item.price === 'number' &&
+            item.price >= 0 &&
+            typeof item.quantity === 'number' &&
             item.quantity > 0
           );
           if (!itemsValid) {
             logger.orderLog.error(id, new Error('Invalid order items'), { items: order.items });
             return;
           }
-          const computedTotal = order.items.reduce((sum: number, item) => 
+          const computedTotal = order.items.reduce((sum: number, item) =>
             sum + (item.price * item.quantity), 0
           );
           const newOrder: Order = {
@@ -96,7 +100,9 @@ export const useOrderStore = create<OrderStore>()(
             total: order.total ?? computedTotal,
           } as Order;
           state.orders.push(newOrder);
+          created = newOrder;
         });
+        return created;
       },
 
       updateOrder: (id: ID, updates: Partial<Order>) => {

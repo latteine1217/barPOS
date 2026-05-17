@@ -8,6 +8,35 @@ import { logger } from '@/services/loggerService';
 
 import type { SupabaseConfig } from '@/types';
 import SupabaseService from '../services/supabaseService';
+import { useConfirm } from '@/hooks/useConfirm';
+
+// 以 updatedAt（或 createdAt 後備）合併本地與遠端集合。
+// 目的：避免 syncFromSupabase 直接 setOrders(remote) 把本機未上傳的
+// 離線單覆蓋掉。同 id 採「時間戳較新者」勝出；無時間戳視為 0。
+// 注意：Table.id 為 number，Order.id 為 string，因此 id 型別放寬為
+// string | number；保留 generic 讓呼叫端拿回原型別。
+// TODO: 移到 service 層（backupRestoreService 或 syncService）。
+type SyncableEntity = {
+  id: string | number;
+  updatedAt?: string | undefined;
+  createdAt?: string | undefined;
+};
+
+const mergeByUpdatedAt = <T extends SyncableEntity>(local: readonly T[], remote: readonly T[]): T[] => {
+  const map = new Map<T['id'], T>();
+  for (const item of local) map.set(item.id, item);
+  for (const item of remote) {
+    const existing = map.get(item.id);
+    if (!existing) {
+      map.set(item.id, item);
+      continue;
+    }
+    const localTs = Date.parse(existing.updatedAt ?? existing.createdAt ?? '') || 0;
+    const remoteTs = Date.parse(item.updatedAt ?? item.createdAt ?? '') || 0;
+    if (remoteTs > localTs) map.set(item.id, item);
+  }
+  return Array.from(map.values());
+};
 
 interface TestResult {
   success: boolean;
@@ -52,6 +81,7 @@ const Settings: React.FC = () => {
   const orderActions = useOrderActions();
   const tableActions = useTableActions();
   const menuActions = useMenuActions();
+  const confirm = useConfirm();
   
   const [testing, setTesting] = useState<boolean>(() => false);
   const [testResult, setTestResult] = useState<TestResult | null>(() => null);
@@ -163,10 +193,25 @@ const Settings: React.FC = () => {
       return;
     }
 
+    // 變更前先讓使用者明確同意 merge 策略（先前是直接覆寫，會吞掉本機
+    // 未同步的離線單）。
+    const ok = await confirm({
+      title: '從雲端同步',
+      description:
+        '系統將以「最後修改時間較新者」原則合併本地與雲端資料：\n' +
+        '• 本地未同步的新項目會保留\n' +
+        '• 雲端較新的修改會覆蓋本地舊版\n' +
+        '• 雲端已不存在但本地仍有的資料會保留（不會被刪除）\n\n' +
+        '要繼續嗎？',
+      confirmText: '開始同步',
+      cancelText: '取消',
+    });
+    if (!ok) return;
+
     setSyncing(true);
     try {
       const supabaseService = new SupabaseService(supabaseConfig.url, supabaseConfig.key);
-      
+
       // 從 Supabase 獲取資料
       const [ordersResult, tablesResult, menuResult, membersResult] = await Promise.all([
         supabaseService.fetchOrders(),
@@ -179,21 +224,24 @@ const Settings: React.FC = () => {
       const errorMessages: string[] = [];
 
       if (ordersResult.success && orderActions) {
-        orderActions.setOrders(ordersResult.data ?? []);
+        const merged = mergeByUpdatedAt(orders, ordersResult.data ?? []);
+        orderActions.setOrders(merged);
         successCount++;
       } else if (!ordersResult.success) {
         errorMessages.push('訂單同步失敗: ' + ordersResult.error);
       }
 
       if (tablesResult.success && tableActions) {
-        tableActions.setTables(tablesResult.data ?? []);
+        const merged = mergeByUpdatedAt(tables, tablesResult.data ?? []);
+        tableActions.setTables(merged);
         successCount++;
       } else if (!tablesResult.success) {
         errorMessages.push('桌位同步失敗: ' + tablesResult.error);
       }
 
       if (menuResult.success && menuActions) {
-        menuActions.setMenuItems(menuResult.data ?? []);
+        const merged = mergeByUpdatedAt(menuItems, menuResult.data ?? []);
+        menuActions.setMenuItems(merged);
         successCount++;
       } else if (!menuResult.success) {
         errorMessages.push('菜單同步失敗: ' + menuResult.error);
@@ -201,7 +249,8 @@ const Settings: React.FC = () => {
 
       // 會員資料直接寫入 members store
       if (membersResult.success && membersResult.data) {
-        setMembers(membersResult.data);
+        const merged = mergeByUpdatedAt(members, membersResult.data);
+        setMembers(merged);
         successCount++;
       } else if (!membersResult.success) {
         errorMessages.push('會員同步失敗: ' + membersResult.error);
