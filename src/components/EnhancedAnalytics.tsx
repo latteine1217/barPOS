@@ -127,7 +127,7 @@ const EnhancedAnalytics: React.FC = () => {
 
       {/* 營收趨勢圖 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">營收趨勢</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">營收趨勢</h3>
         <LineChart
           data={revenueTrends}
           height={300}
@@ -155,7 +155,7 @@ const EnhancedAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 熱門產品 */}
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">熱門調酒 Top 5</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">熱門調酒 Top 5</h3>
           <BarChart
             data={productAnalysis.topSellingProducts.slice(0, 5)}
             height={250}
@@ -175,7 +175,7 @@ const EnhancedAnalytics: React.FC = () => {
 
         {/* 客戶分群 */}
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">客戶分群</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">客戶分群</h3>
           <PieChart
             data={customerAnalysis.segments.map(segment => ({
               name: segment.name,
@@ -195,7 +195,7 @@ const EnhancedAnalytics: React.FC = () => {
     <div className="space-y-8">
       {/* 詳細營收趨勢 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">營收詳細分析</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">營收詳細分析</h3>
         <LineChart
           data={revenueTrends}
           height={400}
@@ -227,7 +227,7 @@ const EnhancedAnalytics: React.FC = () => {
 
       {/* 基酒分類營收 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">基酒分類營收</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">基酒分類營收</h3>
         <BarChart
           data={productAnalysis.categories}
           height={300}
@@ -251,7 +251,7 @@ const EnhancedAnalytics: React.FC = () => {
     <div className="space-y-8">
       {/* 產品銷售排行 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">產品銷售排行</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">產品銷售排行</h3>
         <BarChart
           data={productAnalysis.topSellingProducts}
           height={400}
@@ -277,7 +277,7 @@ const EnhancedAnalytics: React.FC = () => {
       {/* 基酒分類分析 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">基酒分類營收佔比</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">基酒分類營收佔比</h3>
           <PieChart
             data={productAnalysis.categories.map(cat => ({
               name: cat.name,
@@ -290,7 +290,7 @@ const EnhancedAnalytics: React.FC = () => {
         </div>
 
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">基酒分類銷量佔比</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">基酒分類銷量佔比</h3>
           <PieChart
             data={productAnalysis.categories.map(cat => ({
               name: cat.name,
@@ -336,7 +336,7 @@ const EnhancedAnalytics: React.FC = () => {
       {/* 客戶分群分析 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">客戶分群分佈</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">客戶分群分佈</h3>
           <PieChart
             data={customerAnalysis.segments.map(segment => ({
               name: segment.name,
@@ -349,7 +349,7 @@ const EnhancedAnalytics: React.FC = () => {
         </div>
 
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">分群平均價值</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">分群平均價值</h3>
           <BarChart
             data={customerAnalysis.segments}
             height={300}
@@ -369,25 +369,25 @@ const EnhancedAnalytics: React.FC = () => {
 
       {/* 高價值客戶 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">高價值客戶 Top 10</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">高價值客戶 Top 10</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="card bg-white/5">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white/80 uppercase">客戶ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white/80 uppercase">消費總額</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white/80 uppercase">消費頻率</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white/80 uppercase">客戶價值</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">客戶ID</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">消費總額</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">消費頻率</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">客戶價值</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {customerAnalysis.topCustomers.map((customer) => (
                 <tr key={customer.customerId} className="hover:bg-white/5">
-                  <td className="px-4 py-3 text-sm text-white">#{customer.customerId}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--text-primary)]">#{customer.customerId}</td>
                   <td className="px-4 py-3 text-sm text-green-400 font-semibold">
                     {formatters.currency(customer.monetary)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-white">{customer.frequency} 次</td>
+                  <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{customer.frequency} 次</td>
                   <td className="px-4 py-3 text-sm text-purple-400 font-semibold">
                     {formatters.currency(customer.clv)}
                   </td>
@@ -405,7 +405,7 @@ const EnhancedAnalytics: React.FC = () => {
     <div className="space-y-8">
       {/* 每小時營收分佈 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">24小時營收分佈</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">24小時營收分佈</h3>
         <BarChart
           data={timeAnalysis.hourlyDistribution}
           height={300}
@@ -424,7 +424,7 @@ const EnhancedAnalytics: React.FC = () => {
 
       {/* 週間營收分佈 */}
       <div className="card p-6">
-        <h3 className="text-xl font-semibold text-white mb-6">一週營收分佈</h3>
+        <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">一週營收分佈</h3>
         <BarChart
           data={timeAnalysis.weeklyDistribution}
           height={300}
@@ -444,7 +444,7 @@ const EnhancedAnalytics: React.FC = () => {
       {/* 熱門時段統計 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">熱門時段 Top 3</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">熱門時段 Top 3</h3>
           <div className="space-y-4">
             {timeAnalysis.peakHours.map((hour, index) => (
               <div key={hour.hour} className="flex items-center justify-between p-4 card bg-white/5">
@@ -456,7 +456,7 @@ const EnhancedAnalytics: React.FC = () => {
                   }`}>
                     {index + 1}
                   </div>
-                  <span className="text-white font-medium">{hour.hour}:00</span>
+                  <span className="text-[var(--text-primary)] font-medium">{hour.hour}:00</span>
                 </div>
                 <span className="text-green-400 font-bold">
                   {formatters.currency(hour.revenue)}
@@ -467,7 +467,7 @@ const EnhancedAnalytics: React.FC = () => {
         </div>
 
         <div className="card p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">熱門日期 Top 3</h3>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-6">熱門日期 Top 3</h3>
           <div className="space-y-4">
             {timeAnalysis.peakDays.map((day, index) => (
               <div key={day.day} className="flex items-center justify-between p-4 card bg-white/5">
@@ -479,7 +479,7 @@ const EnhancedAnalytics: React.FC = () => {
                   }`}>
                     {index + 1}
                   </div>
-                  <span className="text-white font-medium">{day.day}</span>
+                  <span className="text-[var(--text-primary)] font-medium">{day.day}</span>
                 </div>
                 <span className="text-green-400 font-bold">
                   {formatters.currency(day.revenue)}
@@ -506,7 +506,7 @@ const EnhancedAnalytics: React.FC = () => {
     <div className="p-6 space-y-8">
       {/* 標題和控制項 */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">酒吧營運分析</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">酒吧營運分析</h1>
         
         <div className="flex flex-col sm:flex-row gap-4">
           {/* 時間篩選 */}
@@ -534,8 +534,8 @@ const EnhancedAnalytics: React.FC = () => {
                 onClick={() => setSelectedView(view)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                   selectedView === view
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                    ? 'bg-purple-500 text-[var(--text-primary)]'
+                    : 'bg-white/10 text-[var(--text-secondary)] hover:bg-white/20'
                 }`}
               >
                 {getViewText(view)}

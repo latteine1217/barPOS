@@ -157,12 +157,12 @@ const History = memo(() => {
   return (
     <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">歷史訂單</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)]">歷史訂單</h1>
       </div>
 
       {/* 過濾器 */}
       <div className="card p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-white mb-6">篩選條件</h2>
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">篩選條件</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label htmlFor={`${idBase}-filter-status`} className="form-label">訂單狀態</label>
@@ -255,25 +255,25 @@ const History = memo(() => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card text-center p-6 sm:p-8">
           <div className="text-2xl font-bold text-blue-400">{statistics.totalOrders}</div>
-          <div className="text-sm text-white/80">總訂單數</div>
+          <div className="text-sm text-[var(--text-secondary)]">總訂單數</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
           <div className="text-2xl font-bold text-green-400">{formatCurrency(statistics.totalRevenue)}</div>
-          <div className="text-sm text-white/80">總營收</div>
+          <div className="text-sm text-[var(--text-secondary)]">總營收</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
           <div className="text-2xl font-bold text-purple-400">{formatCurrency(Math.round(statistics.avgOrderValue))}</div>
-          <div className="text-sm text-white/80">平均客單價</div>
+          <div className="text-sm text-[var(--text-secondary)]">平均客單價</div>
         </div>
         <div className="card text-center p-6 sm:p-8">
           <div className="text-2xl font-bold text-orange-400">{statistics.statusCounts.paid || 0}</div>
-          <div className="text-sm text-white/80">已結帳訂單</div>
+          <div className="text-sm text-[var(--text-secondary)]">已結帳訂單</div>
         </div>
       </div>
 
       {/* 訂單列表 */}
       <div className="card p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-white mb-6">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
           訂單列表 ({filteredOrders.length} 筆)
         </h2>
         {filteredOrders.length > 0 ? (
@@ -281,25 +281,25 @@ const History = memo(() => {
             <table className="w-full">
               <thead className="card bg-white/5">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     訂單編號
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     桌號
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     餐點
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     總額
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     狀態
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     建立時間
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-white/80 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                     操作
                   </th>
                 </tr>
@@ -311,22 +311,22 @@ const History = memo(() => {
                     className="hover:bg-white/5 cursor-pointer transition-colors"
                     onClick={() => handleOrderClick(order)}
                   >
-                    <td className="px-6 py-5 text-sm font-medium text-white">
+                    <td className="px-6 py-5 text-sm font-medium text-[var(--text-primary)]">
                       #{order.id}
                     </td>
-                    <td className="px-6 py-5 text-sm text-white/90">
+                    <td className="px-6 py-5 text-sm text-[var(--text-primary)]">
                       桌 {order.tableNumber}
                     </td>
-                    <td className="px-6 py-5 text-sm text-white/90">
+                    <td className="px-6 py-5 text-sm text-[var(--text-primary)]">
                       <div className="max-w-xs">
                         {order.items?.map((item, index) => (
-                          <div key={item.id ?? `${order.id}-${index}`} className="text-xs text-white/70">
+                          <div key={item.id ?? `${order.id}-${index}`} className="text-xs text-[var(--text-muted)]">
                             {item.name} x{item.quantity}
                           </div>
                         )) || '無餐點資訊'}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-sm font-semibold text-white">
+                    <td className="px-6 py-5 text-sm font-semibold text-[var(--text-primary)]">
                       {formatCurrency(order.total)}
                     </td>
                     <td className="px-6 py-5 text-sm">
@@ -334,7 +334,7 @@ const History = memo(() => {
                         {getStatusText(order.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-sm text-white/70">
+                    <td className="px-6 py-5 text-sm text-[var(--text-muted)]">
                       {new Date(order.createdAt).toLocaleString('zh-TW')}
                     </td>
                     <td className="px-6 py-5 text-sm">
@@ -354,7 +354,7 @@ const History = memo(() => {
             </table>
           </div>
         ) : (
-          <p className="text-white/60 text-center py-12">
+          <p className="text-[var(--text-primary)]/60 text-center py-12">
             {(orders || []).length === 0 ? '暫無訂單紀錄' : '無符合條件的訂單'}
           </p>
         )}

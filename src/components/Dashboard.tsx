@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import { useDashboard } from '@/hooks/business/useDashboard';
 import type { OrderStatus, Order } from '@/types';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { formatAmount } from '@/utils/formatCurrency';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 type TabNav = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout';
 
@@ -45,8 +45,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
     return statusTexts[status] || status;
   }, []);
 
-  // 沿用 $ 字面前綴語義（JSX 已包含 `$`），純千分位數字交給 utils.formatAmount
-  const formatCurrency = useCallback((amount: number): string => formatAmount(amount), []);
+  // 移除：原 local formatCurrency callback（與 utils 衝突）；直接用 utils.formatCurrency
 
   const cutoffHour = useSettingsStore((s) => s.businessDayCutoffHour ?? 3);
 
@@ -76,7 +75,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
             <div className="flex-1">
               <p className="text-sm font-medium text-[var(--text-secondary)] mb-2">今日營收</p>
               <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                ${formatCurrency(todayRevenue)}
+                {formatCurrency(todayRevenue)}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
                 今日累計
@@ -94,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
             <div className="flex-1">
               <p className="text-sm font-medium text-[var(--text-secondary)] mb-2">營業結算</p>
               <p className="text-3xl font-bold text-[var(--text-primary)]">
-                ${formatCurrency(todayRevenue)}
+                {formatCurrency(todayRevenue)}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
                 訂單 {todayOrderCount}，結算界線 {cutoffHour.toString().padStart(2,'0')}:00
@@ -200,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-medium text-[var(--text-primary)]">
-                        ${formatCurrency(order.total)}
+                        {formatCurrency(order.total)}
                       </div>
                     </td>
                     <td className="py-3 px-4">

@@ -2092,6 +2092,9 @@
       scroll-behavior: auto !important;
     }
 
+    /* 注意 !important：Tailwind hover:scale 屬於 utility layer，
+       在 @layer components 內若不加 !important 會被 utility 勝出。
+       前一版漏此規範 → reduced-motion 對 hover scale 實際失效。 */
     .hover\:scale-105:hover,
     .hover\:scale-110:hover,
     .group:hover .group-hover\:scale-105,

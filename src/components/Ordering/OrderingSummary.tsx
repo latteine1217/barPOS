@@ -256,7 +256,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
                 <option key={p} value={p}>{p}%</option>
               ))}
             </select>
-            <span className="text-xs text-gray-600 dark:text-gray-400">服務費：${Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100))}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">服務費：{formatCurrency(Math.round((totalAmount + (Number.isFinite(adjustment) ? adjustment : 0)) * (tipPercent/100)))}</span>
           </div>
         )}
         </div>

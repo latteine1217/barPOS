@@ -88,12 +88,23 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
     onOrderComplete(null);
   }, [selectedTable, existingOrder, currentStatus, releaseTable, onOrderComplete, showToast]);
 
-  // Adjustment (surcharge/discount before tip)
-  const [adjustment, setAdjustment] = useState<number>(0);
+  // Adjustment / tip 編輯既有訂單時必須從 existingOrder 還原初值，
+  // 否則 useState(0) 會把 store 內既有 tip / adjustment 在「確認」當下
+  // 砍掉。先前 store updateOrder 白名單未含 tip/adjustment 時這個 bug
+  // 不會發作；Sprint 4 補白名單後反而暴露此 regression。
+  const [adjustment, setAdjustment] = useState<number>(() => existingOrder?.adjustment ?? 0);
 
   // Tip state
-  const [tipEnabled, setTipEnabled] = useState<boolean>(false);
-  const [tipPercent, setTipPercent] = useState<number>(10);
+  const [tipEnabled, setTipEnabled] = useState<boolean>(() => (existingOrder?.tip ?? 0) > 0);
+  const [tipPercent, setTipPercent] = useState<number>(() => {
+    // 嘗試從 existingOrder 反推 tip 百分比；若 subtotal+adjustment 為 0
+    // 或 tip 不存在，fallback 預設 10%
+    const ex = existingOrder;
+    if (!ex || !ex.tip) return 10;
+    const base = (ex.subtotal ?? 0) + (ex.adjustment ?? 0);
+    if (base <= 0) return 10;
+    return Math.round((ex.tip / base) * 100);
+  });
 
   // ✅ 簡化的確認訂單邏輯
   const handleConfirmOrder = useCallback(() => {

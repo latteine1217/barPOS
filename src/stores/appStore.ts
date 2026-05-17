@@ -66,6 +66,9 @@ export const useAppStore = create<AppStore>()(
           useTableStore.getState().initialize(),
           useMenuStore.getState().initialize(),
           useSettingsStore.getState().initialize(),
+          // 先前漏掉：首屏 useMembers() 會拿空陣列直到使用者切換到 Members
+          // 分頁才觸發 hydrate；杯數短時間顯示為 0 → 誤判可加杯。
+          useMembersStore.getState().initialize(),
         ]);
         const hasFailure = results.some(r => r.status === 'rejected');
         set((state) => {
@@ -167,7 +170,7 @@ export const useAppStore = create<AppStore>()(
         const persistKeys = [
           'order-store',
           'table-store',
-          'menu-items',
+          'menu-store',              // ← 先前寫成 'menu-items'，與 menuStore persist name 不符，重置後菜單復活
           'members-store',           // ← 先前漏掉，會造成「重置全部」後會員復活
           'restaurant-pos-settings',
         ];
