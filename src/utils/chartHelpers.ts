@@ -35,11 +35,15 @@ export const chartTheme = {
 };
 
 // 格式化數值顯示
+import { formatCurrency } from './formatCurrency';
+
 export const formatters = {
+  // delegate 至 utils/formatCurrency，確保 chart MetricCard 與 Dashboard /
+  // History 顯示同一筆金額時格式一致（NT$ X,XXX），先前缺 NT$ 前綴造成
+  // 分析頁與 Dashboard 數字看起來像不同金額。
   currency: (value?: string | number): string => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (numValue === undefined || numValue === null) return '0';
-    return `${numValue.toLocaleString()}`;
+    return formatCurrency(numValue);
   },
   percentage: (value?: string | number): string => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;

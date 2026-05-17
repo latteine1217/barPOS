@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOrderStore } from '@/stores';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { sumOrderRevenue } from '@/utils/orderMath';
+import { sumOrderRevenue, isRevenueOrder } from '@/utils/orderMath';
 import type { Order } from '@/types';
 
 interface DashboardData {
@@ -46,10 +46,11 @@ export const useDashboard = (): DashboardData => {
       return time >= start.getTime() && time < end.getTime();
     });
 
+    // 排除 cancelled 才不會出現「今日訂單 10、營收 NT$ 0」自相矛盾 KPI
+    const validOrders = todayOrders.filter(isRevenueOrder);
     return {
-      todayOrderCount: todayOrders.length,
-      // 營收 = total - tip（透過 orderMath.sumOrderRevenue 統一口徑）
-      todayRevenue: sumOrderRevenue(todayOrders),
+      todayOrderCount: validOrders.length,
+      todayRevenue: sumOrderRevenue(validOrders),
       pendingCount: todayOrders.filter((order) => order.status === 'pending').length,
       completedCount: todayOrders.filter((order) => order.status === 'completed').length
     };

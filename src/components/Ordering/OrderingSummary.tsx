@@ -287,7 +287,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
           {orderItems.length > 0 && (
             <button type="button"
               onClick={clearOrder}
-              className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               清空訂單
             </button>
@@ -295,7 +295,7 @@ export const OrderingSummary: React.FC<OrderingSummaryProps> = ({
 
           <button type="button"
             onClick={onCancel}
-            className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             取消
           </button>

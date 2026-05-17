@@ -1,6 +1,6 @@
 import { useId, useState, useMemo, useCallback, memo } from 'react';
 import { useOrders } from '@/stores';
-import { sumOrderRevenue } from '@/utils/orderMath';
+import { sumOrderRevenue, isRevenueOrder } from '@/utils/orderMath';
 import { formatCurrency } from '@/utils/formatCurrency';
 import OrderDetailsModal from './OrderDetailsModal';
 import type { Order, OrderStatus } from '@/types';
@@ -110,9 +110,11 @@ const History = memo(() => {
 
   // 統計數據
   const statistics = useMemo(() => {
-    const totalOrders = filteredOrders.length;
-    // 用 sumOrderRevenue 統一口徑（扣 tip 後的店家營收）
-    const totalRevenue = sumOrderRevenue(filteredOrders);
+    // 排除 cancelled 訂單，與 totalRevenue 口徑一致（sumOrderRevenue 內部已過濾）；
+    // 否則 AOV 分母被取消訂單稀釋
+    const validOrders = filteredOrders.filter(isRevenueOrder);
+    const totalOrders = validOrders.length;
+    const totalRevenue = sumOrderRevenue(validOrders);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
     const statusCounts = filteredOrders.reduce((counts, order) => {
