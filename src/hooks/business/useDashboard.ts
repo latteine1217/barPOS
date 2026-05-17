@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOrderStore } from '@/stores';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { sumOrderRevenue } from '@/utils/orderMath';
 import type { Order } from '@/types';
 
 interface DashboardData {
@@ -47,8 +48,8 @@ export const useDashboard = (): DashboardData => {
 
     return {
       todayOrderCount: todayOrders.length,
-      // 營收 = total - tip，避免把小費算入店家營收（語義一致於 analyticsService）
-      todayRevenue: todayOrders.reduce((sum, order) => sum + ((order.total ?? 0) - (order.tip ?? 0)), 0),
+      // 營收 = total - tip（透過 orderMath.sumOrderRevenue 統一口徑）
+      todayRevenue: sumOrderRevenue(todayOrders),
       pendingCount: todayOrders.filter((order) => order.status === 'pending').length,
       completedCount: todayOrders.filter((order) => order.status === 'completed').length
     };

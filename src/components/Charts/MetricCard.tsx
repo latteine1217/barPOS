@@ -1,17 +1,48 @@
 import React from 'react';
 import { formatters } from '../../utils/chartHelpers';
 
+type MetricColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'yellow' | 'pink' | 'indigo' | 'cyan' | 'emerald';
+
 interface MetricCardProps {
   title: string;
   value: number;
   previousValue?: number;
   icon?: string | React.ReactNode;
-  color?: string;
+  color?: MetricColor;
   trend?: 'up' | 'down' | 'neutral';
   format?: 'number' | 'currency' | 'percentage' | 'compact';
   className?: string;
   onClick?: () => void;
 }
+
+// Tailwind JIT 需要完整字面量才不會被 purge — 動態 `text-${color}-400`
+// 在 build time source code 中不存在這個字串，JIT 偵測不到，整批顏色
+// 會被 tree-shake 移除。集中於此 map 才能保證所有 variant 都進 bundle。
+const COLOR_TEXT: Record<MetricColor, string> = {
+  blue: 'text-blue-400',
+  green: 'text-green-400',
+  purple: 'text-purple-400',
+  orange: 'text-orange-400',
+  red: 'text-red-400',
+  yellow: 'text-yellow-400',
+  pink: 'text-pink-400',
+  indigo: 'text-indigo-400',
+  cyan: 'text-cyan-400',
+  emerald: 'text-emerald-400',
+};
+
+const COLOR_GRADIENT: Record<MetricColor, string> = {
+  blue: 'from-blue-400 to-blue-600',
+  green: 'from-green-400 to-green-600',
+  purple: 'from-purple-400 to-purple-600',
+  orange: 'from-orange-400 to-orange-600',
+  red: 'from-red-400 to-red-600',
+  yellow: 'from-yellow-400 to-yellow-600',
+  pink: 'from-pink-400 to-pink-600',
+  indigo: 'from-indigo-400 to-indigo-600',
+  cyan: 'from-cyan-400 to-cyan-600',
+  emerald: 'from-emerald-400 to-emerald-600',
+};
 
 const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
@@ -81,7 +112,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-white/90 text-sm font-semibold mb-2">{title}</p>
-          <p className={`text-3xl font-bold text-${color}-400 mb-1 drop-shadow-sm`}>
+          <p className={`text-3xl font-bold ${COLOR_TEXT[color]} mb-1 drop-shadow-sm`}>
             {formatValue(value)}
           </p>
           {change !== null && (
@@ -95,7 +126,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         </div>
         
         {icon && (
-          <div className={`text-${color}-400 text-4xl opacity-90 drop-shadow-sm`}>
+          <div className={`${COLOR_TEXT[color]} text-4xl opacity-90 drop-shadow-sm`}>
             {typeof icon === 'string' ? (
               <span>{icon}</span>
             ) : (
@@ -106,7 +137,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       </div>
       
       {/* 底部裝飾線 */}
-      <div className={`h-1 bg-gradient-to-r from-${color}-400 to-${color}-600 rounded-full mt-4 opacity-70`}></div>
+      <div className={`h-1 bg-gradient-to-r ${COLOR_GRADIENT[color]} rounded-full mt-4 opacity-70`}></div>
     </div>
   );
 };

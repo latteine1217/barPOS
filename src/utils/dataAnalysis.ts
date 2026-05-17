@@ -11,17 +11,18 @@ import groupBy from 'lodash/groupBy';
 import sumBy from 'lodash/sumBy';
 import meanBy from 'lodash/meanBy';
 import orderBy from 'lodash/orderBy';
-import type { 
-  Order, 
+import type {
+  Order,
   OrderStatus,
-  RFMAnalysis, 
-  CustomerSegment, 
-  TimePeriod, 
-  TrendPeriod, 
-  TrendData, 
-  ProductAnalysis, 
-  SeatingAnalysis 
+  RFMAnalysis,
+  CustomerSegment,
+  TimePeriod,
+  TrendPeriod,
+  TrendData,
+  ProductAnalysis,
+  SeatingAnalysis
 } from '../types';
+import { sumOrderRevenue, meanOrderRevenue } from './orderMath';
 
 interface PeriodFilterOptions {
   now?: Date;
@@ -110,7 +111,7 @@ const getAllRFMValues = (orders: Order[]): Omit<RFMAnalysis, 'score'>[] => {
     
     const recency = mostRecentOrder ? differenceInDays(now, new Date(mostRecentOrder.createdAt)) : 999;
     const frequency = customerOrders.length;
-    const monetary = sumBy(customerOrders, 'total');
+    const monetary = sumOrderRevenue(customerOrders);
     
     return { customerId: id, recency, frequency, monetary };
   });
@@ -227,8 +228,8 @@ export const calculateTrends = (
   return Object.entries(groupedData).map(([periodStr, periodOrders]) => ({
     period: periodStr,
     orderCount: periodOrders.length,
-    revenue: sumBy(periodOrders, 'total'),
-    averageOrderValue: meanBy(periodOrders, 'total') || 0,
+    revenue: sumOrderRevenue(periodOrders),
+    averageOrderValue: meanOrderRevenue(periodOrders),
     customerCount: new Set(periodOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size
   })).sort((a, b) => a.period.localeCompare(b.period));
 };
@@ -258,8 +259,8 @@ export const analyzeSeating = (orders: Order[]): SeatingAnalysis[] => {
   return Object.entries(seatData).map(([tableNumber, tableOrders]) => ({
     tableNumber: parseInt(tableNumber),
     orderCount: tableOrders.length,
-    totalRevenue: sumBy(tableOrders, 'total'),
-    averageOrderValue: meanBy(tableOrders, 'total') || 0,
+    totalRevenue: sumOrderRevenue(tableOrders),
+    averageOrderValue: meanOrderRevenue(tableOrders),
     uniqueCustomers: new Set(tableOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size,
     utilizationRate: calculateUtilizationRate(tableOrders)
   })).sort((a, b) => b.totalRevenue - a.totalRevenue);
@@ -318,8 +319,8 @@ const calculateGrowthRate = (data: TrendData[]): number => {
 // Customer Lifetime Value calculation
 export const calculateCLV = (customerOrders: Order[], periodInMonths: number = 12): number => {
   if (customerOrders.length === 0) return 0;
-  
-  const totalRevenue = sumBy(customerOrders, 'total');
+
+  const totalRevenue = sumOrderRevenue(customerOrders);
   const monthsActive = calculateActiveMonths(customerOrders);
   const avgMonthlyRevenue = totalRevenue / Math.max(monthsActive, 1);
   

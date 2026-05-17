@@ -114,15 +114,8 @@ interface AnalyticsServiceOptions {
 
 const HOUR_IN_MS = 60 * 60 * 1000;
 
-/**
- * 計算單筆訂單的「店家營收」金額：
- *   revenue = total - tip
- * 小費屬於員工 / 服務生收入，不應計入店家營收。
- * 對於沒有 tip 欄位的舊資料（migration 前的訂單）fallback 為 total。
- */
-const orderRevenue = (order: Order): number => {
-  return (order.total ?? 0) - (order.tip ?? 0);
-};
+// 統一從 orderMath 取得「店家營收（不含小費）」純函式
+import { orderRevenue } from '@/utils/orderMath';
 
 // 分析服務類
 export class AnalyticsService {

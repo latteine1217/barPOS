@@ -240,17 +240,19 @@ export const useNetworkStatus = (options: UseNetworkStatusOptions = {}) => {
     }
   }, []);
 
-  // 模擬 API 調用（實際實現時會替換為真實的服務調用）
+  // 離線佇列同步的 API 介接尚未實作。先前版本是含 5% 隨機失敗的
+  // simulateApiCall，這在 production bundle 中會造成「實際下訂單被
+  // 卡進 offline queue 後有 5% 機率自我失敗 + retry 風暴」。
+  // 此處改為純警告：呼叫端應傳入真實 syncer，否則直接丟錯讓問題顯露
+  // 而不是悄悄假裝成功。
+  // TODO: 接上真實 supabaseService.upsertOrder / upsertTable / upsertMenuItem，
+  // 並透過 dependency injection 傳入而非寫死於此 hook。
   const simulateApiCall = async (item: OfflineQueueItem, type: string): Promise<void> => {
-    // 模擬網路延遲和失敗率
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 200));
-    
-    // 5% 的失敗率用於測試重試機制
-    if (Math.random() < 0.05) {
-      throw new Error(`Simulated ${type} API failure for item ${item.id}`);
-    }
-    
-    logger.info(`Successfully synced ${type} item`, { itemId: item.id });
+    logger.warn(
+      `Offline queue sync not implemented; item dropped: ${type}`,
+      { component: 'useNetworkStatus', itemId: item.id, type }
+    );
+    throw new Error(`Offline ${type} sync not implemented (item ${item.id})`);
   };
 
   // 處理離線隊列

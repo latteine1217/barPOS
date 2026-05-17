@@ -38,6 +38,12 @@ interface DatabaseOrder {
   subtotal: number;
   tax: number;
   discount: number;
+  /** 加 / 減調整（正值加價、負值折讓） */
+  adjustment?: number | null;
+  /** 小費（不入店家營收） */
+  tip?: number | null;
+  /** 客戶 / 會員 ID 連結，供 RFM / CLV 分析 */
+  customer_id?: string | null;
   status: string;
   customers: number;
   notes: string | null;
@@ -218,6 +224,9 @@ class SupabaseService {
         subtotal: order.subtotal ?? 0,
         tax: order.tax ?? 0,
         discount: order.discount ?? 0,
+        adjustment: order.adjustment ?? null,
+        tip: order.tip ?? null,
+        customer_id: order.customerId ?? null,
         status: this.mapStatusToDatabase(order.status),
         customers: order.customers,
         notes: order.notes ?? null,
@@ -288,6 +297,9 @@ class SupabaseService {
         subtotal: order.subtotal ?? 0,
         tax: order.tax ?? 0,
         discount: order.discount ?? 0,
+        adjustment: order.adjustment ?? null,
+        tip: order.tip ?? null,
+        customer_id: order.customerId ?? null,
         status: this.mapStatusToDatabase(order.status),
         customers: order.customers,
         notes: order.notes ?? null,
@@ -425,6 +437,10 @@ class SupabaseService {
       subtotal: Number(dbOrder.subtotal) || 0,
       tax: Number(dbOrder.tax) || 0,
       discount: Number(dbOrder.discount) || 0,
+      // 缺欄位時 fallback undefined（與 client-only 訂單一致）
+      adjustment: dbOrder.adjustment != null ? Number(dbOrder.adjustment) : undefined,
+      tip: dbOrder.tip != null ? Number(dbOrder.tip) : undefined,
+      customerId: dbOrder.customer_id ?? undefined,
       status: (dbOrder.status as OrderStatus) ?? ORDER_STATUS_MAP.pending,
       customers: Number(dbOrder.customers) || 0,
       notes: dbOrder.notes ?? undefined,
