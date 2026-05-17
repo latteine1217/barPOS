@@ -35,15 +35,21 @@ export const chartTheme = {
 };
 
 // 格式化數值顯示
-import { formatCurrency } from './formatCurrency';
+import { formatCurrency, formatAmount } from './formatCurrency';
 
 export const formatters = {
-  // delegate 至 utils/formatCurrency，確保 chart MetricCard 與 Dashboard /
-  // History 顯示同一筆金額時格式一致（NT$ X,XXX），先前缺 NT$ 前綴造成
-  // 分析頁與 Dashboard 數字看起來像不同金額。
+  // 給 MetricCard / Tooltip 等「卡片金額」用：含 NT$ 前綴與千分位
+  // 與 utils/formatCurrency 同口徑。
   currency: (value?: string | number): string => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     return formatCurrency(numValue);
+  },
+  // 給 chart Y 軸 tick 等「軸刻度」用：純千分位數字，無前綴。
+  // 避免「NT$ 1,500」拉長 tick 字串造成左 margin 擠壓與重疊。
+  currencyAxis: (value?: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === undefined || numValue === null) return '0';
+    return formatAmount(numValue);
   },
   percentage: (value?: string | number): string => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;

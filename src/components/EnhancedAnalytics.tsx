@@ -168,7 +168,7 @@ const EnhancedAnalytics: React.FC = () => {
               }
             ]}
             xAxisKey="name"
-            yAxisFormatter={formatters.currency}
+            yAxisFormatter={formatters.currencyAxis}
             tooltipFormatter={formatters.currency}
           />
         </div>
@@ -239,7 +239,7 @@ const EnhancedAnalytics: React.FC = () => {
             }
           ]}
           xAxisKey="name"
-          yAxisFormatter={formatters.currency}
+          yAxisFormatter={formatters.currencyAxis}
           tooltipFormatter={formatters.currency}
         />
       </div>
@@ -269,7 +269,7 @@ const EnhancedAnalytics: React.FC = () => {
             }
           ]}
           xAxisKey="name"
-          yAxisFormatter={formatters.currency}
+          yAxisFormatter={formatters.currencyAxis}
           tooltipFormatter={formatters.number}
         />
       </div>
@@ -361,7 +361,7 @@ const EnhancedAnalytics: React.FC = () => {
               }
             ]}
             xAxisKey="name"
-            yAxisFormatter={formatters.currency}
+            yAxisFormatter={formatters.currencyAxis}
             tooltipFormatter={formatters.currency}
           />
         </div>
@@ -417,7 +417,7 @@ const EnhancedAnalytics: React.FC = () => {
             }
           ]}
           xAxisKey="label"
-          yAxisFormatter={formatters.currency}
+          yAxisFormatter={formatters.currencyAxis}
           tooltipFormatter={formatters.currency}
         />
       </div>
@@ -436,7 +436,7 @@ const EnhancedAnalytics: React.FC = () => {
             }
           ]}
           xAxisKey="label"
-          yAxisFormatter={formatters.currency}
+          yAxisFormatter={formatters.currencyAxis}
           tooltipFormatter={formatters.currency}
         />
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
@@ -19,8 +19,16 @@ const Input = ({
   className = '',
   info,
   ref,
+  id,
   ...props
 }: InputProps) => {
+  // 自動生成 input id 並讓 label htmlFor 對應，達成 a11y 關聯
+  // 與 SR 朗讀正確的 error / helperText。caller 仍可顯式傳入 id 覆寫。
+  const reactId = useId();
+  const inputId = id ?? reactId;
+  const errorId = error ? `${inputId}-error` : undefined;
+  const helperId = helperText && !error ? `${inputId}-helper` : undefined;
+  const describedBy = errorId ?? helperId;
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 ring-[var(--color-accent)]';
   
   const variantStyles = {
@@ -44,7 +52,7 @@ const Input = ({
     <div className="w-full">
       {label && (
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-sm font-medium text-[var(--text-secondary)]">
+          <label htmlFor={inputId} className="block text-sm font-medium text-[var(--text-secondary)]">
             {label}
           </label>
           {info && (
@@ -59,14 +67,17 @@ const Input = ({
       )}
       <input
         ref={ref}
+        id={inputId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${errorStyles} ${className}`}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{helperText}</p>
+        <p id={helperId} className="mt-1 text-sm text-[var(--text-muted)]">{helperText}</p>
       )}
     </div>
   );

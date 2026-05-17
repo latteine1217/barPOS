@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface SelectOption {
   value: string | number;
@@ -29,8 +29,15 @@ const Select = ({
   className = '',
   info,
   ref,
+  id,
   ...props
 }: SelectProps) => {
+  // 自動生成 select id 並讓 label htmlFor 對應，達成 a11y 關聯
+  const reactId = useId();
+  const selectId = id ?? reactId;
+  const errorId = error ? `${selectId}-error` : undefined;
+  const helperId = helperText && !error ? `${selectId}-helper` : undefined;
+  const describedBy = errorId ?? helperId;
   const baseStyles = 'w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 ring-[var(--color-accent)] cursor-pointer';
   
   const variantStyles = {
@@ -54,7 +61,7 @@ const Select = ({
     <div className="w-full">
       {label && (
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-sm font-medium text-[var(--text-secondary)]">
+          <label htmlFor={selectId} className="block text-sm font-medium text-[var(--text-secondary)]">
             {label}
           </label>
           {info && (
@@ -69,6 +76,9 @@ const Select = ({
       )}
       <select
         ref={ref}
+        id={selectId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${errorStyles} ${className}`}
         {...props}
       >
@@ -89,10 +99,10 @@ const Select = ({
         ))}
       </select>
       {error && (
-        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{helperText}</p>
+        <p id={helperId} className="mt-1 text-sm text-[var(--text-muted)]">{helperText}</p>
       )}
     </div>
   );

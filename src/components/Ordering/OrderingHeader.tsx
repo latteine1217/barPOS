@@ -73,7 +73,7 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: Math.max(1, (orderDetails.customers || 1) - 1) })}
-            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-lg hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`減少人數（目前 ${orderDetails.customers}）`}
           >
             −
@@ -84,12 +84,12 @@ export const OrderingHeader: React.FC<OrderingHeaderProps> = ({
             aria-label="客人數"
             value={orderDetails.customers}
             onChange={(e) => updateOrderDetails({ customers: Math.max(1, parseInt(e.target.value) || 1) })}
-            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="w-16 text-center px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
           />
           <button
             type="button"
             onClick={() => updateOrderDetails({ customers: (orderDetails.customers || 1) + 1 })}
-            className="size-9 rounded-lg bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+            className="size-9 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-lg hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
             aria-label={`增加人數（目前 ${orderDetails.customers}）`}
           >
             ＋

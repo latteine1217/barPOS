@@ -25,8 +25,9 @@ const LogViewer = lazy(() => import('./components/LogViewer'));
 type TabType = 'tables' | 'dashboard' | 'menu' | 'history' | 'analytics' | 'settings' | 'layout' | 'members';
 
 const TabFallback = () => (
-  <div className="flex items-center justify-center h-full py-16">
-    <div className="animate-spin rounded-full size-8 border-b-2 border-[var(--color-accent)]"></div>
+  <div className="flex items-center justify-center h-full py-16" role="status" aria-live="polite" aria-label="載入中">
+    <div className="animate-spin rounded-full size-8 border-b-2 border-[var(--color-accent)]" aria-hidden="true"></div>
+    <span className="sr-only">載入中…</span>
   </div>
 );
 
@@ -95,8 +96,9 @@ function AppContent() {
             調酒酒吧 POS 系統
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">正在載入應用程式...</p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full size-8 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center" role="status" aria-live="polite" aria-label="正在載入應用程式">
+            <div className="animate-spin rounded-full size-8 border-b-2 border-blue-600" aria-hidden="true"></div>
+            <span className="sr-only">正在載入應用程式…</span>
           </div>
         </div>
       </div>
