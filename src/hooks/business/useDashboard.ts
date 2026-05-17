@@ -47,7 +47,8 @@ export const useDashboard = (): DashboardData => {
 
     return {
       todayOrderCount: todayOrders.length,
-      todayRevenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
+      // 營收 = total - tip，避免把小費算入店家營收（語義一致於 analyticsService）
+      todayRevenue: todayOrders.reduce((sum, order) => sum + ((order.total ?? 0) - (order.tip ?? 0)), 0),
       pendingCount: todayOrders.filter((order) => order.status === 'pending').length,
       completedCount: todayOrders.filter((order) => order.status === 'completed').length
     };

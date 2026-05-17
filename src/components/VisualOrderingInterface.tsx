@@ -111,9 +111,10 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
 
       const tableNumber = initialTableNumber || orderDetails.tableNumber;
       const subtotal = totalAmount;
-      const base = subtotal + (Number.isFinite(adjustment) ? adjustment : 0);
-      const tip = tipEnabled ? Math.round(base * (tipPercent / 100)) : 0;
-      const payable = base + tip;
+      const adjustmentValue = Number.isFinite(adjustment) ? adjustment : 0;
+      const base = subtotal + adjustmentValue;
+      const tipValue = tipEnabled ? Math.round(base * (tipPercent / 100)) : 0;
+      const payable = base + tipValue;
 
       const orderData: Order = {
         id: existingOrder?.id || `order-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
@@ -121,6 +122,9 @@ const VisualOrderingInterface = (props: VisualOrderingInterfaceProps) => {
         customers: orderDetails.customers,
         items: orderItems,
         subtotal,
+        // 分離保留 adjustment / tip，避免下游 analytics 將小費算入營收
+        adjustment: adjustmentValue,
+        tip: tipValue,
         total: payable,
         status: currentStatus,
         notes: orderDetails.notes,

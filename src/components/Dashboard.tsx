@@ -79,7 +79,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 ${formatCurrency(todayRevenue)}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                +12% 較昨日
+                今日累計
               </p>
             </div>
             <div className="size-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
@@ -114,7 +114,7 @@ const Dashboard: React.FC<DashboardProps> = memo(({ onNavigate }) => {
                 {todayOrderCount}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                +8% 較昨日
+                今日累計
               </p>
             </div>
             <div className="size-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">

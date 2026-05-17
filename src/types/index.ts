@@ -19,10 +19,21 @@ export interface Order {
   tableNumber: number;
   tableName?: string | undefined;
   items: OrderItem[];
+  /**
+   * 應收總額 = subtotal + (adjustment ?? 0) + (tip ?? 0)。
+   * 注意：營收統計請用 `total - (tip ?? 0)`（或 subtotal + adjustment），
+   * 避免把小費算入店家營收。
+   */
   total: number;
+  /** 純品項小計（不含 adjustment / tip / tax） */
   subtotal: number;
   tax?: number | undefined;
+  /** 折扣（正值代表折扣金額） */
   discount?: number | undefined;
+  /** 加 / 減調整（正值加價、負值折讓） */
+  adjustment?: number | undefined;
+  /** 小費（屬於員工 / 服務生收入，不應計入店家營收） */
+  tip?: number | undefined;
   status: OrderStatus;
   customers: number;
   customerId?: string | undefined; // 添加客戶ID用於CRM分析

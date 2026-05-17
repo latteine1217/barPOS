@@ -10,32 +10,32 @@ interface OrderingFilterBarProps {
 }
 
 const getCategoryDisplayName = (category: string) => {
-  if (category === 'all') return 'All';
+  if (category === 'all') return '全部';
   const map: Record<string, string> = {
-    cocktails: 'Cocktails',
-    classic: 'Classic',
-    signature: 'Signature',
-    mocktails: 'Mocktails',
-    spirits: 'Spirits',
-    wine: 'Wine',
-    beer: 'Beer',
-    snacks: 'Snacks',
-    others: 'Others'
+    cocktails: '調酒',
+    classic: '經典',
+    signature: '招牌',
+    mocktails: '無酒精',
+    spirits: '烈酒',
+    wine: '葡萄酒',
+    beer: '啤酒',
+    snacks: '小食',
+    others: '其他'
   };
-  return map[category] || category || 'Others';
+  return map[category] || category || '其他';
 };
 
 const getBaseSpiritDisplayName = (spirit: string) => {
   const spiritNames: Record<string, string> = {
-    all: 'All',
-    gin: 'Gin',
-    vodka: 'Vodka',
-    rum: 'Rum',
-    whiskey: 'Whiskey',
-    tequila: 'Tequila',
-    brandy: 'Brandy',
-    liqueur: 'Liqueur',
-    none: 'Non-alcoholic'
+    all: '全部',
+    gin: '琴酒',
+    vodka: '伏特加',
+    rum: '蘭姆酒',
+    whiskey: '威士忌',
+    tequila: '龍舌蘭',
+    brandy: '白蘭地',
+    liqueur: '利口酒',
+    none: '無酒精'
   };
   return spiritNames[spirit] || spirit;
 };

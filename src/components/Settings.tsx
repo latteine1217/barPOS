@@ -8,35 +8,8 @@ import { logger } from '@/services/loggerService';
 
 import type { SupabaseConfig } from '@/types';
 import SupabaseService from '../services/supabaseService';
+import { mergeByUpdatedAt } from '@/services/syncService';
 import { useConfirm } from '@/hooks/useConfirm';
-
-// 以 updatedAt（或 createdAt 後備）合併本地與遠端集合。
-// 目的：避免 syncFromSupabase 直接 setOrders(remote) 把本機未上傳的
-// 離線單覆蓋掉。同 id 採「時間戳較新者」勝出；無時間戳視為 0。
-// 注意：Table.id 為 number，Order.id 為 string，因此 id 型別放寬為
-// string | number；保留 generic 讓呼叫端拿回原型別。
-// TODO: 移到 service 層（backupRestoreService 或 syncService）。
-type SyncableEntity = {
-  id: string | number;
-  updatedAt?: string | undefined;
-  createdAt?: string | undefined;
-};
-
-const mergeByUpdatedAt = <T extends SyncableEntity>(local: readonly T[], remote: readonly T[]): T[] => {
-  const map = new Map<T['id'], T>();
-  for (const item of local) map.set(item.id, item);
-  for (const item of remote) {
-    const existing = map.get(item.id);
-    if (!existing) {
-      map.set(item.id, item);
-      continue;
-    }
-    const localTs = Date.parse(existing.updatedAt ?? existing.createdAt ?? '') || 0;
-    const remoteTs = Date.parse(item.updatedAt ?? item.createdAt ?? '') || 0;
-    if (remoteTs > localTs) map.set(item.id, item);
-  }
-  return Array.from(map.values());
-};
 
 interface TestResult {
   success: boolean;

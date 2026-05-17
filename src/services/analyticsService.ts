@@ -114,6 +114,16 @@ interface AnalyticsServiceOptions {
 
 const HOUR_IN_MS = 60 * 60 * 1000;
 
+/**
+ * 計算單筆訂單的「店家營收」金額：
+ *   revenue = total - tip
+ * 小費屬於員工 / 服務生收入，不應計入店家營收。
+ * 對於沒有 tip 欄位的舊資料（migration 前的訂單）fallback 為 total。
+ */
+const orderRevenue = (order: Order): number => {
+  return (order.total ?? 0) - (order.tip ?? 0);
+};
+
 // 分析服務類
 export class AnalyticsService {
   private orders: Order[];
@@ -139,13 +149,13 @@ export class AnalyticsService {
     const filteredOrders = this.getScopedOrders(period);
     
     const totalOrders = filteredOrders.length;
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + orderRevenue(order), 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     const uniqueCustomers = new Set(filteredOrders.flatMap(o => o.customerId ? [o.customerId] : [])).size;
 
     // 計算同期比較
     const previousPeriodOrders = this.getPreviousPeriodOrders(period);
-    const previousRevenue = previousPeriodOrders.reduce((sum, order) => sum + order.total, 0);
+    const previousRevenue = previousPeriodOrders.reduce((sum, order) => sum + orderRevenue(order), 0);
     const previousOrderCount = previousPeriodOrders.length;
     const previousAOV = previousOrderCount > 0 ? previousRevenue / previousOrderCount : 0;
 
@@ -254,14 +264,14 @@ export class AnalyticsService {
         hourlyData[hour] = { hour, orderCount: 0, revenue: 0 };
       }
       hourlyData[hour]!.orderCount++;
-      hourlyData[hour]!.revenue += order.total;
+      hourlyData[hour]!.revenue += orderRevenue(order);
       
       // 按星期統計
       if (!dailyData[dayOfWeek]) {
         dailyData[dayOfWeek] = { day: dayOfWeek, orderCount: 0, revenue: 0 };
       }
       dailyData[dayOfWeek]!.orderCount++;
-      dailyData[dayOfWeek]!.revenue += order.total;
+      dailyData[dayOfWeek]!.revenue += orderRevenue(order);
     });
 
     const hourlyDistribution = Array.from({ length: 24 }, (_, hour) => {

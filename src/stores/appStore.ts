@@ -4,6 +4,7 @@ import { useOrderStore } from './orderStore';
 import { useTableStore } from './tableStore';
 import { useMenuStore } from './menuStore';
 import { useSettingsStore } from './settingsStore';
+import { useMembersStore } from './membersStore';
 import { logger } from '@/services/loggerService';
 import type { Order, ID } from '@/types';
 
@@ -160,6 +161,23 @@ export const useAppStore = create<AppStore>()(
     // 清除所有資料
     clearAllData: async () => {
       try {
+        // 先清掉 localStorage 中的 persist snapshot，避免後續 setX([])
+        // 觸發的 persist 寫入又把空集合落地（race 結果一樣，但順序乾淨）。
+        // 涵蓋四個 Zustand persist key + 早期 storageService 直接寫的 settings。
+        const persistKeys = [
+          'order-store',
+          'table-store',
+          'menu-items',
+          'members-store',           // ← 先前漏掉，會造成「重置全部」後會員復活
+          'restaurant-pos-settings',
+        ];
+        for (const key of persistKeys) {
+          try { localStorage.removeItem(key); } catch (e) {
+            logger.warn(`clear localStorage ${key} failed`, { component: 'appStore', error: e });
+          }
+        }
+
+        // 接著重置記憶體 state（persist 仍會寫一次，但寫的是預設值）
         useOrderStore.getState().clearAllOrders();
         const defaultItemIds = new Set([
           '101','102','103','104','105','106','107','108','109','110',
@@ -169,10 +187,8 @@ export const useAppStore = create<AppStore>()(
         const defaultItems = menuItems.filter(item => defaultItemIds.has(item.id));
         useMenuStore.getState().setMenuItems(defaultItems);
         useTableStore.getState().resetAllTables();
-        try { localStorage.removeItem('order-store'); } catch (e) { logger.warn('clear localStorage order-store failed', { component: 'appStore', error: e }); }
-        try { localStorage.removeItem('table-store'); } catch (e) { logger.warn('clear localStorage table-store failed', { component: 'appStore', error: e }); }
-        try { localStorage.removeItem('restaurant-pos-settings'); } catch (e) { logger.warn('clear localStorage settings failed', { component: 'appStore', error: e }); }
-        try { localStorage.removeItem('menu-items'); } catch (e) { logger.warn('clear localStorage menu-items failed', { component: 'appStore', error: e }); }
+        useMembersStore.getState().setMembers([]);
+
         logger.info('All data cleared successfully', { component: 'appStore' });
       } catch (error) {
         logger.error('Failed to clear data', { component: 'appStore' }, error as Error);
