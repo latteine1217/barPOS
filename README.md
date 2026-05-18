@@ -327,6 +327,43 @@ npm run test:ui
 
 ## 🔄 Version History
 
+### [v4.5] - 2026-05-18
+
+Hardening release driven by 8 rounds of multi-disciplinary code review
+(frontend / UI-UX / backend specialists) and 7 sprint iterations.
+Final scores: Backend 9.0/10 · UI-UX 8.5/10 · Frontend grade A-.
+
+#### Data Integrity & Correctness (4 P0)
+- **Order atomicity**: `addOrderWithTableUpdate` now returns `boolean` with rollback on validation / missing-table / table-update failure — fixes orphaned orders and tables
+- **Cloud sync no longer overwrites local**: `syncFromSupabase` switched from `setOrders(remote)` to `mergeByUpdatedAt`, with confirm dialog explaining merge rules
+- **Supabase serialization fixed**: `menu_items.ingredients` (TEXT[]) and `orders.items` / `tables.position` (JSONB) no longer double-encoded via `serializeJson` — cloud menu sync now works
+- **Analytics revenue tip-aware**: 7 callsites (`analyticsService`, `useDashboard`, `dataAnalysis` RFM/Trends/Seating/CLV, `useTodayStats`, `History.statistics`) unified through `orderMath.sumOrderRevenue` (excludes tip and cancelled)
+
+#### Schema & State Fixes (9 P1)
+- `Order` type gained `tip` / `adjustment` fields with full Supabase round-trip
+- `orderStore.updateOrder` whitelist expanded to 14 fields (was missing tip/adjustment/customerId/etc.)
+- `VisualOrderingInterface` now restores `tip` / `adjustment` from existing order
+- `clearAllData` fixed persist key typo (`menu-items` → `menu-store`) and added members-store cleanup
+- `appStore.initialize` now hydrates `membersStore` (was missing → first-paint zero-cup race)
+- `ErrorBoundary` errorId moved into state to avoid render-time `Date.now()`
+
+#### A11y, Currency & UI Consistency (6 P2)
+- `formatCurrency` utility unifies all monetary display as `NT$ X,XXX`; chart Y-axes use `currencyAxis` (no prefix) to prevent tick overflow
+- `prefers-reduced-motion` global override for all `hover:scale-*` (was leaking through `@layer` ordering)
+- `MetricCard` colors moved to JIT-safe Record (dynamic `text-${color}-400` was being purged)
+- `text-white` in History (21) and EnhancedAnalytics (26) replaced with `var(--text-*)` for light-theme readability
+- `ui/Input` + `ui/Select` gained `useId` + `htmlFor` + `aria-invalid` + `aria-describedby` + `role="alert"` — all callers (Menu / Tables / Settings / etc.) automatically benefit
+- Dashboard removed hardcoded `+12% / +8% 較昨日` fake delta strings
+
+#### Dead Code Cleanup
+- Removed legacy `Analytics.tsx` (status filter mismatch with `EnhancedAnalytics`)
+- Removed 30+ unreferenced files (hooks barrel, DevTools/*, types/core/*, etc.)
+- Removed `useNetworkStatus.simulateApiCall` 5% random failure injection (prod-bundle bug)
+
+#### Testing
+- 49 → 63 tests (+14): syncService unit tests (9 cases) + appStore rollback tests (5 cases)
+- All type-check / lint / build / tests green
+
 ### [v4.3] - 2026-02-24
 - **Analytics**: Unified `selectedPeriod` + order status filtering across all analysis views
 - **Business Day**: Added cutoff-aware cross-day split and trend gap-filling
